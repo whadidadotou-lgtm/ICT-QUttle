@@ -517,6 +517,7 @@
           <li>Added level-gap PvP limits and boss warnings/music, plus a level-50 parry that reflects fast answers unless a hard question shatters it.</li>
           <li>Made the original metal soundtrack faster and bigger with layered octave guitars, heavier bass, extra double-kick drums, cymbal crashes, and a more intense low-health mix.</li>
           <li>Added a triumphant boss-victory fanfare that plays only after winning a boss NPC battle.</li>
+          <li>Added GitHub Pages local mode with browser-saved accounts, progress, practice, and solo bot battles; online play still needs a server.</li>
           <li>Added separate saved volume sliders for lobby/Pomodoro music and battle/practice sound effects.</li>
         </ul>
       </article>
@@ -641,6 +642,8 @@
     </div>
   </dialog>
   <div class="toast" id="toast" role="status" hidden></div>
+  <script src="./grade9-practice.js"></script>
+  <script src="./local-game.js"></script>
   <script>
     const app = document.querySelector('#app');
     const joinScreen = document.querySelector('#join-screen');
@@ -703,6 +706,8 @@
     let soundContext = null;
     let soundMasterGain = null;
     let soundEnabled = true;
+    let localOnly = false;
+    const localGame = window.ICTQuattleLocal.createLocalGame(localStorage, window.crypto, window.grade9Practice);
     let homeworkPending = false;
     let homeworkRewardInFlight = false;
     let lastBattleSoundLog = '';
@@ -719,7 +724,18 @@
     const playerKey = 'ict-quattle-player';
 
     async function request(url, options = {}) {
-      const response = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', ...(options.headers || {}) } });
+      if (localOnly) return localGame.handle(url, options);
+      let response;
+      try {
+        response = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', ...(options.headers || {}) } });
+      } catch {
+        throw new Error('Could not reach the game server. Check your connection and try again.');
+      }
+      if (!response.headers.get('content-type')?.includes('application/json')) {
+        localOnly = true;
+        setAuthMode(authMode);
+        return localGame.handle(url, options);
+      }
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Request failed');
       return data;
@@ -798,7 +814,7 @@
     }
 
     function renderModePicker() {
-      return `<main class="mode-screen"><p class="eyebrow">ICT QUttle · pick your path</p><h1>How do you want to play?</h1><p class="mode-intro">Study on your own with a Pomodoro, or meet other learners online.</p><div class="mode-cards"><button class="mode-card" data-action="section" data-section="solo"><span class="mode-icon">◷</span><h2>Solo Studies</h2><p>Choose a bot battle or focus with a Pomodoro and mellow background audio.</p><strong>Choose solo activity →</strong></button><button class="mode-card" data-action="section" data-section="online"><span class="mode-icon">◎</span><h2>Online Multiplayer</h2><p>Challenge other players, team up, and share study-focused chat.</p><strong>Find your people →</strong></button></div></main>`;
+      return `<main class="mode-screen"><p class="eyebrow">ICT QUttle · pick your path</p><h1>How do you want to play?</h1><p class="mode-intro">Study on your own with a Pomodoro, or meet other learners online.</p>${localOnly ? '<p class="practice-feedback">Local browser mode: accounts, progress, practice, and bot battles are saved in this browser. Online multiplayer needs a game server.</p>' : ''}<div class="mode-cards"><button class="mode-card" data-action="section" data-section="solo"><span class="mode-icon">◷</span><h2>Solo Studies</h2><p>Choose a bot battle or focus with a Pomodoro and mellow background audio.</p><strong>Choose solo activity →</strong></button>${localOnly ? '<button class="mode-card" disabled><span class="mode-icon">◎</span><h2>Online Multiplayer</h2><p>Online challenges and shared study chat need a game server.</p><strong>Unavailable in static mode</strong></button>' : '<button class="mode-card" data-action="section" data-section="online"><span class="mode-icon">◎</span><h2>Online Multiplayer</h2><p>Challenge other players, team up, and share study-focused chat.</p><strong>Find your people →</strong></button>'}</div></main>`;
     }
 
     function renderSoloPicker() {
@@ -866,7 +882,7 @@
     }
 
     function renderStudyRoomPeople() {
-      if (!studyRoom.studying.length) return '<p class="empty-rivals">You are the first one studying solo. Others will appear here while they are active.</p>';
+      if (!studyRoom.studying.length) return `<p class="empty-rivals">${localOnly ? 'Your Pomodoro runs locally. Online study presence needs a game server.' : 'You are the first one studying solo. Others will appear here while they are active.'}</p>`;
       return studyRoom.studying.map((person) => `<div class="study-person"><span>${esc(person.name)}</span><span>${esc((state.subjects.find((subject) => subject.id === person.subject) || {}).name || 'Studying')}</span></div>`).join('');
     }
 
@@ -1358,6 +1374,10 @@
     }
 
     function selectSection(section) {
+      if (section === 'online' && localOnly) {
+        notify('Online multiplayer needs a game server and is unavailable on static GitHub Pages.');
+        return;
+      }
       if (activeSection === 'solo' && soloView === 'study') {
         updateStudyStatus(false);
         if (studyTimerRunning) studyRemaining = Math.max(0, Math.ceil((studyDeadline - Date.now()) / 1000));
@@ -1419,9 +1439,11 @@
       authMode = mode;
       const creating = mode === 'register';
       document.querySelector('#auth-title').textContent = creating ? 'Create your account.' : 'Welcome back.';
-      document.querySelector('#auth-description').textContent = creating
-        ? 'Choose a unique username and password to save your player profile.'
-        : 'Sign in to return to your saved player profile.';
+      document.querySelector('#auth-description').textContent = localOnly
+        ? 'This GitHub Pages version saves your account and progress in this browser only.'
+        : creating
+          ? 'Choose a unique username and password to save your player profile.'
+          : 'Sign in to return to your saved player profile.';
       document.querySelector('#auth-submit').textContent = creating ? 'Create account' : 'Sign in';
       document.querySelector('#auth-toggle').textContent = creating ? 'I already have an account' : 'Create a new account';
       document.querySelector('#auth-password').autocomplete = creating ? 'new-password' : 'current-password';
@@ -1708,7 +1730,7 @@
       lastRenderedState = signature;
       document.querySelector('#profile-name').textContent = state.you.name;
       document.querySelector('#profile-badge').textContent = state.you.name.slice(0, 1).toUpperCase();
-      document.querySelector('#online-count').textContent = `${state.onlinePlayers.length + 1} IN ARENA`;
+      document.querySelector('#online-count').textContent = localOnly ? 'LOCAL PLAYER' : `${state.onlinePlayers.length + 1} IN ARENA`;
       const battle = state.battle;
       if (!activeSection) {
         app.innerHTML = renderModePicker();
@@ -2457,9 +2479,11 @@
           joinScreen.hidden = false;
           if (error.message === 'Player session not found') {
             localStorage.removeItem(playerKey);
-            notify('Your saved profile could not be found on this server. Join again to start a new profile.');
+            notify(localOnly
+              ? 'No saved profile was found in this browser. Create a local account to start; server profiles do not transfer automatically.'
+              : 'Your saved profile could not be found on this server. Join again to start a new profile.');
           } else {
-            notify('Could not reconnect. Your saved profile was kept; refresh to try again.');
+            notify(localOnly ? error.message : 'Could not reconnect. Your saved profile was kept; refresh to try again.');
           }
         }
       } else {

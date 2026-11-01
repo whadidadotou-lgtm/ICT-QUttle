@@ -515,4 +515,5 @@ for (const [id, subject] of Object.entries(curriculum)) {
 curriculum.computers.topics = [...curriculum.computers.practiceTopics];
 curriculum.computers.computerScienceQuestions = computerScienceQuestions;
 
-module.exports = curriculum;
+if (typeof module === 'object' && module.exports) module.exports = curriculum;
+else globalThis.grade9Practice = curriculum;

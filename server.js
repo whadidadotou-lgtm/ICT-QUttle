@@ -6,6 +6,10 @@ const grade9Practice = require('./grade9-practice');
 
 const PORT = Number(process.env.PORT || 3000);
 const INDEX = path.join(__dirname, 'index.html');
+const STATIC_ASSETS = new Map([
+	['/grade9-practice.js', path.join(__dirname, 'grade9-practice.js')],
+	['/local-game.js', path.join(__dirname, 'local-game.js')],
+]);
 const PLAYER_DATA_FILE = process.env.PLAYER_DATA_FILE || path.join(__dirname, 'data', 'players.json');
 const TURN_MS = 20_000;
 const MAX_HP = 100;
@@ -1195,6 +1199,17 @@ const server = http.createServer((request, response) => {
 	const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
 	if (url.pathname.startsWith('/api/')) return handleApi(request, response, url);
 	if (request.method !== 'GET' || (url.pathname !== '/' && url.pathname !== '/index.html')) {
+		const assetPath = STATIC_ASSETS.get(url.pathname);
+		if (request.method === 'GET' && assetPath) {
+			return fs.readFile(assetPath, (error, content) => {
+				if (error) {
+					response.writeHead(500);
+					return response.end('Game asset is missing');
+				}
+				response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-store' });
+				response.end(content);
+			});
+		}
 		response.writeHead(404);
 		return response.end('Not found');
 	}
