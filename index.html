@@ -787,36 +787,52 @@
     }
 
     async function exportLocalSave(username, password) {
-      let save;
-      try {
-        save = await localGame.handle('/api/export-local-account', {
-          method: 'POST',
-          body: JSON.stringify({ username, password }),
-        });
-      } catch (error) {
-        if (!['Not found', 'This feature is not available in local browser mode.'].includes(error.message)) throw error;
-        const authenticated = await localGame.handle('/api/login', {
-          method: 'POST',
-          body: JSON.stringify({ username, password }),
-        });
-        const player = authenticated.you;
-        save = {
-          format: 'ict-quattle-local-account-v1',
-          account: {
-            username: player.username || player.name,
-            xp: player.xp,
-            totalXp: player.totalXp,
-            xpBalance: player.xpBalance,
-            xpSpent: player.totalXp - player.xpBalance,
-            level: player.level,
-            matches: player.matches,
-            wins: player.wins,
-            losses: player.losses,
-            draws: player.draws,
-          },
-        };
+      if (typeof password !== 'string' || password.length < 8 || password.length > 128) {
+        throw new Error('Password must be between 8 and 128 characters');
       }
-      downloadSave(save);
+      let players;
+      try {
+        players = JSON.parse(localStorage.getItem('ict-quattle-local-players') || 'null');
+      } catch (error) {
+        throw new Error(`Could not read the browser save: ${error.message}`);
+      }
+      if (!Array.isArray(players)) throw new Error('No browser save was found in this browser.');
+      const usernameKey = String(username || '').trim().toLowerCase();
+      const player = players.find((record) => record?.usernameKey === usernameKey);
+      if (!player) throw new Error('No matching account exists in this browser.');
+      if (!/^[\da-f]{32}$/i.test(player.passwordSalt) || !/^[\da-f]{64}$/i.test(player.passwordHash)) {
+        throw new Error('The saved browser account is invalid. Sign in again or use the server account export.');
+      }
+      const salt = Uint8Array.from(player.passwordSalt.match(/.{2}/g), (byte) => Number.parseInt(byte, 16));
+      const key = await window.crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+      const digest = await window.crypto.subtle.deriveBits({
+        name: 'PBKDF2',
+        salt,
+        iterations: 150_000,
+        hash: 'SHA-256',
+      }, key, 256);
+      const actualHash = [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+      let difference = actualHash.length ^ player.passwordHash.length;
+      for (let index = 0; index < actualHash.length; index += 1) {
+        difference |= actualHash.charCodeAt(index) ^ (player.passwordHash.charCodeAt(index) || 0);
+      }
+      if (difference !== 0) throw new Error('Username or password is incorrect');
+      downloadSave({
+        format: 'ict-quattle-local-account-v1',
+        account: {
+          username: player.username,
+          xp: player.xp,
+          totalXp: player.totalXp,
+          xpBalance: player.xpBalance,
+          xpSpent: player.xpSpent,
+          level: player.level,
+          matches: player.matches,
+          wins: player.wins,
+          losses: player.losses,
+          draws: player.draws,
+          homeworkRewardDate: player.homeworkRewardDate || '',
+        },
+      });
     }
 
     async function exportAccountSave(password) {
