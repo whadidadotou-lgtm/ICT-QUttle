@@ -377,10 +377,41 @@
 					throw new Error('Username or password is incorrect');
 				}
 				const player = loadPlayers().find((record) => record.usernameKey === account.usernameKey);
-				if (!player) throw new Error('Username or password is incorrect');
+				if (!player) {
+					throw new Error('No account with that username exists in this browser. Server accounts are separate from browser-only accounts.');
+				}
 				const credentials = await hashPassword(body.password, player.passwordSalt);
 				if (!equalHex(credentials.passwordHash, player.passwordHash)) throw new Error('Username or password is incorrect');
 				return makeState(player.id);
+			}
+
+			if (parsedUrl.pathname === '/api/export-local-account' && method === 'POST') {
+				let account;
+				try {
+					account = normalizeUsername(body.username);
+				} catch {
+					throw new Error('Username or password is incorrect');
+				}
+				const player = loadPlayers().find((record) => record.usernameKey === account.usernameKey);
+				if (!player) throw new Error('No matching account exists in this browser');
+				const credentials = await hashPassword(body.password, player.passwordSalt);
+				if (!equalHex(credentials.passwordHash, player.passwordHash)) throw new Error('Username or password is incorrect');
+				return {
+					format: 'ict-quattle-local-account-v1',
+					account: {
+						username: player.username,
+						xp: player.xp,
+						totalXp: player.totalXp,
+						xpBalance: player.xpBalance,
+						xpSpent: player.xpSpent,
+						level: player.level,
+						matches: player.matches,
+						wins: player.wins,
+						losses: player.losses,
+						draws: player.draws,
+						homeworkRewardDate: player.homeworkRewardDate || '',
+					},
+				};
 			}
 
 			if (parsedUrl.pathname === '/api/state' && method === 'GET') {

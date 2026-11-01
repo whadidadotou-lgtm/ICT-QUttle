@@ -97,6 +97,44 @@ function verifyPassword(password, player) {
 	return actual.length === expected.length && crypto.timingSafeEqual(actual, expected);
 }
 
+function validateImportedAccount(value) {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) {
+		throw new Error('The browser save file is invalid');
+	}
+	const account = normalizeUsername(value.username);
+	const integerFields = ['totalXp', 'xpBalance', 'xpSpent', 'matches', 'wins', 'losses', 'draws'];
+	if (!Number.isInteger(value.level) || value.level < 1 || value.level > MAX_LEVEL
+		|| !Number.isInteger(value.xp) || value.xp < 0 || value.xp >= value.level * 100
+		|| integerFields.some((field) => !Number.isSafeInteger(value[field]) || value[field] < 0)
+		|| value.xpBalance > value.totalXp
+		|| value.xpBalance + value.xpSpent !== value.totalXp
+		|| (value.homeworkRewardDate !== undefined && value.homeworkRewardDate !== ''
+			&& !/^\d{4}-\d{2}-\d{2}$/.test(value.homeworkRewardDate))) {
+		throw new Error('The browser save file contains invalid player progress');
+	}
+	return { ...account, ...Object.fromEntries(['xp', ...integerFields, 'level', 'homeworkRewardDate']
+		.map((field) => [field, value[field] ?? ''])) };
+}
+
+function mergeImportedProgress(player, imported) {
+	player.totalXp = Math.max(player.totalXp, imported.totalXp);
+	player.xpBalance = Math.max(player.xpBalance, imported.xpBalance);
+	player.xpSpent = Math.max(0, player.totalXp - player.xpBalance);
+	let earnedXp = player.totalXp;
+	player.level = 1;
+	while (player.level < MAX_LEVEL && earnedXp >= player.level * 100) {
+		earnedXp -= player.level * 100;
+		player.level += 1;
+	}
+	player.xp = player.level === MAX_LEVEL ? 0 : earnedXp;
+	for (const field of ['matches', 'wins', 'losses', 'draws']) {
+		player[field] = Math.max(player[field], imported[field]);
+	}
+	player.matches = Math.max(player.matches, player.wins + player.losses + player.draws);
+	player.homeworkRewardDate = [player.homeworkRewardDate || '', imported.homeworkRewardDate || ''].sort().at(-1);
+	Object.assign(player, combatStats(player.level));
+}
+
 function loadSavedPlayers(filePath) {
 	let content;
 	try {
@@ -912,6 +950,52 @@ function getPlayerState(playerId) {
 }
 
 function handleApi(request, response, url) {
+	if (request.method === 'POST' && url.pathname === '/api/import-local-account') {
+		return readBody(request).then(({ format, account: value, password }) => {
+			if (format !== 'ict-quattle-local-account-v1') {
+				return json(response, 400, { error: 'Choose a valid ICT QUttle browser save file' });
+			}
+			const imported = validateImportedAccount(value);
+			const existingPlayer = [...players.values()].find((candidate) => candidate.usernameKey === imported.usernameKey);
+			if (existingPlayer) {
+				if (!verifyPassword(password, existingPlayer)) {
+					return json(response, 401, { error: 'That username already has a server account. Enter its server password to merge progress.' });
+				}
+				mergeImportedProgress(existingPlayer, imported);
+				savePlayers(PLAYER_DATA_FILE, players);
+				return json(response, 200, { ...getPlayerState(existingPlayer.id), migration: 'merged' });
+			}
+
+			const credentials = hashPassword(password);
+			const playerId = crypto.randomUUID();
+			const player = {
+				id: playerId,
+				name: imported.username,
+				username: imported.username,
+				usernameKey: imported.usernameKey,
+				...credentials,
+				xp: imported.xp,
+				totalXp: imported.totalXp,
+				xpBalance: imported.xpBalance,
+				xpSpent: imported.xpSpent,
+				level: imported.level,
+				...combatStats(imported.level),
+				matches: imported.matches,
+				wins: imported.wins,
+				losses: imported.losses,
+				draws: imported.draws,
+				homeworkRewardDate: imported.homeworkRewardDate,
+				hp: MAX_HP,
+				battleId: null,
+				challengeId: null,
+				lastSeen: Date.now(),
+			};
+			players.set(playerId, player);
+			savePlayers(PLAYER_DATA_FILE, players);
+			return json(response, 201, { ...getPlayerState(playerId), migration: 'imported' });
+		}).catch((error) => json(response, 400, { error: error.message }));
+	}
+
 	if (request.method === 'POST' && url.pathname === '/api/register') {
 		return readBody(request).then(({ username, password }) => {
 			const account = normalizeUsername(username);
@@ -1250,7 +1334,9 @@ module.exports = {
 	isStudyRelatedMessage,
 	loadSavedPlayers,
 	hashPassword,
+	mergeImportedProgress,
 	normalizeUsername,
+	validateImportedAccount,
 	isFastAnswer,
 	npcWinXp,
 	questionDamageMultiplier,

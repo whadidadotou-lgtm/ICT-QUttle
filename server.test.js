@@ -24,6 +24,8 @@ const {
 	npcWinXp,
 	savePlayers,
 	verifyPassword,
+	mergeImportedProgress,
+	validateImportedAccount,
 	MAX_LEVEL,
 	MAX_PVP_LEVEL_GAP,
 	PARRY_LEVEL,
@@ -262,6 +264,55 @@ test('account usernames are normalized uniquely and passwords are stored as veri
 	assert.equal(verifyPassword('incorrect password', player), false);
 	assert.equal(verifyPassword('x'.repeat(200), player), false);
 	assert.throws(() => hashPassword('short'), /8 and 128 characters/);
+});
+
+test('browser save imports validate progress and merge without replacing server credentials', () => {
+	const imported = validateImportedAccount({
+		username: 'SavedPlayer',
+		xp: 40,
+		totalXp: 340,
+		xpBalance: 300,
+		xpSpent: 40,
+		level: 3,
+		matches: 12,
+		wins: 7,
+		losses: 4,
+		draws: 1,
+		homeworkRewardDate: '2026-10-30',
+	});
+	assert.equal(imported.usernameKey, 'savedplayer');
+	assert.throws(() => validateImportedAccount({ ...imported, xpBalance: 400 }), /invalid player progress/i);
+
+	const credentials = hashPassword('server account password');
+	const serverPlayer = {
+		id: 'server-player',
+		name: 'SavedPlayer',
+		username: 'SavedPlayer',
+		usernameKey: 'savedplayer',
+		...credentials,
+		xp: 25,
+		totalXp: 225,
+		xpBalance: 200,
+		xpSpent: 25,
+		level: 2,
+		matches: 8,
+		wins: 4,
+		losses: 3,
+		draws: 1,
+		homeworkRewardDate: '2026-10-31',
+	};
+
+	mergeImportedProgress(serverPlayer, imported);
+	assert.equal(serverPlayer.id, 'server-player');
+	assert.equal(serverPlayer.level, 3);
+	assert.equal(serverPlayer.xp, 40);
+	assert.equal(serverPlayer.totalXp, 340);
+	assert.equal(serverPlayer.xpBalance, 300);
+	assert.equal(serverPlayer.xpSpent, 40);
+	assert.equal(serverPlayer.matches, 12);
+	assert.equal(serverPlayer.wins, 7);
+	assert.equal(serverPlayer.homeworkRewardDate, '2026-10-31');
+	assert.equal(verifyPassword('server account password', serverPlayer), true);
 });
 
 test('account credentials survive saved-player reloads without exposing passwords', (context) => {

@@ -33,8 +33,20 @@ test('local accounts enforce unique usernames and store password hashes, not pla
 		post(api, '/api/login', { username: 'StudyKnight', password: 'wrong password' }),
 		/incorrect/i,
 	);
+	await assert.rejects(
+		post(api, '/api/login', { username: 'ServerPlayer', password: 'strong password' }),
+		/no account.*in this browser.*server accounts are separate/i,
+	);
 	const signedIn = await post(api, '/api/login', { username: 'studyknight', password: 'strong password' });
 	assert.equal(signedIn.you.id, registered.you.id);
+	const exported = await post(api, '/api/export-local-account', { username: 'StudyKnight', password: 'strong password' });
+	assert.equal(exported.format, 'ict-quattle-local-account-v1');
+	assert.equal(exported.account.username, 'StudyKnight');
+	assert.equal('passwordHash' in exported.account, false);
+	await assert.rejects(
+		post(api, '/api/export-local-account', { username: 'StudyKnight', password: 'wrong password' }),
+		/incorrect/i,
+	);
 });
 
 test('local practice awards and saves XP on the player profile', async () => {
@@ -78,7 +90,7 @@ test('local account edits require the current password and remain available afte
 	});
 	await assert.rejects(
 		post(api, '/api/login', { username: 'AccountHero', password: 'strong password' }),
-		/incorrect/i,
+		/no account.*in this browser/i,
 	);
 	const signedIn = await post(api, '/api/login', { username: 'RenamedHero', password: 'new strong password' });
 	assert.equal(signedIn.you.id, registered.you.id);

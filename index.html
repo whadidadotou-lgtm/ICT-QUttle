@@ -334,6 +334,8 @@
     .join-box label { display: block; margin-bottom: 7px; font: 10px var(--mono); text-transform: uppercase; }
     .join-box input { width: 100%; height: 42px; margin-bottom: 12px; padding: 0 11px; border: 1px solid var(--line); background: white; outline-color: var(--forest); font-size: 13px; }
     .join-box .primary-button { width: 100%; }
+    .auth-transfer { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 3px 0 12px; }
+    .auth-transfer button { min-height: 34px; padding: 5px 8px; border: 1px solid var(--line); background: transparent; cursor: pointer; font: 9px var(--mono); }
     .mode-screen { max-width: 1080px; margin: 0 auto; padding: 48px 24px; }
     .mode-screen h1 { margin: 8px 0; font-size: clamp(32px, 5vw, 52px); letter-spacing: -.06em; }
     .mode-intro { max-width: 580px; color: var(--muted); line-height: 1.6; }
@@ -580,6 +582,11 @@
       <label for="auth-password">Password</label>
       <input id="auth-password" name="password" type="password" autocomplete="current-password" placeholder="Your password" required>
       <button class="primary-button" id="auth-submit" type="submit">Sign in</button>
+      <div class="auth-transfer">
+        <button id="auth-export" type="button">Export browser save</button>
+        <button id="auth-import" type="button">Import browser save</button>
+        <input id="auth-import-file" type="file" accept=".json,application/json" hidden>
+      </div>
       <button class="mode-back" id="auth-toggle" type="button">Create a new account</button>
     </form>
   </div>
@@ -1440,7 +1447,7 @@
       const creating = mode === 'register';
       document.querySelector('#auth-title').textContent = creating ? 'Create your account.' : 'Welcome back.';
       document.querySelector('#auth-description').textContent = localOnly
-        ? 'This GitHub Pages version saves your account and progress in this browser only.'
+        ? 'Browser-only mode: sign in only to accounts created in this browser. Server profiles are separate.'
         : creating
           ? 'Choose a unique username and password to save your player profile.'
           : 'Sign in to return to your saved player profile.';
@@ -2272,6 +2279,69 @@
 
     document.querySelector('#auth-toggle').addEventListener('click', () => {
       setAuthMode(authMode === 'login' ? 'register' : 'login');
+    });
+
+    document.querySelector('#auth-export').addEventListener('click', async () => {
+      try {
+        const save = await localGame.handle('/api/export-local-account', {
+          method: 'POST',
+          body: JSON.stringify({
+            username: joinForm.elements.username.value,
+            password: joinForm.elements.password.value,
+          }),
+        });
+        const file = new Blob([JSON.stringify(save, null, 2)], { type: 'application/json' });
+        const downloadUrl = URL.createObjectURL(file);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `${save.account.username}-ict-quattle-save.json`;
+        link.click();
+        URL.revokeObjectURL(downloadUrl);
+        notify('Browser save exported. Import that file on the server sign-in screen.');
+      } catch (error) {
+        notify(error.message);
+      }
+    });
+
+    const importSaveInput = document.querySelector('#auth-import-file');
+    document.querySelector('#auth-import').addEventListener('click', () => importSaveInput.click());
+    importSaveInput.addEventListener('change', async (event) => {
+      const file = event.currentTarget.files[0];
+      event.currentTarget.value = '';
+      if (!file) return;
+      if (!joinForm.elements.password.value) {
+        notify('Enter the local account password before importing its save.');
+        return;
+      }
+      try {
+        const save = JSON.parse(await file.text());
+        if (save.format !== 'ict-quattle-local-account-v1' || !save.account?.username) {
+          throw new Error('Choose a valid ICT QUttle browser save file.');
+        }
+        joinForm.elements.username.value = save.account.username;
+        const importSave = (password) => request('/api/import-local-account', {
+          method: 'POST',
+          body: JSON.stringify({ ...save, password }),
+        });
+        let result;
+        try {
+          result = await importSave(joinForm.elements.password.value);
+        } catch (error) {
+          if (!error.message.startsWith('That username already has a server account.')) throw error;
+          const serverPassword = window.prompt('This username already exists on the server. Enter the server account password to merge the saves.');
+          if (serverPassword === null) return;
+          result = await importSave(serverPassword);
+        }
+        finishLogin(result);
+        joinForm.reset();
+        setAuthMode('login');
+        openHomeworkReminder();
+        notify(result.migration === 'merged'
+          ? 'Browser save merged. The server password and any higher progress were kept.'
+          : 'Browser save imported into the server.');
+      } catch (error) {
+        notify(error.message);
+      }
     });
 
     document.querySelector('#profile-button').addEventListener('click', async () => {
