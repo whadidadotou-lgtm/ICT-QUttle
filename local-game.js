@@ -385,14 +385,19 @@
 				return makeState(player.id);
 			}
 
-			if (parsedUrl.pathname === '/api/export-local-account' && method === 'POST') {
-				let account;
-				try {
-					account = normalizeUsername(body.username);
-				} catch {
-					throw new Error('Username or password is incorrect');
+			if (['/api/export-local-account', '/api/export-account'].includes(parsedUrl.pathname) && method === 'POST') {
+				let player;
+				if (parsedUrl.pathname === '/api/export-account') {
+					player = loadPlayers().find((record) => record.id === String(body.playerId || ''));
+				} else {
+					let account;
+					try {
+						account = normalizeUsername(body.username);
+					} catch {
+						throw new Error('Username or password is incorrect');
+					}
+					player = loadPlayers().find((record) => record.usernameKey === account.usernameKey);
 				}
-				const player = loadPlayers().find((record) => record.usernameKey === account.usernameKey);
 				if (!player) throw new Error('No matching account exists in this browser');
 				const credentials = await hashPassword(body.password, player.passwordSalt);
 				if (!equalHex(credentials.passwordHash, player.passwordHash)) throw new Error('Username or password is incorrect');

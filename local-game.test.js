@@ -46,6 +46,19 @@ test('local accounts enforce unique usernames and store password hashes, not pla
 	assert.equal(exported.account.totalXp, 2);
 	assert.equal(exported.account.xpBalance, 2);
 	assert.equal('passwordHash' in exported.account, false);
+	const signedInExport = await post(api, '/api/export-account', {
+		playerId: signedIn.you.id,
+		password: 'strong password',
+	});
+	assert.equal(signedInExport.account.username, 'StudyKnight');
+	assert.equal(signedInExport.account.totalXp, 2);
+	await assert.rejects(
+		post(api, '/api/export-account', {
+			playerId: signedIn.you.id,
+			password: 'wrong password',
+		}),
+		/incorrect/i,
+	);
 	await assert.rejects(
 		post(api, '/api/export-local-account', { username: 'StudyKnight', password: 'wrong password' }),
 		/incorrect/i,
