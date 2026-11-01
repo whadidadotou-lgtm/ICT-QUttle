@@ -1,0 +1,2507 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f1eee4">
+  <title>ICT QUttle | Solo study and multiplayer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f1eee4;
+      --paper-bright: #fbfaf5;
+      --ink: #232b29;
+      --muted: #727872;
+      --line: #d8d7cc;
+      --forest: #315b49;
+      --lime: #c6df71;
+      --orange: #e5794d;
+      --blue: #81b8c3;
+      --danger: #bd5142;
+      --mono: 'DM Mono', monospace;
+      --sans: 'Space Grotesk', sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); min-width: 320px; }
+    body[data-theme="solid-blue"] { --paper: #e7eef9; --paper-bright: #f8faff; --ink: #263248; --muted: #657187; --line: #c9d4e4; --forest: #355a83; --lime: #a9c8ee; --orange: #bc704f; --blue: #79a8d1; background: var(--paper); }
+    body[data-theme="solid-sage"] { --paper: #e8f0e5; --paper-bright: #f8fbf6; --ink: #27372d; --muted: #68796d; --line: #cbd9c8; --forest: #40614c; --lime: #bed88a; --orange: #c5774f; --blue: #83b3a3; background: var(--paper); }
+    body[data-theme="solid-lilac"] { --paper: #f0eafa; --paper-bright: #fcfaff; --ink: #352b43; --muted: #766b84; --line: #d9cfe5; --forest: #5c4777; --lime: #d3b8eb; --orange: #c77769; --blue: #95a7d8; background: var(--paper); }
+    body[data-theme="solid-sunset"] { --paper: #fae9df; --paper-bright: #fff9f5; --ink: #402b2c; --muted: #806b69; --line: #e5c9bb; --forest: #8d493f; --lime: #f3bb76; --orange: #d66b50; --blue: #c17b78; background: var(--paper); }
+    body[data-theme="solid-mint"] { --paper: #e1f1ed; --paper-bright: #f7fcfa; --ink: #203936; --muted: #627b75; --line: #c1dbd4; --forest: #32675d; --lime: #a6d9b8; --orange: #ca7556; --blue: #75b9ad; background: var(--paper); }
+    body[data-theme="solid-coral"] { --paper: #f9e6e5; --paper-bright: #fff9f8; --ink: #412d34; --muted: #806b70; --line: #e8c9ca; --forest: #824d60; --lime: #f1b3a5; --orange: #d36d57; --blue: #b57c94; background: var(--paper); }
+    body[data-theme="solid-gold"] { --paper: #f3edda; --paper-bright: #fdfaf0; --ink: #3a3425; --muted: #77705d; --line: #dcd2b5; --forest: #69603a; --lime: #dfcf7c; --orange: #c4774f; --blue: #9baa7d; background: var(--paper); }
+    body[data-theme="custom"] { --paper: var(--custom-background, #dce8f4); --ink: var(--custom-foreground, #232b29); --muted: var(--custom-muted, #727872); --line: var(--custom-line, #d8d7cc); background: var(--custom-background, #dce8f4); }
+    body[data-theme="retro"] { background-color: #f3e8c7; background-image: linear-gradient(#7565400b 1px, transparent 1px), linear-gradient(90deg, #7565400b 1px, transparent 1px); background-size: 24px 24px; }
+    button, input { font: inherit; }
+    button { color: inherit; }
+    .shell { min-height: 100vh; }
+    .topbar { height: 66px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; border-bottom: 1px solid var(--line); background: rgba(251,250,245,.8); }
+    .brand { display: flex; align-items: center; gap: 12px; color: var(--ink); text-decoration: none; }
+    .brand-mark { width: 34px; height: 34px; display: grid; place-items: center; background: var(--forest); color: var(--lime); font-size: 18px; font-weight: 700; transform: rotate(-5deg); }
+    .brand-name { font-size: 15px; line-height: 1; font-weight: 700; letter-spacing: .04em; }
+    .brand-name span { color: var(--forest); }
+    .topbar-right { display: flex; align-items: center; gap: 18px; }
+    .online-indicator, .profile-button { display: inline-flex; align-items: center; gap: 8px; border: 0; background: transparent; }
+    .online-indicator { color: var(--muted); font: 11px var(--mono); }
+    .online-dot { width: 8px; height: 8px; border-radius: 50%; background: #75a86c; box-shadow: 0 0 0 3px #75a86c22; }
+    .profile-button { cursor: pointer; font-size: 13px; font-weight: 600; }
+    .profile-badge { width: 29px; height: 29px; display: grid; place-items: center; color: var(--ink); background: var(--lime); border-radius: 50%; font: 12px var(--mono); }
+    .personalize-button { padding: 8px 10px; border: 1px solid var(--line); background: transparent; cursor: pointer; font: 10px var(--mono); }
+    #settings-button { width: 42px; height: 42px; display: grid; place-items: center; padding: 0; border-radius: 8px; font: 28px/1 var(--sans); }
+    .personalize-dialog { width: min(520px, calc(100vw - 28px)); max-height: min(720px, calc(100vh - 32px)); overflow: auto; padding: 0; border: 1px solid var(--line); color: var(--ink); background: var(--paper-bright); box-shadow: 0 20px 70px #172b2440; }
+    .personalize-dialog::backdrop { background: #172b2488; }
+    .settings-dialog { width: min(300px, calc(100vw - 28px)); padding: 22px; border: 1px solid var(--line); color: var(--ink); background: var(--paper-bright); box-shadow: 0 20px 70px #172b2440; }
+    .settings-dialog::backdrop { background: #172b2488; }
+    .settings-options { display: grid; gap: 9px; margin-top: 18px; }
+    .settings-options button { min-height: 42px; border: 1px solid var(--line); background: var(--paper); cursor: pointer; text-align: left; padding: 0 12px; }
+    .account-dialog { width: min(430px, calc(100vw - 28px)); }
+    .account-form { display: grid; gap: 8px; margin-top: 20px; }
+    .account-form label { margin-top: 4px; font: 10px var(--mono); text-transform: uppercase; }
+    .account-form input { width: 100%; height: 42px; padding: 0 11px; border: 1px solid var(--line); background: white; outline-color: var(--forest); font-size: 13px; }
+    .account-actions { display: flex; justify-content: space-between; gap: 8px; margin-top: 14px; }
+    .account-actions button { min-height: 38px; padding: 0 12px; border: 1px solid var(--line); background: transparent; cursor: pointer; font: 10px var(--mono); }
+    .account-actions .primary-button { border: 0; color: var(--paper-bright); background: var(--forest); }
+    .account-close[hidden], .account-logout[hidden] { display: none; }
+    .updates-dialog { width: min(560px, calc(100vw - 28px)); max-height: min(720px, calc(100vh - 32px)); overflow: auto; padding: 24px; border: 1px solid var(--line); color: var(--ink); background: var(--paper-bright); box-shadow: 0 20px 70px #172b2440; }
+    .updates-dialog::backdrop { background: #172b2488; }
+    .homework-dialog { width: min(460px, calc(100vw - 28px)); padding: 28px; border: 1px solid var(--line); color: var(--ink); background: var(--paper-bright); box-shadow: 0 20px 70px #172b2480; }
+    .homework-dialog::backdrop { background: #172b2488; }
+    .homework-dialog h2 { margin: 8px 0; font-size: 25px; }
+    .homework-dialog p { color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .homework-dialog-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+    .homework-dialog-actions button { min-height: 42px; padding: 0 14px; border: 1px solid var(--line); background: var(--paper); cursor: pointer; font-weight: 600; }
+    .homework-dialog-actions .primary-button { border-color: var(--forest); color: var(--paper-bright); background: var(--forest); }
+    .homework-warning { margin: 18px 0; padding: 18px; border: 2px solid var(--orange); background: var(--paper-bright); }
+    .homework-warning h2 { margin: 0 0 6px; font-size: 20px; }
+    .homework-warning p { margin: 0 0 12px; line-height: 1.5; }
+    .updates-list { display: grid; gap: 16px; margin-top: 20px; }
+    .update-entry { padding: 14px; border: 1px solid var(--line); background: var(--paper); }
+    .update-entry time { color: var(--muted); font: 10px var(--mono); }
+    .update-entry h3 { margin: 6px 0; font-size: 15px; }
+    .update-entry ul { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .updates-close { float: right; padding: 7px 10px; border: 1px solid var(--line); background: transparent; cursor: pointer; font: 10px var(--mono); }
+    .personalize-content { padding: 24px; }
+    .personalize-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+    .personalize-heading h2 { margin: 5px 0 6px; font-size: 24px; }
+    .personalize-heading p:last-child { margin: 0; color: var(--muted); font-size: 12px; }
+    .personalize-close { width: 34px; height: 34px; border: 1px solid var(--line); background: transparent; cursor: pointer; font-size: 18px; }
+    .theme-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-top: 20px; }
+    .theme-option { min-height: 76px; padding: 11px; border: 1px solid var(--line); background: var(--paper); text-align: left; cursor: pointer; }
+    .theme-option[aria-pressed="true"] { border: 2px solid var(--forest); }
+    .theme-option strong, .theme-option span { display: block; }
+    .theme-option strong { font-size: 12px; }
+    .theme-option span { margin-top: 5px; color: var(--muted); font-size: 10px; }
+    .theme-option[data-theme-option="solid-blue"] { background: #e7eef9; }
+    .theme-option[data-theme-option="solid-sage"] { background: #e8f0e5; }
+    .theme-option[data-theme-option="solid-lilac"] { background: #f0eafa; }
+    .theme-option[data-theme-option="solid-sunset"] { background: #fae9df; }
+    .theme-option[data-theme-option="solid-mint"] { background: #e1f1ed; }
+    .theme-option[data-theme-option="solid-coral"] { background: #f9e6e5; }
+    .theme-option[data-theme-option="solid-gold"] { background: #f3edda; }
+    .custom-solid-option { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 10px; padding: 12px; border: 1px solid var(--line); font-size: 12px; }
+    .custom-solid-option span { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; }
+    .custom-solid-option input { width: 44px; height: 36px; padding: 2px; border: 1px solid var(--line); background: transparent; cursor: pointer; }
+    .theme-option[data-theme-option="retro"] { color: #f3e5b3; background-color: #203b33; background-image: linear-gradient(#ffffff12 1px, transparent 1px), linear-gradient(90deg, #ffffff12 1px, transparent 1px); background-size: 9px 9px; }
+    .theme-option[data-theme-option="retro"] span { color: #d4dfd4; }
+    .appearance-toggle { display: flex; align-items: flex-start; gap: 10px; margin-top: 10px; padding: 12px; border: 1px solid var(--line); cursor: pointer; }
+    .appearance-toggle input { margin-top: 2px; accent-color: var(--forest); }
+    .appearance-toggle strong, .appearance-toggle span { display: block; }
+    .appearance-toggle strong { font-size: 12px; }
+    .appearance-toggle span { margin-top: 4px; color: var(--muted); font-size: 10px; }
+    .volume-control { display: grid; gap: 9px; margin-top: 10px; padding: 12px; border: 1px solid var(--line); }
+    .volume-control > span { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; }
+    .volume-control output { color: var(--muted); font: 11px var(--mono); }
+    .volume-control input { width: 100%; accent-color: var(--forest); cursor: pointer; }
+    .app-grid { max-width: 1440px; min-height: calc(100vh - 66px); margin: 0 auto; display: grid; grid-template-columns: 230px minmax(360px, 1fr) 340px; }
+    .rail { padding: 28px 20px 24px 28px; border-right: 1px solid var(--line); }
+    .eyebrow { margin: 0; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; font: 10px var(--mono); }
+    .rail-title { margin: 7px 0 22px; font-size: 22px; letter-spacing: -.04em; }
+    .rank-block { padding: 14px 0 18px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .rank-line { display: flex; justify-content: space-between; align-items: baseline; }
+    .rank-name { font-size: 15px; font-weight: 700; }
+    .rank-level { color: var(--forest); font: 11px var(--mono); }
+    .rank-caption { margin-top: 6px; color: var(--muted); font-size: 11px; }
+    .xp-track { height: 4px; margin-top: 10px; background: var(--line); }
+    .xp-fill { height: 100%; background: var(--orange); transition: width .45s ease; }
+    .xp-caption { margin-top: 6px; color: var(--muted); font: 9px var(--mono); }
+    .section-heading { margin: 26px 0 12px; display: flex; justify-content: space-between; align-items: center; font: 10px var(--mono); letter-spacing: .09em; text-transform: uppercase; }
+    .section-heading span:last-child { color: var(--muted); }
+    .stat-row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 12px; }
+    .stat-row span { color: var(--muted); }
+    .stat-row strong { font: 11px var(--mono); }
+    .chapter-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chapter-tag { min-width: 42px; padding: 6px 7px; border: 1px solid var(--line); color: #575e57; text-align: center; font: 10px var(--mono); }
+    .chapter-tag.scripture-topic { width: 100%; text-align: left; font-family: var(--sans); line-height: 1.4; }
+    .subject-picker { min-width: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 112px), 1fr)); gap: 7px; margin: 12px 0; }
+    .subject-picker .eyebrow { grid-column: 1 / -1; align-self: center; }
+    .subject-option { min-width: 0; min-height: 34px; padding: 7px 8px; border: 1px solid var(--line); background: transparent; cursor: pointer; font: 10px var(--mono); overflow-wrap: anywhere; }
+    .subject-option[aria-pressed="true"] { border-color: var(--forest); color: white; background: var(--forest); }
+    .rail-note { margin-top: 27px; padding: 12px; border-left: 2px solid var(--orange); background: #e5794d12; color: #605951; font-size: 11px; line-height: 1.6; }
+    .main-panel { min-width: 0; padding: 28px 30px 32px; }
+    .page-heading { display: flex; align-items: end; justify-content: space-between; margin-bottom: 22px; }
+    .page-heading h1 { margin: 5px 0 0; font-size: 28px; letter-spacing: -.05em; line-height: 1.05; }
+    .season { padding: 7px 9px; background: var(--lime); color: var(--forest); font: 10px var(--mono); }
+    .arena { position: relative; min-height: 292px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 21px 22px 18px; color: #f4f2e9; background: radial-gradient(ellipse at 50% 48%, #426553 0, transparent 48%), linear-gradient(135deg, #19382f, #24493b 52%, #18342d); }
+    .arena::before, .arena::after { content: ''; position: absolute; pointer-events: none; }
+    .arena::before { inset: 0; opacity: .38; background: linear-gradient(90deg, transparent calc(50% - 1px), #d5e8bd35 50%, transparent calc(50% + 1px)), repeating-linear-gradient(0deg, transparent 0 34px, #ffffff0a 35px 36px); }
+    .arena::after { width: 106px; height: 106px; top: 50%; left: 50%; border: 1px solid #d5e8bd55; background: linear-gradient(135deg, #c6df7114, #c6df7105); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); transform: translate(-50%, -50%) rotate(45deg); }
+    .arena-top, .combatants, .arena-bottom { position: relative; z-index: 1; }
+    .arena-top { display: flex; align-items: center; justify-content: space-between; color: #d8e1d2; font: 10px var(--mono); text-transform: uppercase; letter-spacing: .08em; }
+    .live-label { display: flex; align-items: center; gap: 7px; }
+    .live-label i { width: 6px; height: 6px; border-radius: 50%; background: var(--lime); }
+    .combatants { flex: 1; display: grid; grid-template-columns: 1fr 72px 1fr; align-items: center; gap: 12px; padding: 20px 6px 14px; }
+    .team-group { min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+    .fighter { min-width: 0; padding: 12px 9px 10px; border: 1px solid #ffffff30; background: linear-gradient(145deg, #ffffff13, #102d251f); box-shadow: inset 0 1px #ffffff12, 0 10px 24px #10241d2b; text-align: center; }
+    .fighter:last-child { text-align: center; }
+    .fighter-avatar { width: 74px; height: 74px; margin: 0 auto 10px; display: grid; place-items: center; border: 1px solid #ffffff75; outline: 4px solid #ffffff0d; color: var(--ink); background: linear-gradient(145deg, #d9ef95, var(--lime)); box-shadow: 0 0 26px #c6df7130; font-size: 31px; font-weight: 700; clip-path: polygon(14% 0, 86% 0, 100% 20%, 100% 80%, 86% 100%, 14% 100%, 0 80%, 0 20%); }
+    .team-group .fighter-avatar { width: 56px; height: 56px; margin-bottom: 8px; font-size: 23px; }
+    .team-group[data-size="1"] { grid-template-columns: 1fr; }
+    .fighter.enemy .fighter-avatar { background: linear-gradient(145deg, #ffae83, var(--orange)); box-shadow: 0 0 26px #e5794d38; }
+    .fighter-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 700; }
+    .fighter-role { margin-top: 3px; color: #c7d5c9; font: 9px var(--mono); text-transform: uppercase; }
+    .hp-wrap { max-width: 145px; margin: 10px auto 0; }
+    .hp-label { display: flex; justify-content: space-between; margin-bottom: 5px; color: #e8e9dd; font: 9px var(--mono); }
+    .hp-track { height: 8px; overflow: hidden; background: repeating-linear-gradient(90deg, #ffffff32 0 9px, transparent 9px 11px); }
+    .hp-fill { height: 100%; background: linear-gradient(90deg, #a9cc55, var(--lime)); box-shadow: 0 0 12px #c6df7170; transition: width .35s ease; }
+    .fighter.enemy .hp-fill { background: linear-gradient(90deg, #c75c3b, #ff9a6f); box-shadow: 0 0 12px #e5794d75; }
+    .versus { position: relative; z-index: 1; padding: 10px 5px; color: #d9dfcc; background: #17352dde; border: 1px solid #d5e8bd4a; box-shadow: 0 0 24px #c6df711c; text-align: center; font: 9px var(--mono); letter-spacing: .08em; }
+    .versus strong { display: block; margin-bottom: 4px; color: var(--lime); font-size: 21px; text-shadow: 0 0 15px #c6df7180; }
+    .arena-bottom { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid #ffffff2e; color: #d4dfd4; font: 10px var(--mono); }
+    .arena-bottom strong { color: var(--lime); font-weight: 500; }
+    .first-person-arena .combatants { display: none; }
+    .first-person-arena::after { display: none; }
+    .pov-scene { position: absolute; z-index: 1; inset: 43px 0 43px; overflow: hidden; background: linear-gradient(#1b3840 0%, #496a69 52%, #334d42 53%, #172f29 100%); }
+    .pov-scene::before { content: ''; position: absolute; inset: 52% -20% -45%; background: repeating-linear-gradient(90deg, transparent 0 54px, #d5e8bd18 55px 56px), repeating-linear-gradient(0deg, transparent 0 35px, #d5e8bd20 36px 37px); transform: perspective(110px) rotateX(28deg); transform-origin: top; }
+    .pov-scene.parry-ready::after, .pov-scene.parry-reflect::after, .pov-scene.parry-break::after { content: ''; position: absolute; z-index: 3; left: 50%; top: 50%; width: min(250px, 42vw); aspect-ratio: 1; border: 4px solid #a9faff; border-radius: 50%; pointer-events: none; background: radial-gradient(circle, #b8ffff12 48%, #81f4ff55 52%, #48aaff18 69%, transparent 72%); box-shadow: 0 0 22px 8px #65eaff88, inset 0 0 24px #65eaff66; transform: translate(-50%, -50%); }
+    .pov-scene.parry-ready::after { opacity: .8; animation: parry-charge 1.1s ease-in-out infinite alternate; }
+    .pov-scene.parry-reflect::after { animation: parry-reflection .65s ease-out both; }
+    .pov-scene.parry-break::after { border-color: #ffe6a1; background: linear-gradient(40deg, transparent 47%, #fff8 48% 49%, transparent 50%), radial-gradient(circle, #ffae1a35, transparent 72%); box-shadow: 0 0 28px 10px #ffae1a99; animation: parry-shatter .7s ease-out both; }
+    .pov-opponents { position: absolute; z-index: 1; inset: 7% 8% 12%; display: flex; justify-content: center; align-items: flex-end; gap: clamp(18px, 8vw, 75px); }
+    .pov-opponent { position: relative; display: grid; justify-items: center; align-content: end; gap: 5px; min-width: 62px; color: #f4f2e9; text-shadow: 0 2px 5px #10241d; font: 9px var(--mono); text-transform: uppercase; }
+    .pov-block { position: relative; width: 66px; height: 118px; filter: drop-shadow(0 10px 6px #07191480); }
+    .pov-head { position: absolute; top: 0; left: 15px; width: 38px; height: 38px; display: grid; place-items: center; border: 2px solid #f3e5b3; color: #263830; background: linear-gradient(135deg, #f3ce91, #d4975d); box-shadow: inset -6px -5px #9a603344; font: 700 15px var(--sans); }
+    .pov-body { position: absolute; top: 41px; left: 13px; width: 42px; height: 43px; border: 2px solid #f3e5b3; background: linear-gradient(135deg, #77aeb0, #355e6a); box-shadow: inset -7px -5px #17352d55; }
+    .pov-limb { position: absolute; top: 43px; width: 12px; height: 40px; border: 2px solid #f3e5b3; background: #d5a26c; }
+    .pov-limb.left { left: 0; }
+    .pov-limb.right { right: 0; }
+    .pov-leg { position: absolute; top: 84px; width: 15px; height: 34px; border: 2px solid #f3e5b3; background: #334853; }
+    .pov-leg.left { left: 14px; }
+    .pov-leg.right { right: 14px; }
+    .pov-opponent.pov-defeated::after { content: ''; position: absolute; z-index: 4; left: 50%; bottom: 16px; width: 88px; height: 88px; opacity: 0; pointer-events: none; border-radius: 50%; background: radial-gradient(circle, #fff 0 8%, transparent 10%), radial-gradient(circle, #fffde2 12%, #ffe65a 25%, #ff8a28 48%, #f23c25 61%, transparent 73%), conic-gradient(from 0deg, #ffe548 0 7%, transparent 7% 15%, #ff722e 15% 22%, transparent 22% 30%, #fff 30% 36%, transparent 36% 45%, #ffe548 45% 53%, transparent 53% 62%, #ff722e 62% 70%, transparent 70% 80%, #ffe548 80% 88%, transparent 88%); filter: drop-shadow(0 0 14px #ff8a28); transform: translate(-50%, 0) scale(.15); }
+    .pov-opponent.pov-exploding::after { animation: pov-defeat-burst 900ms ease-out var(--pov-elapsed, 0ms) both; }
+    .pov-opponent.pov-defeated .pov-block, .pov-opponent.pov-defeated > span, .pov-opponent.pov-defeated > .pov-mini-health { animation: pov-defeated-hide 350ms ease-in calc(var(--pov-elapsed, 0ms) + 450ms) both; }
+    .pov-opponent.pov-defeated:not(.pov-exploding) .pov-block, .pov-opponent.pov-defeated:not(.pov-exploding) > span, .pov-opponent.pov-defeated:not(.pov-exploding) > .pov-mini-health { visibility: hidden; }
+    .pov-mini-health { width: 66px; color: #fff; text-align: center; font: 8px var(--mono); text-shadow: 0 1px 4px #10241d; }
+    .pov-mini-health-track { height: 5px; overflow: hidden; border: 1px solid #ffffffa0; background: #290f16; }
+    .pov-mini-health-fill { height: 100%; background: linear-gradient(90deg, #fa4a42, #ffdb66, #a9f075); transition: width .3s ease; }
+    .pov-opponent:nth-child(even) .pov-body { background: linear-gradient(135deg, #ffae83, #a54f3b); }
+    .pov-opponent:nth-child(3n) .pov-body { background: linear-gradient(135deg, #c0a3dd, #6e5986); }
+    .pov-health { position: absolute; z-index: 4; left: 14px; bottom: 12px; width: min(220px, 42%); padding: 8px 10px; border: 1px solid #ffffff80; color: #fff; background: #10241dcc; box-shadow: 0 3px 12px #07191470; font: 10px var(--mono); }
+    .pov-health-label { display: flex; justify-content: space-between; margin-bottom: 5px; }
+    .pov-health-track { height: 12px; overflow: hidden; border: 1px solid #ffffff80; background: #290f16; }
+    .pov-health-fill { height: 100%; background: linear-gradient(90deg, #f23e45, #ffcf65 70%, #baf075); box-shadow: 0 0 9px #88ec6d; transition: width .35s ease; }
+    .pov-hand { position: absolute; z-index: 3; right: 9%; bottom: -34px; width: 130px; height: 132px; }
+    .pov-arm { position: absolute; right: 18px; bottom: -8px; width: 80px; height: 94px; border: 2px solid #f3e5b3; background: linear-gradient(120deg, #d5a26c 0 35%, #34594c 36%); clip-path: polygon(20% 0, 100% 20%, 100% 100%, 0 100%); transform: rotate(-17deg); }
+    .pov-orb { position: absolute; top: 9px; left: 8px; width: 48px; height: 48px; border: 2px solid #e8ffff; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff 0 5%, #b8ffff 10%, #50e8ff 28%, #348aff 53%, #1b38c5 75%); box-shadow: 0 0 13px 5px #57dfffbb, 0 0 36px 12px #557aff88; animation: orb-charge 1.8s ease-in-out infinite alternate; }
+    .pov-scene.orb-hard .pov-orb, .pov-scene.shot-hard .pov-orb { background: radial-gradient(circle at 35% 30%, #fff 0 5%, #fff6ae 10%, #ffe548 35%, #ffad16 64%, #cb4a08 82%); box-shadow: 0 0 15px 6px #ffe548dd, 0 0 40px 15px #ff8e1888; }
+    .pov-scene.orb-fast .pov-orb, .pov-scene.shot-fast .pov-orb { top: -1px; left: -2px; width: 68px; height: 68px; box-shadow: 0 0 18px 7px #57dfffdd, 0 0 46px 16px #557affaa; }
+    .pov-scene.orb-hard.orb-fast .pov-orb, .pov-scene.shot-hard.shot-fast .pov-orb { background: radial-gradient(circle at 35% 30%, #fff 0 5%, #fff6ae 10%, #ffe548 35%, #ffad16 64%, #cb4a08 82%); box-shadow: 0 0 18px 7px #ffe548ee, 0 0 46px 16px #ff8e18aa; }
+    .pov-projectile { position: absolute; z-index: 4; right: calc(9% + 27px); bottom: 35px; width: 52px; height: 52px; opacity: 0; border: 2px solid #e8ffff; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff 0 5%, #b8ffff 10%, #50e8ff 28%, #348aff 53%, #1b38c5 75%); box-shadow: 0 0 18px 8px #57dfffdd, 0 0 48px 18px #557affaa; }
+    .pov-scene.shot-hard .pov-projectile { background: radial-gradient(circle at 35% 30%, #fff 0 5%, #fff6ae 10%, #ffe548 35%, #ffad16 64%, #cb4a08 82%); box-shadow: 0 0 18px 8px #ffe548ee, 0 0 48px 18px #ff8e18aa; }
+    .pov-scene.throw-shot .pov-projectile { animation: pov-throw 850ms cubic-bezier(.15,.7,.25,1) var(--pov-elapsed, 0ms) both; }
+    .pov-scene.throw-shot.shot-fast .pov-projectile { width: 72px; height: 72px; }
+    .pov-scene.throw-shot .pov-opponent.pov-projectile-target .pov-block { animation: pov-target-hit .42s ease-out calc(var(--pov-elapsed, 0ms) + 550ms); }
+    .pov-scene.hand-explode .pov-orb { animation: pov-hand-explode .72s ease-out both; }
+    .pov-caption { position: absolute; z-index: 4; left: 12px; top: 10px; color: #e2eee2; font: 9px var(--mono); letter-spacing: .08em; text-shadow: 0 1px 5px #10241d; }
+    body.pov-taking-damage::after { content: ''; position: fixed; z-index: 1000; inset: 0; pointer-events: none; background: #fa182c88; animation: pov-damage-flash .5s ease-out both; }
+    @keyframes orb-charge { to { transform: scale(1.09); } }
+    @keyframes parry-charge { to { opacity: .45; transform: translate(-50%, -50%) scale(1.07); } }
+    @keyframes parry-reflection { 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.25); filter: brightness(2); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(.6); } }
+    @keyframes parry-shatter { 15% { opacity: 1; transform: translate(-50%, -50%) scale(1.15) rotate(12deg); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5) rotate(-18deg); } }
+    @keyframes pov-damage-flash { 0% { opacity: .8; } 100% { opacity: 0; } }
+    @keyframes pov-throw { 0% { opacity: 1; transform: translate(0, 0) scale(1); } 12% { opacity: 1; } 82% { opacity: 1; transform: translate(var(--flight-x, -40vw), var(--flight-y, -20vh)) scale(.35); } 100% { opacity: 0; transform: translate(var(--flight-x, -40vw), var(--flight-y, -20vh)) scale(.04); } }
+    @keyframes pov-target-hit { 35% { filter: brightness(2); transform: translateX(8px); } }
+    @keyframes pov-defeat-burst { 0% { opacity: 0; transform: translate(-50%, 0) scale(.15); } 20% { opacity: 1; transform: translate(-50%, 0) scale(1.15); } 100% { opacity: 0; transform: translate(-50%, 5px) scale(1.6); } }
+    @keyframes pov-defeated-hide { to { opacity: 0; transform: translateY(8px) scale(.85); } }
+    @keyframes pov-hand-explode { 20% { opacity: 1; transform: scale(1.8); filter: brightness(2.5); } 100% { opacity: 0; transform: scale(2.6); filter: brightness(1.8); } }
+    .below-arena { display: grid; grid-template-columns: 1fr 200px; gap: 18px; margin-top: 25px; }
+    .feed-title { margin: 0 0 11px; font: 10px var(--mono); text-transform: uppercase; letter-spacing: .1em; }
+    .feed-list { display: grid; gap: 8px; }
+    .feed-item { display: flex; gap: 9px; align-items: flex-start; color: #626962; font-size: 11px; line-height: 1.45; }
+    .feed-mark { flex: 0 0 auto; width: 6px; height: 6px; margin-top: 5px; background: var(--blue); }
+    .feed-item.hit .feed-mark { background: var(--forest); }
+    .feed-item.miss .feed-mark { background: var(--orange); }
+    .round-stat { padding-left: 15px; border-left: 1px solid var(--line); }
+    .round-number { margin: 5px 0; font-size: 27px; font-weight: 600; letter-spacing: -.06em; }
+    .round-caption { color: var(--muted); font: 9px var(--mono); text-transform: uppercase; }
+    .quiz-panel { padding: 28px 23px; border-left: 1px solid var(--line); background: #e8e7dd; }
+    .quiz-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 14px; border-bottom: 1px solid #cecec2; }
+    .quiz-header h2 { margin: 0; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
+    .chapter-pill { padding: 6px 8px; background: var(--paper-bright); color: var(--forest); font: 10px var(--mono); }
+    .timer-row { display: flex; align-items: center; justify-content: space-between; margin: 19px 0 8px; }
+    .timer-caption { color: var(--muted); font: 9px var(--mono); text-transform: uppercase; letter-spacing: .08em; }
+    .timer-value { color: var(--forest); font: 16px var(--mono); }
+    .timer-track { height: 4px; background: #cfcec2; }
+    .timer-fill { height: 100%; width: 100%; background: var(--forest); transition: width .2s linear; }
+    .timer-fill.urgent { background: var(--orange); }
+    .question { min-height: 82px; margin: 24px 0 17px; font-size: 19px; line-height: 1.35; letter-spacing: -.035em; font-weight: 600; }
+    .answer-list { display: grid; gap: 8px; }
+    .answer { width: 100%; min-height: 44px; display: grid; grid-template-columns: 25px 1fr; gap: 9px; align-items: center; padding: 8px 10px; border: 1px solid #cbcbbf; background: var(--paper-bright); text-align: left; cursor: pointer; transition: background .15s, border-color .15s, transform .15s; }
+    .answer:hover:not(:disabled) { border-color: var(--forest); background: #f7f9ea; transform: translateX(2px); }
+    .answer:disabled { cursor: default; opacity: .62; }
+    .answer-key { width: 22px; height: 22px; display: grid; place-items: center; background: #e9e8df; color: #59635b; font: 10px var(--mono); }
+    .answer-text { font-size: 11px; line-height: 1.35; }
+    .quiz-feedback { min-height: 37px; padding-top: 12px; color: var(--muted); font-size: 10px; line-height: 1.4; }
+    .quiz-feedback strong { color: var(--forest); }
+    .quiz-footer { margin-top: 16px; padding-top: 13px; border-top: 1px solid #cecec2; color: #71776f; font: 9px var(--mono); line-height: 1.6; }
+    .lobby-heading { margin: 31px 0 11px; display: flex; align-items: baseline; justify-content: space-between; }
+    .lobby-heading h2 { margin: 0; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
+    .lobby-heading span { color: var(--muted); font: 10px var(--mono); }
+    .rival-list { border-top: 1px solid var(--line); }
+    .rival-row { min-height: 59px; display: grid; grid-template-columns: 35px minmax(0, 1fr) auto; align-items: center; gap: 10px; border-bottom: 1px solid var(--line); }
+    .rival-icon { width: 30px; height: 30px; display: grid; place-items: center; color: var(--forest); background: #d7e4c7; font-size: 13px; font-weight: 700; }
+    .rival-icon.player { color: #355e6a; background: #c7dde0; border-radius: 50%; }
+    .rival-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 600; }
+    .rival-meta { margin-top: 2px; color: var(--muted); font: 9px var(--mono); }
+    .challenge-button { min-height: 31px; padding: 0 10px; border: 1px solid var(--forest); color: var(--forest); background: transparent; cursor: pointer; font: 9px var(--mono); text-transform: uppercase; }
+    .challenge-button:hover { color: white; background: var(--forest); }
+    .empty-rivals { padding: 15px 0; color: var(--muted); font-size: 11px; }
+    .quiz-state { min-height: 300px; display: flex; flex-direction: column; justify-content: center; }
+    .state-symbol { width: 46px; height: 46px; margin-bottom: 19px; display: grid; place-items: center; background: var(--lime); color: var(--forest); font-size: 22px; }
+    .state-symbol.waiting { color: #355e6a; background: #c7dde0; }
+    .quiz-state h2 { margin: 0 0 7px; font-size: 20px; letter-spacing: -.04em; }
+    .quiz-state p { max-width: 230px; margin: 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .result-mark { margin: 12px 0 20px; color: var(--forest); font: 12px var(--mono); text-transform: uppercase; }
+    .result-mark.lost { color: var(--danger); }
+    .result-actions { margin-top: 20px; }
+    .primary-button { min-height: 40px; padding: 0 14px; border: 0; color: var(--paper-bright); background: var(--forest); cursor: pointer; font: 10px var(--mono); text-transform: uppercase; }
+    .primary-button:hover { background: #254535; }
+    .mode-toggle { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--line); background: var(--paper-bright); }
+    .mode-option { min-height: 28px; padding: 0 9px; border: 0; color: var(--muted); background: transparent; cursor: pointer; font: 9px var(--mono); }
+    .mode-option[aria-pressed="true"] { color: var(--paper-bright); background: var(--forest); }
+    .invite-list { margin: 0 0 10px; border-top: 1px solid var(--orange); background: #e5794d12; }
+    .invite-row { min-height: 52px; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 7px; padding: 7px 9px; border-bottom: 1px solid var(--line); }
+    .invite-copy { min-width: 0; font-size: 11px; }
+    .invite-copy strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .invite-copy span { display: block; margin-top: 3px; color: var(--muted); font: 9px var(--mono); text-transform: uppercase; }
+    .invite-action { min-height: 29px; padding: 0 9px; border: 1px solid var(--forest); color: var(--forest); background: transparent; cursor: pointer; font: 9px var(--mono); text-transform: uppercase; }
+    .invite-action.accept { color: white; background: var(--forest); }
+    .invite-action.decline { border-color: var(--line); color: var(--muted); }
+    .invite-row.outgoing { grid-template-columns: minmax(0, 1fr) auto; }
+    .team-setup { display: grid; gap: 10px; margin: 0 0 12px; padding: 11px 12px; border: 1px solid var(--line); background: #fbfaf580; }
+    .team-format { display: inline-flex; width: fit-content; gap: 2px; padding: 3px; background: #e8e7dd; }
+    .team-format button { min-height: 28px; padding: 0 9px; border: 0; color: var(--muted); background: transparent; cursor: pointer; font: 9px var(--mono); }
+    .team-format button[aria-pressed="true"] { color: white; background: var(--forest); }
+    .team-setup-bottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .team-setup-note { color: var(--muted); font-size: 10px; line-height: 1.4; }
+    .challenge-button[aria-pressed="true"] { color: white; background: var(--forest); }
+    .challenge-button:disabled { border-color: var(--line); color: #8b8e86; cursor: default; }
+    .result-xp { margin: -8px 0 16px; color: var(--forest); font: 12px var(--mono); }
+    .combat-stats { margin-top: 3px; color: #c7d5c9; font: 8px var(--mono); }
+    .wallet-chip { margin-top: 10px; color: var(--muted); font: 9px var(--mono); }
+    .wallet-chip strong { color: var(--forest); }
+    .battle-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 11px; }
+    .hint-button, .resign-button { min-height: 32px; padding: 0 9px; border: 1px solid var(--forest); color: var(--forest); background: transparent; cursor: pointer; font: 9px var(--mono); text-transform: uppercase; }
+    .hint-button { background: #fbfaf5; }
+    .resign-button { border-color: var(--danger); color: var(--danger); }
+    .hint-button:disabled, .resign-button:disabled { border-color: var(--line); color: #93958e; cursor: default; }
+    .hint-copy { margin: 8px 0 0; padding: 9px 10px; border-left: 2px solid var(--orange); color: #535b54; background: #fbfaf5; font-size: 11px; line-height: 1.45; }
+    .arena.is-hit { animation: hit-shake .38s ease-out; }
+    .fighter.is-attacking .fighter-avatar { animation: fighter-lunge .34s ease-out; }
+    .fighter.is-hit .fighter-avatar { animation: fighter-impact .38s ease-out; }
+    .fighter.is-miss .fighter-avatar { animation: fighter-miss .3s ease-out; }
+    .question-enter .question, .question-enter .answer-list { animation: question-enter .32s ease-out both; }
+    .question-enter .answer-list { animation-delay: .06s; }
+    .live-label i { animation: pulse-dot 1.8s ease-in-out infinite; }
+    @keyframes hit-shake { 0%, 100% { transform: translateX(0); } 30% { transform: translateX(-2px); } 70% { transform: translateX(2px); } }
+    @keyframes fighter-lunge { 45% { transform: translateX(5px) scale(1.035); } }
+    @keyframes fighter-impact { 35% { transform: translateX(-3px); filter: brightness(1.2); } 70% { transform: translateX(2px); } }
+    @keyframes fighter-miss { 40% { transform: translateY(3px); filter: saturate(.7); } }
+    @keyframes question-enter { from { opacity: .6; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse-dot { 50% { box-shadow: 0 0 0 6px #c6df7133; } }
+    @media (prefers-reduced-motion: reduce) { .live-label i, .arena.is-hit, .fighter.is-attacking .fighter-avatar, .fighter.is-hit .fighter-avatar, .fighter.is-miss .fighter-avatar, .question-enter .question, .question-enter .answer-list { animation: none !important; } }
+    @media (prefers-reduced-motion: reduce) { .pov-orb { animation: none; } .pov-scene.throw-shot .pov-projectile { opacity: 0; transform: translate(var(--flight-x, -40vw), var(--flight-y, -20vh)) scale(.04); } .pov-opponent.pov-exploding::after { animation: none; opacity: 1; transform: translate(-50%, 0) scale(1.15); } .pov-scene.hand-explode .pov-orb { opacity: .2; transform: scale(1.8); } .pov-scene.parry-ready::after, .pov-scene.parry-reflect::after, .pov-scene.parry-break::after { animation: none; opacity: 1; } body.pov-taking-damage::after { animation: none; opacity: .65; } }
+    .toast { position: fixed; z-index: 10; right: 20px; bottom: 20px; max-width: min(360px, calc(100vw - 40px)); padding: 12px 15px; color: white; background: var(--ink); font-size: 12px; box-shadow: 0 8px 25px #0002; }
+    .join-screen { position: fixed; z-index: 20; inset: 66px 0 0; display: grid; place-items: center; padding: 20px; background: #232b29b8; }
+    .join-screen[hidden], .toast[hidden] { display: none; }
+    .join-box { width: min(380px, 100%); padding: 27px; background: var(--paper-bright); box-shadow: 0 20px 70px #0003; }
+    .join-box .eyebrow { color: var(--forest); }
+    .join-box h2 { margin: 8px 0 6px; font-size: 25px; letter-spacing: -.05em; }
+    .join-box p { margin: 0 0 19px; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .join-box label { display: block; margin-bottom: 7px; font: 10px var(--mono); text-transform: uppercase; }
+    .join-box input { width: 100%; height: 42px; margin-bottom: 12px; padding: 0 11px; border: 1px solid var(--line); background: white; outline-color: var(--forest); font-size: 13px; }
+    .join-box .primary-button { width: 100%; }
+    .mode-screen { max-width: 1080px; margin: 0 auto; padding: 48px 24px; }
+    .mode-screen h1 { margin: 8px 0; font-size: clamp(32px, 5vw, 52px); letter-spacing: -.06em; }
+    .mode-intro { max-width: 580px; color: var(--muted); line-height: 1.6; }
+    .mode-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 30px; }
+    .mode-card { min-height: 230px; display: flex; flex-direction: column; align-items: flex-start; padding: 23px; border: 1px solid var(--line); background: var(--paper-bright); text-align: left; cursor: pointer; transition: transform .18s, border-color .18s, box-shadow .18s; }
+    .mode-card:hover { transform: translateY(-4px); border-color: var(--forest); box-shadow: 0 12px 30px #232b2912; }
+    .mode-card .mode-icon { color: var(--forest); font: 28px var(--mono); }
+    .mode-card h2 { margin: 18px 0 8px; font-size: 21px; letter-spacing: -.04em; }
+    .mode-card p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .mode-card strong { margin-top: auto; padding-top: 22px; color: var(--forest); font: 10px var(--mono); text-transform: uppercase; }
+    .submode-screen { max-width: 850px; margin: 0 auto; padding: 38px 22px; }
+    .submode-screen h1 { margin: 6px 0 20px; font-size: 34px; letter-spacing: -.05em; }
+    .submode-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .submode-card { min-height: 150px; padding: 20px; border: 1px solid var(--line); background: var(--paper-bright); text-align: left; cursor: pointer; }
+    .submode-card:hover { border-color: var(--forest); }
+    .submode-card strong { display: block; margin-bottom: 8px; font-size: 17px; }
+    .submode-card span { color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .mode-back { margin-bottom: 20px; border: 0; color: var(--forest); background: transparent; cursor: pointer; font: 10px var(--mono); text-transform: uppercase; }
+    .lobby-controls { display: grid; justify-items: end; gap: 5px; }
+    .study-layout { max-width: 1120px; display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 18px; margin: 28px auto; padding: 0 22px; }
+    .study-main, .study-people-panel, .study-chat { padding: 24px; border: 1px solid var(--line); background: var(--paper-bright); }
+    .study-main h1 { margin: 8px 0; font-size: 34px; letter-spacing: -.05em; }
+    .study-main > p { max-width: 520px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .study-clock { margin: 23px 0 17px; color: var(--forest); font: 56px var(--mono); letter-spacing: -.07em; }
+    .study-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+    .study-controls button, .study-subjects button { min-height: 38px; padding: 0 13px; border: 1px solid var(--forest); color: var(--forest); background: transparent; cursor: pointer; font: 10px var(--mono); text-transform: uppercase; }
+    .study-controls .primary-button { color: white; background: var(--forest); }
+    .study-subjects { display: flex; gap: 7px; margin-top: 20px; }
+    .study-subjects button[aria-pressed="true"] { color: white; background: var(--forest); }
+    .study-people-panel h2, .study-chat h2 { margin: 0 0 13px; font-size: 14px; }
+    .study-person { display: flex; justify-content: space-between; gap: 8px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 11px; }
+    .study-person span:last-child { color: var(--muted); font: 9px var(--mono); }
+    .study-chat { grid-column: 1; }
+    .chat-transcript { max-height: 250px; overflow: auto; display: grid; gap: 8px; margin: 12px 0; }
+    .chat-actions { display: flex; justify-content: flex-end; gap: 7px; }
+    .chat-actions button { min-height: 29px; padding: 0 9px; border: 1px solid var(--line); color: var(--muted); background: transparent; cursor: pointer; font: 9px var(--mono); }
+    .chat-line { padding: 8px 10px; background: #f1eee4; font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
+    .chat-line strong { margin-right: 5px; }
+    .chat-warning { display: block; margin-top: 4px; color: var(--danger); font-size: 10px; }
+    .chat-form { display: flex; gap: 8px; }
+    .chat-form input { flex: 1; min-width: 0; height: 38px; padding: 0 10px; border: 1px solid var(--line); }
+    .chat-form button { border: 0; padding: 0 14px; color: white; background: var(--forest); cursor: pointer; font: 10px var(--mono); }
+    .call-note { padding: 11px 12px; border-left: 2px solid var(--orange); color: #605951; background: #e5794d12; font-size: 11px; line-height: 1.5; }
+    .practice-screen { max-width: 820px; margin: 24px auto; padding: 22px; }
+    .practice-panel { padding: 26px; border: 1px solid var(--line); background: var(--paper-bright); }
+    .practice-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .practice-heading h1 { margin-bottom: 0; }
+    .practice-panel h1 { margin: 6px 0 18px; font-size: 30px; letter-spacing: -.05em; }
+    .practice-prompt { margin: 24px 0 18px; font-size: 21px; line-height: 1.45; }
+    .practice-options { display: grid; gap: 8px; }
+    .practice-feedback { min-height: 46px; margin: 15px 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .practice-topic-picker { display: grid; gap: 7px; max-width: 430px; margin: 17px 0; color: var(--muted); font: 10px var(--mono); text-transform: uppercase; }
+    .practice-topic-picker select, .battle-topic-picker select { min-height: 38px; padding: 0 10px; border: 1px solid var(--line); color: var(--ink); background: var(--paper-bright); font: 11px var(--sans); text-transform: none; }
+    .answer.answer-correct { border: 2px solid #3f8059; background: #e4f2e7; color: #214b31; opacity: 1; }
+    .answer.answer-wrong { border: 2px solid #bd5142; background: #fae8e4; color: #7d3029; opacity: 1; }
+    .practice-feedback.correct { color: #28613c; }
+    .practice-feedback.incorrect { color: #9c3e32; }
+    .answer-result { margin: 15px 0; padding: 12px; border-left: 4px solid; font-size: 11px; line-height: 1.6; }
+    .answer-result.correct { border-color: #3f8059; color: #214b31; background: #e4f2e7; }
+    .answer-result.incorrect { border-color: #bd5142; color: #7d3029; background: #fae8e4; }
+    .answer-result-option { display: inline-block; margin: 2px 3px 2px 0; padding: 2px 6px; border: 1px solid currentColor; font-weight: 600; }
+    .appearance-toggle { display: flex; align-items: center; gap: 9px; margin-top: 17px; padding: 12px; border: 1px solid var(--line); font-size: 12px; }
+    .appearance-toggle input { accent-color: var(--forest); }
+    .appearance-toggle span { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
+    .confetti-layer { position: fixed; z-index: 50; inset: 0; overflow: hidden; pointer-events: none; }
+    .confetti-piece { position: absolute; top: -14px; width: 9px; height: 13px; animation: confetti-fall 1.65s ease-in forwards; }
+    @keyframes confetti-fall { to { transform: translate3d(var(--drift), 105vh, 0) rotate(720deg); opacity: .8; } }
+    @media (prefers-reduced-motion: reduce) { .confetti-piece { animation: none; display: none; } }
+    .practice-source { margin-top: 20px; font-size: 10px; line-height: 1.6; }
+    .practice-source a { color: var(--forest); }
+    .practice-count { margin: 0; color: var(--muted); font: 10px var(--mono); }
+    #app.retro-mode { --paper: #f3e8c7; --paper-bright: #fff8df; --ink: #263830; --muted: #68715d; --line: #cabb91; --forest: #25483d; --lime: #e6cf78; --orange: #c86142; --blue: #79aeb0; min-height: calc(100vh - 66px); background-color: var(--paper); background-image: linear-gradient(#7565400b 1px, transparent 1px), linear-gradient(90deg, #7565400b 1px, transparent 1px); background-size: 24px 24px; }
+    .retro-mode .arena { border: 4px solid #d6bd78; outline: 2px solid #253b31; outline-offset: -9px; background: #203b33; box-shadow: inset 0 0 0 2px #ffffff18, 5px 5px 0 #172b24; }
+    .retro-mode .arena::before, .retro-mode .arena::after { border-radius: 0; border-color: #ffffff25; }
+    .retro-mode .fighter-avatar { border: 2px solid #f6e8b3; clip-path: none; box-shadow: 4px 4px 0 #152922; image-rendering: pixelated; }
+    .retro-mode .versus strong { text-shadow: 2px 2px #b84d39; }
+    .retro-mode .arena-bottom { color: #f3e5b3; }
+    .retro-mode .app-grid { background: #f6f0dc; }
+    .retro-mode .rail, .retro-mode .main-panel, .retro-mode .quiz-panel { background-color: #f6f0dc; }
+    .retro-mode .rail, .retro-mode .quiz-panel { border-color: #cabb91; }
+    .retro-mode .mode-card, .retro-mode .submode-card, .retro-mode .study-main, .retro-mode .study-people-panel, .retro-mode .study-chat, .retro-mode .practice-panel { border: 2px solid #8a7953; border-radius: 0; box-shadow: 4px 4px 0 #c5b584; }
+    .retro-mode .mode-card:hover, .retro-mode .submode-card:hover { border-color: #25483d; box-shadow: 5px 5px 0 #b5a16d; }
+    .retro-mode .subject-option, .retro-mode .team-format button, .retro-mode .mode-option, .retro-mode .answer, .retro-mode .challenge-button, .retro-mode .study-controls button, .retro-mode .study-subjects button { border-radius: 0; }
+    .retro-mode .subject-option { border-color: #9c8b60; color: #25483d; background: #fff8df; }
+    .retro-mode .subject-option[aria-pressed="true"], .retro-mode .team-format button[aria-pressed="true"], .retro-mode .mode-option[aria-pressed="true"] { color: #fff8df; background: #25483d; }
+    .retro-mode .team-setup, .retro-mode .answer, .retro-mode .study-chat, .retro-mode .chat-line { border-color: #cabb91; background-color: #fff8df; }
+    .retro-mode .answer:hover:not(:disabled) { border-color: #25483d; background: #eee3bd; }
+    .retro-mode .study-clock { color: #25483d; text-shadow: 2px 2px #e6cf78; }
+    .retro-mode .study-controls .primary-button, .retro-mode .chat-form button { border: 2px solid #172b24; box-shadow: 2px 2px 0 #172b24; }
+    .retro-mode .rival-row, .retro-mode .invite-row, .retro-mode .chapter-tag { border-color: #cabb91; }
+    @media (max-width: 700px) {
+      .mode-cards, .submode-options { grid-template-columns: 1fr; }
+      .mode-card { min-height: 190px; }
+      .study-layout { grid-template-columns: 1fr; margin-top: 16px; padding: 0 14px; }
+      .study-chat { grid-column: 1; }
+      .study-clock { font-size: 46px; }
+      .subject-picker { grid-template-columns: repeat(auto-fit, minmax(min(100%, 100px), 1fr)); }
+    }
+    @media (max-width: 1080px) {
+      .app-grid { grid-template-columns: 190px minmax(320px, 1fr) 300px; }
+      .rail { padding-left: 20px; padding-right: 15px; }
+      .main-panel { padding-right: 22px; padding-left: 22px; }
+      .quiz-panel { padding-right: 18px; padding-left: 18px; }
+    }
+    @media (max-width: 850px) {
+      .app-grid { grid-template-columns: 190px minmax(0, 1fr); }
+      .quiz-panel { grid-column: 2; border-top: 1px solid var(--line); border-left: 0; }
+      .rail { grid-row: 1 / span 2; }
+      .main-panel { grid-column: 2; }
+      .quiz-panel { padding: 22px; }
+      .quiz-state { min-height: 170px; }
+    }
+    @media (max-width: 600px) {
+      .topbar { height: 58px; padding: 0 15px; }
+      .brand-name { font-size: 13px; }
+      .topbar-right { gap: 8px; }
+      .online-indicator { display: none; }
+      .profile-button { font-size: 0; }
+      .personalize-button { padding: 7px; font-size: 9px; }
+      #settings-button { width: 40px; height: 40px; font-size: 27px; }
+      .personalize-content { padding: 18px; }
+      .subject-picker { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .subject-option { min-height: 40px; }
+      .join-screen { inset: 58px 0 0; }
+      .app-grid { display: flex; flex-direction: column; }
+      .rail { order: 2; padding: 18px 18px 22px; border-right: 0; border-top: 1px solid var(--line); }
+      .main-panel { order: 1; padding: 21px 16px 24px; }
+      .quiz-panel { order: 3; padding: 21px 18px; border-left: 0; }
+      .app-grid.in-battle .quiz-panel { order: 1; padding: 13px 16px 15px; }
+      .app-grid.in-battle .main-panel { order: 2; padding-top: 15px; }
+      .app-grid.in-battle .quiz-header { padding-bottom: 9px; }
+      .app-grid.in-battle .timer-row { margin: 10px 0 6px; }
+      .app-grid.in-battle .question { min-height: 0; margin: 13px 0 10px; font-size: 17px; }
+      .app-grid.in-battle .answer-list { gap: 6px; }
+      .app-grid.in-battle .answer { min-height: 42px; padding: 6px 8px; }
+      .app-grid.in-battle .quiz-feedback { min-height: 0; padding-top: 9px; }
+      .app-grid.in-battle .quiz-footer { margin-top: 9px; padding-top: 8px; }
+      .page-heading h1 { font-size: 25px; }
+      .arena { min-height: 260px; padding: 17px 13px 14px; }
+      .combatants { grid-template-columns: minmax(0,1fr) 43px minmax(0,1fr); gap: 6px; padding-right: 0; padding-left: 0; }
+      .fighter-avatar { width: 61px; height: 61px; font-size: 26px; }
+      .fighter-name { font-size: 12px; }
+      .fighter-role { font-size: 8px; }
+      .hp-wrap { max-width: 110px; }
+      .versus strong { font-size: 18px; }
+      .arena-bottom { font-size: 9px; }
+      .below-arena { grid-template-columns: 1fr 95px; gap: 11px; margin-top: 20px; }
+      .round-stat { padding-left: 10px; }
+      .round-number { font-size: 23px; }
+      .rail-title { margin-bottom: 14px; }
+      .chapter-list { max-width: 330px; }
+      .rail-note { margin-top: 17px; }
+      .quiz-state { min-height: 180px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="ICT QUttle home"><span class="brand-mark">Q</span><span class="brand-name">ICT <span>QU</span>TTLE</span></a>
+      <div class="topbar-right"><div class="online-indicator"><i class="online-dot"></i><span id="online-count">ARENA OPEN</span></div><button class="personalize-button" id="updates-button" type="button">Update log</button><button class="personalize-button" id="settings-button" type="button" aria-label="Settings" title="Settings">&#9881;</button><button class="profile-button" id="profile-button" type="button"><span class="profile-badge" id="profile-badge">?</span><span id="profile-name">Choose name</span></button></div>
+    </header>
+    <div id="app"></div>
+  </div>
+  <dialog class="updates-dialog" id="updates-dialog" aria-labelledby="updates-title">
+    <button class="updates-close" id="updates-close" type="button">Close</button>
+    <p class="eyebrow">Release notes</p>
+    <h2 id="updates-title">Update log</h2>
+    <div class="updates-list">
+      <article class="update-entry">
+        <time datetime="2026-11-01">1 November 2026</time>
+        <h3>Accounts and settings</h3>
+        <ul>
+          <li>Added username and password sign-in so players can recover saved profiles after being logged out.</li>
+          <li>Asked existing players to secure their saved progress with a password, and added account editing under Settings.</li>
+          <li>Moved Personalise into the Settings gear menu and kept usernames unique.</li>
+          <li>Made the Settings gear easier to see and added a cinematic lobby soundtrack.</li>
+          <li>Reworked the lobby theme with a distorted electric-guitar riff, power chords, and punchier drums.</li>
+          <li>Expanded progression to level 100 with a new bot unlocked per level and a special unlock sound.</li>
+          <li>Added level-gap PvP limits and boss warnings/music, plus a level-50 parry that reflects fast answers unless a hard question shatters it.</li>
+          <li>Made the original metal soundtrack faster and bigger with layered octave guitars, heavier bass, extra double-kick drums, cymbal crashes, and a more intense low-health mix.</li>
+          <li>Added a triumphant boss-victory fanfare that plays only after winning a boss NPC battle.</li>
+          <li>Added separate saved volume sliders for lobby/Pomodoro music and battle/practice sound effects.</li>
+        </ul>
+      </article>
+      <article class="update-entry">
+        <time datetime="2026-10-29">29 October 2026</time>
+        <h3>First-person battle effects</h3>
+        <ul>
+          <li>Added an energy orb that flies to rivals and shrinks on impact, with yellow hard-question shots and larger fast-answer shots.</li>
+          <li>Added first-person health bars, red damage flashes, mini rival health bars, and a larger defeat burst.</li>
+        </ul>
+      </article>
+      <article class="update-entry">
+        <time datetime="2026-10-29">29 October 2026</time>
+        <h3>Battle arena refresh</h3>
+        <ul>
+          <li>Kept players visible in the online roster while they are in a match or accepting an invite.</li>
+          <li>Stopped battle-screen entrance animations from replaying during live state updates.</li>
+          <li>Redesigned the arena with a tactical field, framed fighter panels, and clearer health bars.</li>
+          <li>Added a distinct turn-start chime and final-five-seconds warning cue.</li>
+        </ul>
+      </article>
+      <article class="update-entry">
+        <time datetime="2026-10-29">29 October 2026</time>
+        <h3>Gameplay and personalisation</h3>
+        <ul>
+          <li>Battle questions are now chosen randomly from the selected chapter, regardless of player level.</li>
+          <li>Added subtle fighter and question animations that respect reduced-motion settings.</li>
+          <li>Added optional, locally generated lobby music that pauses in battles and Pomodoro.</li>
+          <li>Improved saved-profile reconnect handling and consolidated a duplicate player save.</li>
+        </ul>
+      </article>
+      <article class="update-entry">
+        <time datetime="2026-10-28">28 October 2026</time>
+        <h3>Audio and sound improvements</h3>
+        <ul>
+          <li>Added a steady, softly mixed drum groove to the generated lo-fi study loop.</li>
+          <li>Added distinct cues for battle starts, hits, misses, victories, defeats, draws, and practice answers.</li>
+          <li>Kept all audio generated locally in the browser, with battle sounds controlled by the Sound toggle.</li>
+          <li>Added this update log so new app changes can be recorded and reviewed in one place.</li>
+        </ul>
+      </article>
+    </div>
+  </dialog>
+  <dialog class="homework-dialog" id="homework-dialog" aria-labelledby="homework-title">
+    <p class="eyebrow">Quick check-in</p>
+    <h2 id="homework-title">Have you finished your homework?</h2>
+    <p>Take a moment to check in before choosing what to do next.</p>
+    <div class="homework-dialog-actions">
+      <button class="primary-button" id="homework-yes" type="button">Yes, finished</button>
+      <button id="homework-no" type="button">No, not yet</button>
+    </div>
+  </dialog>
+  <div class="join-screen" id="join-screen" hidden>
+    <form class="join-box" id="join-form">
+      <p class="eyebrow">Enter the arena</p>
+      <h2 id="auth-title">Welcome back.</h2>
+      <p id="auth-description">Sign in to return to your saved player profile.</p>
+      <label for="auth-username">Username</label>
+      <input id="auth-username" name="username" maxlength="18" autocomplete="username" placeholder="e.g. ByteKnight" required>
+      <label for="auth-password">Password</label>
+      <input id="auth-password" name="password" type="password" autocomplete="current-password" placeholder="Your password" required>
+      <button class="primary-button" id="auth-submit" type="submit">Sign in</button>
+      <button class="mode-back" id="auth-toggle" type="button">Create a new account</button>
+    </form>
+  </div>
+  <dialog class="settings-dialog" id="settings-dialog" aria-labelledby="settings-title">
+    <button class="updates-close" id="settings-close" type="button">Close</button>
+    <p class="eyebrow">Preferences</p>
+    <h2 id="settings-title">Settings</h2>
+    <div class="settings-options">
+      <button id="settings-personalise" type="button">Personalise</button>
+      <button id="settings-account" type="button">Account</button>
+    </div>
+  </dialog>
+  <dialog class="personalize-dialog account-dialog" id="account-dialog" aria-labelledby="account-title">
+    <div class="personalize-content">
+      <div class="personalize-heading">
+        <div><p class="eyebrow" id="account-eyebrow">Player account</p><h2 id="account-title">Account</h2><p id="account-description">Update the username and password for this profile.</p></div>
+        <button class="personalize-close account-close" id="account-close" type="button" aria-label="Close account settings">×</button>
+      </div>
+      <form class="account-form" id="account-form">
+        <label for="account-username">Username</label>
+        <input id="account-username" name="username" maxlength="18" autocomplete="username" required>
+        <div id="account-current-row">
+          <label for="account-current-password">Current password</label>
+          <input id="account-current-password" name="currentPassword" type="password" autocomplete="current-password" required>
+        </div>
+        <label for="account-password" id="account-password-label">New password</label>
+        <input id="account-password" name="password" type="password" autocomplete="new-password">
+        <label for="account-password-confirm" id="account-confirm-label">Confirm new password</label>
+        <input id="account-password-confirm" name="passwordConfirm" type="password" autocomplete="new-password">
+        <div class="account-actions">
+          <button class="account-logout" id="account-logout" type="button">Log out</button>
+          <button class="primary-button" id="account-submit" type="submit">Save changes</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+  <dialog class="personalize-dialog" id="personalize-dialog" aria-labelledby="personalize-title">
+    <div class="personalize-content">
+      <div class="personalize-heading">
+        <div><p class="eyebrow">Your display</p><h2 id="personalize-title">Personalisation</h2><p>Choose a background style for this browser.</p></div>
+        <button class="personalize-close" id="personalize-close" type="button" aria-label="Close personalisation">×</button>
+      </div>
+      <div class="theme-options" role="group" aria-label="Background style">
+        <button class="theme-option" type="button" data-theme-option="retro"><strong>Retro grid</strong><span>Pixel-inspired arena look</span></button>
+        <button class="theme-option" type="button" data-theme-option="classic"><strong>Classic</strong><span>Original cream and forest palette</span></button>
+        <button class="theme-option" type="button" data-theme-option="solid-blue"><strong>Solid blue</strong><span>Cool blue study background</span></button>
+        <button class="theme-option" type="button" data-theme-option="solid-sage"><strong>Solid sage</strong><span>Soft green study background</span></button>
+        <button class="theme-option" type="button" data-theme-option="solid-lilac"><strong>Solid lilac</strong><span>Gentle purple study background</span></button>
+        <button class="theme-option" type="button" data-theme-option="solid-sunset"><strong>Sunset</strong><span>Warm peach and terracotta</span></button>
+        <button class="theme-option" type="button" data-theme-option="solid-mint"><strong>Mint</strong><span>Fresh green-blue tones</span></button>
+        <button class="theme-option" type="button" data-theme-option="solid-coral"><strong>Coral</strong><span>Soft rose and berry colours</span></button>
+        <button class="theme-option" type="button" data-theme-option="solid-gold"><strong>Golden hour</strong><span>Calm golden earth tones</span></button>
+      </div>
+      <label class="custom-solid-option" for="custom-solid-color"><span><strong>Custom solid colour</strong><span>Choose any solid background colour.</span></span><input id="custom-solid-color" type="color" value="#dce8f4" aria-label="Choose a custom solid background colour"></label>
+      <label class="appearance-toggle"><input id="confetti-enabled" type="checkbox"><span><strong>Correct-answer confetti</strong><span>Celebrate correct answers with a brief burst.</span></span></label>
+      <label class="appearance-toggle"><input id="lobby-music-enabled" type="checkbox"><span><strong>Lobby music</strong><span>Play an epic guitar-led adventure theme outside battles and Pomodoro.</span></span></label>
+      <label class="volume-control" for="music-volume"><span><strong>Music volume</strong><output id="music-volume-value" for="music-volume">80%</output></span><input id="music-volume" type="range" min="0" max="100" step="1" value="80" aria-label="Music and Pomodoro ambience volume"></label>
+      <label class="volume-control" for="effects-volume"><span><strong>Sound effects volume</strong><output id="effects-volume-value" for="effects-volume">80%</output></span><input id="effects-volume" type="range" min="0" max="100" step="1" value="80" aria-label="Battle and practice sound effects volume"></label>
+      <label class="appearance-toggle"><input id="first-person-battles-enabled" type="checkbox"><span><strong>First-person battles</strong><span>Cast energy shots at block-style rivals; mistimed answers make the orb explode.</span></span></label>
+    </div>
+  </dialog>
+  <div class="toast" id="toast" role="status" hidden></div>
+  <script>
+    const app = document.querySelector('#app');
+    const joinScreen = document.querySelector('#join-screen');
+    const joinForm = document.querySelector('#join-form');
+    const toast = document.querySelector('#toast');
+    const personalizeDialog = document.querySelector('#personalize-dialog');
+    const settingsDialog = document.querySelector('#settings-dialog');
+    const accountDialog = document.querySelector('#account-dialog');
+    const homeworkDialog = document.querySelector('#homework-dialog');
+    let state = null;
+    let busy = false;
+    let pollInFlight = false;
+    let authMode = 'login';
+    let accountSetupRequired = false;
+    let toastTimer;
+    let lastBattleId = null;
+    let lastChallengeId = null;
+    let lastRenderedState = '';
+    let selectedMode = 'online';
+    let selectedFormat = '1v1';
+    let selectedSubject = 'computers';
+    let selectedTopic = 'all';
+    let selectedOpponentIds = [];
+    let activeSection = null;
+    let soloView = 'choose';
+    let studyRoom = { studying: [], messages: [] };
+    let studyChatClearedAt = Number(localStorage.getItem('ict-quattle-chat-clear') || 0);
+    let appearance = ['retro', 'classic', 'solid-blue', 'solid-sage', 'solid-lilac', 'solid-sunset', 'solid-mint', 'solid-coral', 'solid-gold', 'custom'].includes(localStorage.getItem('ict-quattle-appearance'))
+      ? localStorage.getItem('ict-quattle-appearance')
+      : 'retro';
+    let customColor = /^#[\da-f]{6}$/i.test(localStorage.getItem('ict-quattle-custom-color') || '')
+      ? localStorage.getItem('ict-quattle-custom-color')
+      : '#dce8f4';
+    let confettiEnabled = localStorage.getItem('ict-quattle-confetti') !== 'false';
+    let lobbyMusicEnabled = localStorage.getItem('ict-quattle-lobby-music') === 'true';
+    const storedVolume = (key) => {
+      const stored = localStorage.getItem(key);
+      if (stored === null) return 80;
+      const value = Number(stored);
+      return Number.isFinite(value) ? Math.min(100, Math.max(0, Math.round(value))) : 80;
+    };
+    let musicVolume = storedVolume('ict-quattle-music-volume');
+    let effectsVolume = storedVolume('ict-quattle-effects-volume');
+    let firstPersonBattlesEnabled = localStorage.getItem('ict-quattle-first-person-battles') === 'true';
+    let studySubject = 'computers';
+    let studyRemaining = 25 * 60;
+    let studyDeadline = null;
+    let studyTimerRunning = false;
+    let studyPhase = 'focus';
+    let lofiContext = null;
+    let lofiInterval = null;
+    let lofiNoiseBuffer = null;
+    let lobbyMusicContext = null;
+    let lobbyMusicInterval = null;
+    let lobbyMusicMode = null;
+    let lobbyMusicNeedsGesture = false;
+    let lobbyMusicUnsupportedNotified = false;
+    let lobbyMusicMasterGain = null;
+    let lofiMasterGain = null;
+    let soundContext = null;
+    let soundMasterGain = null;
+    let soundEnabled = true;
+    let homeworkPending = false;
+    let homeworkRewardInFlight = false;
+    let lastBattleSoundLog = '';
+    let lastBattleTurnSound = '';
+    let lastBattleAnimationKey = '';
+    let activePovEffect = null;
+    let pendingPovHit = null;
+    let povDefeatedPlayers = new Map();
+    let povDamagePending = false;
+    let lastBattleQuestionKey = '';
+    let lastTimerWarningSound = '';
+    let studyRoomInFlight = false;
+    let practice = { subject: 'business', topic: 'all', question: null, feedback: null, score: 0, attempts: 0, loading: false };
+    const playerKey = 'ict-quattle-player';
+
+    async function request(url, options = {}) {
+      const response = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', ...(options.headers || {}) } });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Request failed');
+      return data;
+    }
+
+    function notify(message) {
+      toast.textContent = message;
+      toast.hidden = false;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { toast.hidden = true; }, 3200);
+    }
+
+    function esc(value) {
+      return String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+    }
+
+    function applyAppearance() {
+      document.body.dataset.theme = appearance;
+      document.body.style.setProperty('--custom-background', customColor);
+      const channels = [1, 3, 5].map((offset) => Number.parseInt(customColor.slice(offset, offset + 2), 16) / 255);
+      const luminance = channels.reduce((total, channel, index) => {
+        const linearChannel = channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+        return total + linearChannel * [0.2126, 0.7152, 0.0722][index];
+      }, 0);
+      const darkBackground = luminance < 0.4;
+      document.body.style.setProperty('--custom-foreground', darkBackground ? '#f7f6ef' : '#232b29');
+      document.body.style.setProperty('--custom-muted', darkBackground ? '#d2d7d1' : '#727872');
+      document.body.style.setProperty('--custom-line', darkBackground ? '#65706a' : '#d8d7cc');
+      app.classList.toggle('retro-mode', appearance === 'retro' && activeSection !== null);
+      personalizeDialog.querySelectorAll('[data-theme-option]').forEach((option) => {
+        option.setAttribute('aria-pressed', String(option.dataset.themeOption === appearance));
+      });
+      document.querySelector('#confetti-enabled').checked = confettiEnabled;
+      document.querySelector('#lobby-music-enabled').checked = lobbyMusicEnabled;
+      updateAudioVolumes();
+      document.querySelector('#first-person-battles-enabled').checked = firstPersonBattlesEnabled;
+      document.querySelector('#custom-solid-color').value = customColor;
+    }
+
+    function updateAudioVolumes() {
+      document.querySelector('#music-volume').value = musicVolume;
+      document.querySelector('#music-volume-value').value = `${musicVolume}%`;
+      document.querySelector('#music-volume-value').textContent = `${musicVolume}%`;
+      document.querySelector('#effects-volume').value = effectsVolume;
+      document.querySelector('#effects-volume-value').value = `${effectsVolume}%`;
+      document.querySelector('#effects-volume-value').textContent = `${effectsVolume}%`;
+      if (lobbyMusicMasterGain && lobbyMusicContext) {
+        const baseVolume = lobbyMusicMode === 'critical' ? 0.7 : lobbyMusicMode === 'boss' ? 0.65 : 0.57;
+        lobbyMusicMasterGain.gain.setTargetAtTime(baseVolume * musicVolume / 100, lobbyMusicContext.currentTime, 0.025);
+      }
+      if (lofiMasterGain && lofiContext) {
+        lofiMasterGain.gain.setTargetAtTime(musicVolume / 100, lofiContext.currentTime, 0.025);
+      }
+      if (soundMasterGain && soundContext) {
+        soundMasterGain.gain.setTargetAtTime(effectsVolume / 100, soundContext.currentTime, 0.025);
+      }
+    }
+
+    function celebrateCorrectAnswer() {
+      if (!confettiEnabled || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const layer = document.createElement('div');
+      layer.className = 'confetti-layer';
+      layer.setAttribute('aria-hidden', 'true');
+      const colors = ['#315b49', '#c6df71', '#e5794d', '#81b8c3', '#d3b8eb', '#f3bb76'];
+      for (let index = 0; index < 24; index += 1) {
+        const piece = document.createElement('i');
+        piece.className = 'confetti-piece';
+        piece.style.left = `${Math.random() * 100}%`;
+        piece.style.backgroundColor = colors[index % colors.length];
+        piece.style.animationDelay = `${Math.random() * 0.3}s`;
+        piece.style.setProperty('--drift', `${Math.round(Math.random() * 180 - 90)}px`);
+        layer.append(piece);
+      }
+      document.body.append(layer);
+      setTimeout(() => layer.remove(), 2200);
+    }
+
+    function renderModePicker() {
+      return `<main class="mode-screen"><p class="eyebrow">ICT QUttle · pick your path</p><h1>How do you want to play?</h1><p class="mode-intro">Study on your own with a Pomodoro, or meet other learners online.</p><div class="mode-cards"><button class="mode-card" data-action="section" data-section="solo"><span class="mode-icon">◷</span><h2>Solo Studies</h2><p>Choose a bot battle or focus with a Pomodoro and mellow background audio.</p><strong>Choose solo activity →</strong></button><button class="mode-card" data-action="section" data-section="online"><span class="mode-icon">◎</span><h2>Online Multiplayer</h2><p>Challenge other players, team up, and share study-focused chat.</p><strong>Find your people →</strong></button></div></main>`;
+    }
+
+    function renderSoloPicker() {
+      return `<main class="submode-screen"><button class="mode-back" data-action="home">← All modes</button><p class="eyebrow">Solo studies</p><h1>Pick a way to focus.</h1><div class="submode-options">      <button class="submode-card" data-action="solo-view" data-view="battle"><strong>Battle bots</strong><span>Battle in every subject except English, Maths, and Business Studies, with chapter choices for each.</span></button><button class="submode-card" data-action="solo-view" data-view="practice-select"><strong>Solo practice questions</strong><span>Practice any of the 12 subjects from your Grade 9 syllabus with chapter choices and source references.</span></button><button class="submode-card" data-action="solo-view" data-view="study"><strong>Pomodoro study room</strong><span>Start a 25/5 Pomodoro, play an original ambient lo-fi loop, and see who else is studying.</span></button></div></main>`;
+    }
+
+    function renderPracticeSubjectPicker() {
+      return `<main class="submode-screen"><button class="mode-back" data-action="solo-picker">← Solo options</button><p class="eyebrow">Grade 9 · solo practice</p><h1>Choose a subject.</h1><div class="submode-options">${state.subjects.map((subject) => `<button class="submode-card" data-action="practice-subject" data-subject="${esc(subject.id)}"><strong>${esc(subject.name)}</strong><span>${esc(subject.questionCount || 100)} original practice questions · ${(subject.practiceTopics || subject.topics).slice(0, 3).map(esc).join(' · ')}</span></button>`).join('')}</div></main>`;
+    }
+
+    function renderPracticeSession() {
+      const subject = state.subjects.find((item) => item.id === practice.subject) || state.subjects[0];
+      const question = practice.question;
+      const sourceLinks = (subject.source || []).map((source) => `<a href="${esc(source)}" target="_blank" rel="noopener noreferrer">${esc(new URL(source).hostname)}</a>`).join(' · ');
+      const topics = subject.practiceTopics || subject.topics || [];
+      const topicPicker = `<label class="practice-topic-picker">Choose chapter<select data-practice-chapter aria-label="Choose a chapter for ${esc(subject.name)}" ${practice.loading ? 'disabled' : ''}>${`<option value="all" ${practice.topic === 'all' ? 'selected' : ''}>All chapters</option>`}${topics.map((topic) => `<option value="${esc(topic)}" ${practice.topic === topic ? 'selected' : ''}>${esc(topic)}</option>`).join('')}</select></label>`;
+      const answerOptions = question ? question.options.map((option, index) => {
+        const selected = practice.feedback?.selectedIndex === index;
+        const correct = practice.feedback?.correctIndex === index;
+        const answerClass = practice.feedback && correct ? ' answer-correct' : practice.feedback && selected ? ' answer-wrong' : '';
+        const icon = practice.feedback && correct ? ' ✓' : practice.feedback && selected ? ' ×' : '';
+        return `<button class="answer${answerClass}" data-action="practice-answer" data-answer="${index}" data-question-id="${esc(question.id)}" ${practice.feedback || practice.loading ? 'disabled' : ''}><span class="answer-key">${String.fromCharCode(65 + index)}</span><span class="answer-text">${esc(option)}${icon}</span></button>`;
+      }).join('') : '';
+      const feedback = practice.feedback
+        ? `${practice.feedback.correct ? `Correct! +${practice.feedback.xpAwarded} XP. ` : `Not quite. The answer is “${practice.feedback.correctAnswer}”. `}${practice.feedback.explanation}`
+        : 'Choose an answer to check your understanding.';
+      app.innerHTML = `<main class="practice-screen"><button class="mode-back" data-action="practice-subject-picker">← Subjects</button><section class="practice-panel"><div class="practice-heading"><div><p class="eyebrow">${esc(subject.name)} · Grade 9</p><h1>Solo practice</h1></div><button class="mode-back" data-action="sound" aria-pressed="${soundEnabled}">Sound ${soundEnabled ? 'on' : 'off'}</button></div>${topicPicker}<p class="practice-count">SCORE ${practice.score} / ${practice.attempts} · ${esc(question?.chapter || '')}</p>${practice.loading ? '<p class="practice-prompt">Loading your next question…</p>' : question ? `<p class="practice-prompt">${esc(question.prompt)}</p><div class="practice-options">${answerOptions}</div><p class="practice-feedback ${practice.feedback ? practice.feedback.correct ? 'correct' : 'incorrect' : ''}" role="status" aria-live="polite">${feedback}</p><button class="primary-button" data-action="practice-next" ${!practice.feedback || practice.loading ? 'disabled' : ''}>Next question</button>` : '<p class="practice-prompt">Choose a subject to start.</p>'}<p class="practice-source">Curriculum references: ${sourceLinks || 'See the listed Grade 9 syllabus topics.'} · Questions are original practice material, not copied from the sources.</p></section></main>`;
+    }
+
+    async function loadPracticeQuestion(subjectId = practice.subject, topic = practice.topic) {
+      practice = { ...practice, subject: subjectId, topic, question: null, feedback: null, loading: true };
+      renderPracticeSession();
+      try {
+        const result = await request('/api/practice-question', {
+          method: 'POST',
+          body: JSON.stringify({ playerId: state.you.id, subject: subjectId, topic: topic === 'all' ? null : topic }),
+        });
+        practice = { ...practice, question: result.question, score: result.score, attempts: result.attempts, loading: false };
+      } catch (error) {
+        practice = { ...practice, loading: false };
+        notify(error.message);
+      }
+      renderPracticeSession();
+    }
+
+    async function submitPracticeAnswer(button) {
+      if (!practice.question || practice.feedback || practice.loading) return;
+      practice.loading = true;
+      renderPracticeSession();
+      try {
+        await wakeBattleAudio();
+        const result = await request('/api/practice-answer', {
+          method: 'POST',
+          body: JSON.stringify({ playerId: state.you.id, questionId: button.dataset.questionId, answer: Number(button.dataset.answer) }),
+        });
+        practice = { ...practice, ...result, loading: false, feedback: result };
+        if (result.progress) state.you = { ...state.you, ...result.progress };
+        playBattleSound(result.correct ? 'correct' : 'incorrect');
+        if (result.correct) celebrateCorrectAnswer();
+      } catch (error) {
+        practice = { ...practice, loading: false };
+        notify(error.message);
+      }
+      renderPracticeSession();
+    }
+
+    function renderStudyRoomPeople() {
+      if (!studyRoom.studying.length) return '<p class="empty-rivals">You are the first one studying solo. Others will appear here while they are active.</p>';
+      return studyRoom.studying.map((person) => `<div class="study-person"><span>${esc(person.name)}</span><span>${esc((state.subjects.find((subject) => subject.id === person.subject) || {}).name || 'Studying')}</span></div>`).join('');
+    }
+
+    function renderStudyMessages() {
+      const visibleMessages = studyRoom.messages.filter((message) => message.sentAt > studyChatClearedAt);
+      if (!visibleMessages.length) return '<p class="empty-rivals">No study messages yet. Share a question or a helpful tip.</p>';
+      return visibleMessages.map((message) => `<div class="chat-line"><strong>${esc(message.name)} · ${esc((state.subjects.find((subject) => subject.id === message.subject) || {}).name || 'Study')}</strong>${esc(message.text)}${message.warning ? '<span class="chat-warning">Reminder: please keep the discussion focused on learning.</span>' : ''}</div>`).join('');
+    }
+
+    async function refreshStudyRoom() {
+      if (!['online', 'solo'].includes(activeSection) || studyRoomInFlight || !state) return;
+      studyRoomInFlight = true;
+      try {
+        studyRoom = await request(`/api/study-room?playerId=${encodeURIComponent(state.you.id)}`);
+        const people = app.querySelector('.study-people');
+        const messages = app.querySelector('.chat-transcript');
+        const peopleHeading = app.querySelector('.study-people-panel h2');
+        if (people) people.innerHTML = renderStudyRoomPeople();
+        if (peopleHeading && activeSection === 'solo') peopleHeading.textContent = `Studying solo · ${studyRoom.studying.length + 1}`;
+        if (messages) {
+          messages.innerHTML = renderStudyMessages();
+          messages.scrollTop = messages.scrollHeight;
+        }
+      } catch (error) {
+        notify(error.message);
+      } finally {
+        studyRoomInFlight = false;
+      }
+    }
+
+    function canPlayLobbyMusic() {
+      return lobbyMusicEnabled && state && !state.battle
+        && !(activeSection === 'solo' && soloView === 'study');
+    }
+
+    function bossMusicMode() {
+      if (!lobbyMusicEnabled || !state) return null;
+      const activeBossBattle = state.battle?.status === 'active' && state.battle.bossFight;
+      const dangerousInvite = [...state.incomingChallenges, ...state.outgoingChallenges]
+        .some((challenge) => challenge.levelGap >= 5);
+      if (!activeBossBattle && !dangerousInvite) return null;
+      return activeBossBattle && state.you.hp <= 20 ? 'critical' : 'boss';
+    }
+
+    function startLobbyMusic(mode = 'lobby') {
+      if (lobbyMusicContext || lobbyMusicNeedsGesture) return;
+      if (!window.AudioContext) {
+        lobbyMusicNeedsGesture = true;
+        if (!lobbyMusicUnsupportedNotified) {
+          notify('Lobby music is not supported by this browser.');
+          lobbyMusicUnsupportedNotified = true;
+        }
+        return;
+      }
+
+      const context = new AudioContext();
+      lobbyMusicContext = context;
+      lobbyMusicMode = mode;
+      const master = context.createGain();
+      const compressor = context.createDynamicsCompressor();
+      master.gain.value = (mode === 'critical' ? 0.7 : mode === 'boss' ? 0.65 : 0.57) * musicVolume / 100;
+      lobbyMusicMasterGain = master;
+      compressor.threshold.value = -18;
+      compressor.knee.value = 18;
+      compressor.ratio.value = 4;
+      compressor.attack.value = 0.015;
+      compressor.release.value = 0.25;
+      master.connect(compressor);
+      compressor.connect(context.destination);
+
+      const bpm = mode === 'critical' ? 168 : mode === 'boss' ? 152 : 132;
+      const sixteenth = 60 / bpm / 4;
+      const chords = [
+        { root: 110, fifth: 164.81, notes: [110, 164.81, 220] },
+        { root: 87.31, fifth: 130.81, notes: [87.31, 130.81, 174.61] },
+        { root: 130.81, fifth: 196, notes: [130.81, 196, 261.63] },
+        { root: 98, fifth: 146.83, notes: [98, 146.83, 196] },
+      ];
+      const guitarRiffs = [
+        [440, 0, 440, 523.25, 659.25, 0, 523.25, 659.25, 440, 0, 523.25, 659.25, 783.99, 659.25, 523.25, 0],
+        [349.23, 0, 349.23, 440, 523.25, 0, 440, 523.25, 349.23, 0, 440, 523.25, 698.46, 523.25, 440, 0],
+        [392, 0, 392, 523.25, 659.25, 0, 587.33, 659.25, 392, 0, 523.25, 659.25, 783.99, 659.25, 587.33, 0],
+        [392, 0, 392, 493.88, 587.33, 0, 493.88, 587.33, 392, 0, 493.88, 587.33, 783.99, 698.46, 587.33, 0],
+      ];
+      const bossRiffs = [
+        [220, 220, 261.63, 329.63, 440, 0, 329.63, 392, 440, 440, 523.25, 659.25, 587.33, 523.25, 440, 392],
+        [174.61, 174.61, 220, 261.63, 349.23, 0, 261.63, 329.63, 349.23, 349.23, 440, 523.25, 493.88, 440, 349.23, 329.63],
+        [196, 196, 261.63, 329.63, 392, 0, 329.63, 392, 523.25, 523.25, 659.25, 783.99, 698.46, 659.25, 523.25, 493.88],
+        [196, 196, 246.94, 293.66, 392, 0, 293.66, 392, 493.88, 493.88, 587.33, 783.99, 698.46, 587.33, 493.88, 440],
+      ];
+      const guitarDistortion = context.createWaveShaper();
+      const distortionCurve = new Float32Array(512);
+      for (let index = 0; index < distortionCurve.length; index += 1) {
+        const sample = (index * 2) / (distortionCurve.length - 1) - 1;
+        distortionCurve[index] = Math.tanh(sample * 5) / Math.tanh(5);
+      }
+      guitarDistortion.curve = distortionCurve;
+      guitarDistortion.oversample = '4x';
+      guitarDistortion.connect(master);
+      const noiseBuffer = context.createBuffer(1, context.sampleRate, context.sampleRate);
+      const noise = noiseBuffer.getChannelData(0);
+      for (let index = 0; index < noise.length; index += 1) noise[index] = Math.random() * 2 - 1;
+
+      const playTone = (frequency, when, duration, volume, type, cutoff) => {
+        const oscillator = context.createOscillator();
+        const filter = context.createBiquadFilter();
+        const envelope = context.createGain();
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(frequency, when);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(cutoff, when);
+        envelope.gain.setValueAtTime(0.0001, when);
+        envelope.gain.exponentialRampToValueAtTime(volume, when + 0.018);
+        envelope.gain.exponentialRampToValueAtTime(0.0001, when + duration);
+        oscillator.connect(filter);
+        filter.connect(envelope);
+        envelope.connect(master);
+        oscillator.start(when);
+        oscillator.stop(when + duration + 0.02);
+      };
+
+      const playGuitar = (frequency, when, duration, volume) => {
+        const filter = context.createBiquadFilter();
+        const envelope = context.createGain();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(3200, when);
+        filter.frequency.exponentialRampToValueAtTime(1700, when + duration);
+        filter.Q.value = 0.8;
+        envelope.gain.setValueAtTime(0.0001, when);
+        envelope.gain.exponentialRampToValueAtTime(volume, when + 0.012);
+        envelope.gain.setTargetAtTime(volume * 0.62, when + 0.025, 0.045);
+        envelope.gain.setTargetAtTime(0.0001, when + duration * 0.72, 0.035);
+        filter.connect(envelope);
+        envelope.connect(guitarDistortion);
+        for (const detune of [-6, 6]) {
+          const oscillator = context.createOscillator();
+          oscillator.type = 'sawtooth';
+          oscillator.frequency.setValueAtTime(frequency, when);
+          oscillator.detune.value = detune;
+          oscillator.connect(filter);
+          oscillator.start(when);
+          oscillator.stop(when + duration + 0.02);
+        }
+      };
+
+      const playKick = (when) => {
+        const oscillator = context.createOscillator();
+        const envelope = context.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(125, when);
+        oscillator.frequency.exponentialRampToValueAtTime(42, when + 0.2);
+        envelope.gain.setValueAtTime(0.32, when);
+        envelope.gain.exponentialRampToValueAtTime(0.0001, when + 0.24);
+        oscillator.connect(envelope);
+        envelope.connect(master);
+        oscillator.start(when);
+        oscillator.stop(when + 0.25);
+      };
+
+      const playDrum = (when, accent) => {
+        const source = context.createBufferSource();
+        const filter = context.createBiquadFilter();
+        const envelope = context.createGain();
+        source.buffer = noiseBuffer;
+        filter.type = 'bandpass';
+        filter.frequency.value = accent ? 1500 : 1100;
+        filter.Q.value = 0.8;
+        envelope.gain.setValueAtTime(accent ? 0.12 : 0.075, when);
+        envelope.gain.exponentialRampToValueAtTime(0.0001, when + (accent ? 0.2 : 0.12));
+        source.connect(filter);
+        filter.connect(envelope);
+        envelope.connect(master);
+        source.start(when);
+        source.stop(when + 0.22);
+      };
+
+      const playCymbal = (when, crash = false) => {
+        const source = context.createBufferSource();
+        const filter = context.createBiquadFilter();
+        const envelope = context.createGain();
+        source.buffer = noiseBuffer;
+        filter.type = 'highpass';
+        filter.frequency.value = crash ? 5200 : 7800;
+        envelope.gain.setValueAtTime(crash ? 0.085 : 0.025, when);
+        envelope.gain.exponentialRampToValueAtTime(0.0001, when + (crash ? 0.75 : 0.08));
+        source.connect(filter);
+        filter.connect(envelope);
+        envelope.connect(master);
+        source.start(when);
+        source.stop(when + (crash ? 0.8 : 0.09));
+      };
+
+      let step = 0;
+      let nextStepTime = context.currentTime + 0.05;
+      const scheduleMusic = () => {
+        if (context.state !== 'running' || lobbyMusicContext !== context) return;
+        if (nextStepTime < context.currentTime) {
+          const missedSteps = Math.ceil((context.currentTime - nextStepTime) / sixteenth);
+          step += missedSteps;
+          nextStepTime += missedSteps * sixteenth;
+        }
+        while (nextStepTime < context.currentTime + 0.1) {
+          const bar = Math.floor(step / 16) % chords.length;
+          const beatStep = step % 16;
+          const chord = chords[bar];
+          if (beatStep === 0) {
+            chord.notes.forEach((frequency, index) => {
+              playTone(frequency, nextStepTime, sixteenth * 15, index === 0 ? 0.06 : 0.045, 'sawtooth', 1000);
+              playTone(frequency * 2, nextStepTime + sixteenth * 0.02, sixteenth * 14, 0.035, 'sawtooth', 1500);
+            });
+          }
+          if (beatStep % 2 === 0) {
+            const bass = beatStep % 8 === 4 ? chord.fifth / 2 : chord.root;
+            playTone(bass, nextStepTime, sixteenth * 1.8, mode === 'lobby' ? 0.2 : 0.24, mode === 'lobby' ? 'triangle' : 'sawtooth', mode === 'lobby' ? 420 : 320);
+          }
+          const riffNote = (mode === 'lobby' ? guitarRiffs : bossRiffs)[bar][beatStep];
+          if (riffNote) {
+            playGuitar(riffNote, nextStepTime, sixteenth * 1.8, beatStep % 4 === 0 ? 0.13 : 0.1);
+            playGuitar(riffNote * 2, nextStepTime, sixteenth * 1.5, mode === 'lobby' ? 0.035 : 0.055);
+            if (mode !== 'lobby') playGuitar(riffNote / 2, nextStepTime, sixteenth * 1.8, 0.06);
+          }
+          if (beatStep === 0 || beatStep === 8) playKick(nextStepTime);
+          if (mode !== 'lobby' && (beatStep === 2 || beatStep === 6 || beatStep === 10 || beatStep === 14)) {
+            playKick(nextStepTime);
+          }
+          if (mode === 'critical' && beatStep % 4 === 0) playKick(nextStepTime);
+          if (beatStep === 4 || beatStep === 12) playDrum(nextStepTime, beatStep === 12);
+          if (mode !== 'lobby' && beatStep % 8 === 0) playCymbal(nextStepTime, beatStep === 0);
+          if (mode !== 'lobby' && beatStep === 14 && bar === 3) playDrum(nextStepTime, true);
+          if (mode === 'critical' && beatStep === 8) playCymbal(nextStepTime, true);
+          if (mode === 'lobby' && beatStep === 14 && bar === 3) playDrum(nextStepTime, true);
+          step += 1;
+          nextStepTime += sixteenth;
+        }
+      };
+
+      context.resume().then(() => {
+        if (lobbyMusicContext !== context) return;
+        scheduleMusic();
+        lobbyMusicInterval = setInterval(scheduleMusic, 25);
+      }).catch(() => {
+        if (lobbyMusicContext !== context) return;
+        stopLobbyMusic();
+        lobbyMusicNeedsGesture = true;
+        notify('Could not start lobby music. Try again after clicking the page.');
+      });
+    }
+
+    function stopLobbyMusic() {
+      clearInterval(lobbyMusicInterval);
+      lobbyMusicInterval = null;
+      if (lobbyMusicContext) {
+        const context = lobbyMusicContext;
+        lobbyMusicContext = null;
+        lobbyMusicMode = null;
+        lobbyMusicMasterGain = null;
+        context.close().catch(() => notify('Could not stop lobby music cleanly.'));
+      }
+    }
+
+    function syncLobbyMusic() {
+      const mode = bossMusicMode() || (canPlayLobbyMusic() ? 'lobby' : null);
+      if (mode === lobbyMusicMode) return;
+      stopLobbyMusic();
+      if (mode) startLobbyMusic(mode);
+    }
+
+    async function updateStudyStatus(studying) {
+      if (!state) return;
+      try {
+        await request('/api/study-status', {
+          method: 'POST',
+          body: JSON.stringify({ playerId: state.you.id, studying, subject: studySubject }),
+        });
+      } catch (error) {
+        notify(error.message);
+      }
+    }
+
+    function startAmbientAudio() {
+      if (!window.AudioContext) {
+        notify('Background audio is not supported by this browser.');
+        return;
+      }
+      if (lofiContext) return;
+      lofiContext = new AudioContext();
+      const context = lofiContext;
+      lofiMasterGain = context.createGain();
+      lofiMasterGain.gain.value = musicVolume / 100;
+      lofiMasterGain.connect(context.destination);
+      const chords = [[261.63, 329.63, 392], [220, 261.63, 329.63], [174.61, 220, 261.63], [196, 246.94, 293.66]];
+      const bpm = 80;
+      const eighthNote = 60 / bpm / 2;
+      let step = 0;
+      let chordIndex = 0;
+      let nextStepTime = context.currentTime + 0.05;
+      lofiNoiseBuffer = context.createBuffer(1, context.sampleRate, context.sampleRate);
+      const noiseData = lofiNoiseBuffer.getChannelData(0);
+      for (let index = 0; index < noiseData.length; index += 1) noiseData[index] = Math.random() * 2 - 1;
+
+      const playChord = (now) => {
+        const filter = context.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 850;
+        const master = context.createGain();
+        master.gain.setValueAtTime(0.0001, now);
+        master.gain.exponentialRampToValueAtTime(0.04, now + 0.6);
+        master.gain.exponentialRampToValueAtTime(0.0001, now + eighthNote * 16);
+        filter.connect(master);
+        master.connect(lofiMasterGain);
+        chords[chordIndex % chords.length].forEach((frequency, index) => {
+          const oscillator = context.createOscillator();
+          const voice = context.createGain();
+          oscillator.type = index === 0 ? 'triangle' : 'sine';
+          oscillator.frequency.value = frequency;
+          voice.gain.value = index === 0 ? 0.7 : 0.28;
+          oscillator.connect(voice);
+          voice.connect(filter);
+          oscillator.start(now);
+          oscillator.stop(now + eighthNote * 16);
+        });
+        chordIndex += 1;
+      };
+
+      const playKick = (now) => {
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(110, now);
+        oscillator.frequency.exponentialRampToValueAtTime(48, now + 0.12);
+        gain.gain.setValueAtTime(0.14, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+        oscillator.connect(gain);
+        gain.connect(lofiMasterGain);
+        oscillator.start(now);
+        oscillator.stop(now + 0.17);
+      };
+
+      const playNoise = (now, duration, volume, filterType, frequency) => {
+        const source = context.createBufferSource();
+        const filter = context.createBiquadFilter();
+        const gain = context.createGain();
+        source.buffer = lofiNoiseBuffer;
+        filter.type = filterType;
+        filter.frequency.value = frequency;
+        gain.gain.setValueAtTime(volume, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+        source.connect(filter);
+        filter.connect(gain);
+        gain.connect(lofiMasterGain);
+        source.start(now);
+        source.stop(now + duration);
+      };
+
+      const playSnare = (now) => {
+        playNoise(now, 0.13, 0.035, 'bandpass', 1900);
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        oscillator.type = 'triangle';
+        oscillator.frequency.setValueAtTime(190, now);
+        oscillator.frequency.exponentialRampToValueAtTime(110, now + 0.1);
+        gain.gain.setValueAtTime(0.035, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.11);
+        oscillator.connect(gain);
+        gain.connect(lofiMasterGain);
+        oscillator.start(now);
+        oscillator.stop(now + 0.12);
+      };
+
+      const playHiHat = (now, accent) => {
+        playNoise(now, 0.045, accent ? 0.012 : 0.007, 'highpass', 7500);
+      };
+
+      const scheduleSteps = () => {
+        if (context.state !== 'running') return;
+        if (nextStepTime < context.currentTime) {
+          const missedSteps = Math.ceil((context.currentTime - nextStepTime) / eighthNote);
+          step += missedSteps;
+          nextStepTime += missedSteps * eighthNote;
+        }
+        while (nextStepTime < context.currentTime + 0.1) {
+          const beat = step % 8;
+          if (step % 16 === 0) playChord(nextStepTime);
+          if (beat === 0 || beat === 4) playKick(nextStepTime);
+          if (beat === 2 || beat === 6) playSnare(nextStepTime);
+          playHiHat(nextStepTime, beat === 0 || beat === 4);
+          step += 1;
+          nextStepTime += eighthNote;
+        }
+      };
+
+      context.resume().then(() => {
+        if (lofiContext !== context) return;
+        scheduleSteps();
+        lofiInterval = setInterval(scheduleSteps, 25);
+      }).catch(() => {
+        if (lofiContext === context) stopAmbientAudio();
+        notify('Could not start background audio.');
+      });
+    }
+
+    function stopAmbientAudio() {
+      clearInterval(lofiInterval);
+      lofiInterval = null;
+      if (lofiContext) {
+        const context = lofiContext;
+        lofiContext = null;
+        lofiMasterGain = null;
+        lofiNoiseBuffer = null;
+        context.close().catch(() => notify('Could not stop background audio cleanly.'));
+      }
+    }
+
+    function playBattleSound(kind) {
+      if (!soundEnabled || !soundContext || soundContext.state !== 'running') return;
+      const context = soundContext;
+      const now = context.currentTime;
+      const tone = (startFrequency, endFrequency, offset, duration, volume, type = 'sine') => {
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        const start = now + offset;
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(startFrequency, start);
+        oscillator.frequency.exponentialRampToValueAtTime(endFrequency, start + duration);
+        gain.gain.setValueAtTime(volume, start);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+        oscillator.connect(gain);
+        gain.connect(soundMasterGain);
+        oscillator.start(start);
+        oscillator.stop(start + duration + 0.01);
+      };
+      const chord = (notes, spacing, duration, volume, type = 'triangle') => {
+        notes.forEach((frequency, index) => tone(frequency, frequency * 1.01, index * spacing, duration, volume, type));
+      };
+
+      if (kind === 'hit') {
+        tone(160, 65, 0, 0.16, 0.045, 'sine');
+        tone(520, 880, 0.015, 0.12, 0.035, 'triangle');
+      } else if (kind === 'miss' || kind === 'incorrect') {
+        tone(260, 120, 0, 0.18, 0.035, 'sawtooth');
+        tone(190, 85, 0.07, 0.16, 0.022, 'triangle');
+      } else if (kind === 'correct') {
+        chord([660, 880], 0.085, 0.2, 0.035);
+      } else if (kind === 'battle-start') {
+        chord([440, 554.37, 659.25], 0.09, 0.16, 0.028);
+      } else if (kind === 'new-bot') {
+        chord([392, 587.33, 783.99], 0.07, 0.18, 0.035);
+        tone(783.99, 1174.66, 0.22, 0.2, 0.025, 'triangle');
+      } else if (kind === 'parry') {
+        tone(1800, 420, 0, 0.32, 0.05, 'square');
+        chord([659.25, 987.77], 0.025, 0.18, 0.035, 'sawtooth');
+      } else if (kind === 'parry-break') {
+        tone(900, 110, 0, 0.3, 0.045, 'sawtooth');
+        tone(180, 55, 0.06, 0.32, 0.035, 'triangle');
+      } else if (kind === 'boss-warning') {
+        chord([110, 164.81, 220], 0.045, 0.42, 0.045, 'sawtooth');
+        tone(220, 110, 0.16, 0.5, 0.04, 'triangle');
+      } else if (kind === 'boss-victory') {
+        chord([392, 493.88, 587.33, 783.99], 0.075, 0.46, 0.045, 'sawtooth');
+        chord([587.33, 783.99, 1174.66], 0.055, 0.72, 0.035, 'triangle');
+        tone(196, 98, 0, 0.42, 0.055, 'sine');
+        tone(783.99, 1567.98, 0.32, 0.68, 0.04, 'sawtooth');
+        tone(1174.66, 1174.66, 0.76, 0.75, 0.025, 'sine');
+      } else if (kind === 'turn-start') {
+        chord([587.33, 783.99, 987.77], 0.07, 0.13, 0.024);
+        tone(1174.66, 1318.51, 0.2, 0.14, 0.018);
+      } else if (kind === 'time-warning') {
+        tone(880, 880, 0, 0.07, 0.025, 'square');
+        tone(660, 660, 0.13, 0.09, 0.025, 'square');
+      } else if (kind === 'victory') {
+        chord([523.25, 659.25, 783.99], 0.11, 0.3, 0.04);
+        tone(1046.5, 1046.5, 0.38, 0.42, 0.025, 'sine');
+      } else if (kind === 'defeat') {
+        chord([440, 349.23, 261.63], 0.13, 0.28, 0.03, 'sine');
+      } else if (kind === 'draw') {
+        chord([440, 554.37], 0.12, 0.3, 0.025, 'sine');
+      }
+    }
+
+    function wakeBattleAudio() {
+      if (!window.AudioContext) return Promise.resolve();
+      if (!soundContext) {
+        soundContext = new AudioContext();
+        soundMasterGain = soundContext.createGain();
+        soundMasterGain.gain.value = effectsVolume / 100;
+        soundMasterGain.connect(soundContext.destination);
+      }
+      return soundContext.resume().catch(() => notify('Battle sounds could not be enabled.'));
+    }
+
+    function selectSection(section) {
+      if (activeSection === 'solo' && soloView === 'study') {
+        updateStudyStatus(false);
+        if (studyTimerRunning) studyRemaining = Math.max(0, Math.ceil((studyDeadline - Date.now()) / 1000));
+        studyTimerRunning = false;
+        studyDeadline = null;
+      }
+      stopAmbientAudio();
+      activeSection = section;
+      soloView = section === 'solo' ? 'choose' : 'battle';
+      lastRenderedState = '';
+      render();
+      if (section === 'online') refreshStudyRoom();
+    }
+
+    function updateStudyClock() {
+      if (!studyTimerRunning || !studyDeadline) return;
+      studyRemaining = Math.max(0, Math.ceil((studyDeadline - Date.now()) / 1000));
+      const clock = app.querySelector('.study-clock');
+      if (clock) clock.textContent = `${String(Math.floor(studyRemaining / 60)).padStart(2, '0')}:${String(studyRemaining % 60).padStart(2, '0')}`;
+      if (studyRemaining > 0) return;
+      studyPhase = studyPhase === 'focus' ? 'break' : 'focus';
+      studyRemaining = studyPhase === 'focus' ? 25 * 60 : 5 * 60;
+      studyDeadline = Date.now() + studyRemaining * 1000;
+      const phaseLabel = app.querySelector('.study-phase');
+      if (phaseLabel) phaseLabel.textContent = `${studyPhase === 'focus' ? 'FOCUS SESSION' : 'SHORT BREAK'} · ${(state.subjects.find((subject) => subject.id === studySubject) || state.subjects[0]).name}`;
+      notify(studyPhase === 'break' ? 'Focus session complete. Take a five-minute break.' : 'Break complete. Starting your next focus session.');
+    }
+
+    async function sendStudyMessage(form) {
+      const input = form.elements.message;
+      const message = input.value.trim();
+      if (!message || !state) return;
+      const button = form.querySelector('button');
+      button.disabled = true;
+      try {
+        await request('/api/study-chat', {
+          method: 'POST',
+          body: JSON.stringify({ playerId: state.you.id, subject: selectedSubject, message }),
+        });
+        input.value = '';
+        await refreshStudyRoom();
+      } catch (error) {
+        notify(error.message);
+      } finally {
+        button.disabled = false;
+        input.focus();
+      }
+    }
+
+    function finishLogin(result) {
+      state = result;
+      localStorage.setItem(playerKey, result.you.id);
+      studyChatClearedAt = Number(localStorage.getItem(`ict-quattle-chat-clear:${result.you.id}`) || 0);
+      joinScreen.hidden = true;
+      render();
+    }
+
+    function setAuthMode(mode) {
+      authMode = mode;
+      const creating = mode === 'register';
+      document.querySelector('#auth-title').textContent = creating ? 'Create your account.' : 'Welcome back.';
+      document.querySelector('#auth-description').textContent = creating
+        ? 'Choose a unique username and password to save your player profile.'
+        : 'Sign in to return to your saved player profile.';
+      document.querySelector('#auth-submit').textContent = creating ? 'Create account' : 'Sign in';
+      document.querySelector('#auth-toggle').textContent = creating ? 'I already have an account' : 'Create a new account';
+      document.querySelector('#auth-password').autocomplete = creating ? 'new-password' : 'current-password';
+      document.querySelector('#auth-password').minLength = creating ? 8 : 0;
+      document.querySelector('#auth-password').placeholder = creating ? 'At least 8 characters' : 'Your password';
+    }
+
+    function openAccountDialog(requireSetup = false) {
+      if (!state) return;
+      accountSetupRequired = requireSetup;
+      document.querySelector('#account-title').textContent = requireSetup ? 'Secure your profile' : 'Account';
+      document.querySelector('#account-eyebrow').textContent = requireSetup ? 'One-time setup' : 'Player account';
+      document.querySelector('#account-description').textContent = requireSetup
+        ? 'Add a unique username and password to keep your saved progress if you get logged out.'
+        : 'Update the username and password for this profile.';
+      document.querySelector('#account-username').value = state.you.username || state.you.name;
+      document.querySelector('#account-current-row').hidden = requireSetup;
+      document.querySelector('#account-current-password').required = !requireSetup;
+      document.querySelector('#account-password').required = requireSetup;
+      document.querySelector('#account-password-label').textContent = requireSetup ? 'Create password' : 'New password (optional)';
+      document.querySelector('#account-password-confirm').required = requireSetup;
+      document.querySelector('#account-confirm-label').hidden = !requireSetup;
+      document.querySelector('#account-password-confirm').hidden = !requireSetup;
+      document.querySelector('#account-close').hidden = requireSetup;
+      document.querySelector('#account-logout').hidden = requireSetup;
+      document.querySelector('#account-current-password').value = '';
+      document.querySelector('#account-password').value = '';
+      document.querySelector('#account-password-confirm').value = '';
+      if (!accountDialog.open) accountDialog.showModal();
+      if (requireSetup) document.querySelector('#account-username').focus();
+    }
+
+    async function refresh() {
+      const playerId = localStorage.getItem(playerKey);
+      if (!playerId || pollInFlight) return;
+      pollInFlight = true;
+      try {
+        const previous = state;
+        state = await request(`/api/state?playerId=${encodeURIComponent(playerId)}`);
+        celebrateBattleHit(previous, state);
+        announceNewBots(previous, state);
+        render();
+        if (!state.you.hasPassword && !accountDialog.open) openAccountDialog(true);
+      } catch (error) {
+        if (error.message === 'Player session not found') {
+          localStorage.removeItem(playerKey);
+          joinScreen.hidden = false;
+        }
+      } finally {
+        pollInFlight = false;
+      }
+    }
+
+    function celebrateBattleHit(previous, next) {
+      const oldBattle = previous?.battle;
+      const newBattle = next?.battle;
+      if (oldBattle?.id !== newBattle?.id) povDefeatedPlayers = new Map();
+      const oldPlayer = oldBattle?.players.find((player) => player.id === next.you.id);
+      const newPlayer = newBattle?.players.find((player) => player.id === next.you.id);
+      if (oldBattle?.id === newBattle?.id && oldPlayer && newPlayer && newPlayer.hp < oldPlayer.hp) {
+        povDamagePending = true;
+      }
+      if (oldBattle?.id === newBattle?.id && newPlayer && newBattle) {
+        const oldPlayers = new Map(oldBattle.players.map((player) => [player.id, player]));
+        for (const player of newBattle.players) {
+          const previousPlayer = oldPlayers.get(player.id);
+          if (previousPlayer?.team !== newPlayer.team && previousPlayer?.hp > 0 && player.hp === 0) {
+            povDefeatedPlayers.set(player.id, { battleId: newBattle.id, startedAt: Date.now() });
+          }
+        }
+      }
+      const latestLog = newBattle?.log?.[0];
+      if (latestLog?.kind === 'parry' && latestLog.playerId === next.you.id) {
+        pendingPovHit = { battleId: newBattle.id, targetId: latestLog.targetId };
+      }
+      if (oldBattle?.id === newBattle?.id && latestLog?.kind === 'hit' && latestLog.playerId === next.you.id) {
+        const oldPlayers = new Map(oldBattle.players.map((player) => [player.id, player]));
+        const target = newBattle.players.find((player) => {
+          const previousPlayer = oldPlayers.get(player.id);
+          return previousPlayer && previousPlayer.team !== newPlayer?.team && previousPlayer.hp > player.hp;
+        });
+        if (target) {
+          pendingPovHit = {
+            battleId: newBattle.id,
+            targetId: target.id,
+          };
+        }
+      }
+      const previousAnswer = oldBattle?.answerFeedback;
+      const latestAnswer = newBattle?.answerFeedback;
+      if (oldBattle?.id === newBattle?.id && latestAnswer?.correct
+        && latestAnswer.questionId !== previousAnswer?.questionId) {
+        celebrateCorrectAnswer();
+      }
+    }
+
+    function announceNewBots(previous, next) {
+      if (!previous || next.you.level <= previous.you.level) return;
+      const previousBotIds = new Set(previous.npcs.map((npc) => npc.id));
+      const unlocked = next.npcs.filter((npc) => !previousBotIds.has(npc.id));
+      if (!unlocked.length) return;
+      notify(`${unlocked.length > 1 ? 'New rivals unlocked' : 'New rival unlocked'}: ${unlocked.map((npc) => `${npc.name} (Lv ${npc.level})`).join(', ')}`);
+      wakeBattleAudio().then(() => playBattleSound('new-bot'));
+    }
+
+    function selectedPlayerLevelGap(opponentIds = selectedOpponentIds, format = selectedFormat) {
+      if (!state) return 0;
+      const expected = format === '2v2' ? 3 : format === '1v2' ? 2 : 1;
+      if (opponentIds.length !== expected) return 0;
+      const opponents = opponentIds.map((id) => state.onlinePlayers.find((player) => player.id === id));
+      if (opponents.some((player) => !player)) return 0;
+      const teams = format === '2v2'
+        ? [[state.you.level, opponents[0].level], [opponents[1].level, opponents[2].level]]
+        : [[state.you.level], opponents.map((player) => player.level)];
+      return Math.max(0, ...teams[0].flatMap((first) => teams[1].map((second) => Math.abs(first - second))));
+    }
+
+    async function act(endpoint, payload = {}) {
+      if (busy || !state) return;
+      busy = true;
+      render();
+      try {
+        const previous = state;
+        state = await request(endpoint, { method: 'POST', body: JSON.stringify({ playerId: state.you.id, ...payload }) });
+        celebrateBattleHit(previous, state);
+        announceNewBots(previous, state);
+        if (endpoint === '/api/challenge') selectedOpponentIds = [];
+        lastRenderedState = '';
+        render();
+      } catch (error) {
+        notify(error.message);
+        await refresh();
+      } finally {
+        busy = false;
+        render();
+      }
+    }
+
+    function renderRivals() {
+      const rivals = [
+        ...state.npcs.map((npc) => ({
+          ...npc,
+          kind: 'npc',
+          detail: `LEVEL ${npc.level}${npc.level >= 50 || npc.level - state.you.level >= 5 ? ' · BOSS FIGHT' : ''}`,
+        })),
+        ...(activeSection === 'solo' ? [] : state.onlinePlayers.map((player) => ({
+          ...player,
+          kind: 'player',
+          detail: player.status === 'available' ? `LVL ${player.level} · ATK ${player.attack} · DEF ${player.defence}` : player.status === 'in-match' ? 'IN MATCH' : 'INVITATION PENDING',
+        }))),
+      ];
+      if (!rivals.length) return '<div class="empty-rivals">No other players online. Your rivals are ready.</div>';
+      return rivals.map((rival) => {
+        const isPlayer = rival.kind === 'player';
+        const selected = selectedOpponentIds.includes(rival.id);
+        const available = !isPlayer || rival.status === 'available';
+        const actionLabel = isPlayer
+          ? available ? selected ? 'Selected' : 'Select' : rival.status === 'in-match' ? 'In match' : 'Invited'
+          : 'Challenge';
+        return `<div class="rival-row"><div class="rival-icon ${isPlayer ? 'player' : ''}">${isPlayer ? esc(rival.name.slice(0, 1).toUpperCase()) : '✳'}</div><div><div class="rival-name">${esc(rival.name)}</div><div class="rival-meta">${rival.detail}</div></div><button class="challenge-button" data-action="${isPlayer ? 'select-player' : 'battle'}" data-id="${esc(rival.id)}" data-level="${rival.level}" ${isPlayer ? `aria-pressed="${selected}"` : ''} ${available ? '' : 'disabled'}>${actionLabel}</button></div>`;
+      }).join('');
+    }
+
+    function enhanceLobby(root) {
+      const modeControl = root.querySelector('.season');
+      if (modeControl) {
+        modeControl.className = 'mode-toggle';
+        modeControl.setAttribute('role', 'group');
+        modeControl.setAttribute('aria-label', 'Online duel mode');
+        modeControl.innerHTML = `<button class="mode-option" type="button" data-action="mode" data-mode="online" aria-pressed="${selectedMode === 'online'}">Turn based</button><button class="mode-option" type="button" data-action="mode" data-mode="simultaneous" aria-pressed="${selectedMode === 'simultaneous'}">First correct</button>`;
+      }
+      root.querySelectorAll('.challenge-button').forEach((button) => {
+        if (state.opponents.some((opponent) => opponent.id === button.dataset.id) && selectedOpponentIds.includes(button.dataset.id)) button.textContent = 'Selected';
+      });
+
+      const rivalList = root.querySelector('.rival-list');
+      if (!rivalList) return;
+      const required = selectedFormat === '2v2' ? 3 : selectedFormat === '1v2' ? 2 : 1;
+      const setup = document.createElement('div');
+      setup.className = 'team-setup';
+      const selectedGap = selectedPlayerLevelGap();
+      const gapNotice = selectedGap >= 5 ? ` ⚠ ${selectedGap}-level gap · boss fight music.` : '';
+      setup.innerHTML = `<p class="eyebrow">Match format</p><div class="team-format" role="group" aria-label="Player team format">${['1v1', '2v2', '1v2'].map((format) => `<button type="button" data-action="format" data-format="${format}" aria-pressed="${selectedFormat === format}">${format}</button>`).join('')}</div><div class="team-setup-bottom"><span class="team-setup-note">${selectedFormat === '2v2' ? 'Select 3 players. Your first pick joins your team.' : selectedFormat === '1v2' ? 'Select 2 players to challenge together.' : 'Select 1 player for a duel.'} ${selectedOpponentIds.length}/${required} selected${gapNotice}</span><button class="challenge-button" data-action="send-team-challenge" ${selectedOpponentIds.length !== required || selectedGap > 10 ? 'disabled' : ''}>Send invites</button></div>`;
+      root.querySelector('.lobby-heading').insertAdjacentElement('afterend', setup);
+      const subjectPicker = document.createElement('div');
+      subjectPicker.className = 'subject-picker';
+      subjectPicker.innerHTML = `<span class="eyebrow">Grade 9 subject</span>${state.subjects.map((subject) => `<button type="button" class="subject-option" data-action="subject" data-subject="${esc(subject.id)}" aria-pressed="${selectedSubject === subject.id}">${esc(subject.name)}${subject.battleAvailable ? '' : ' · PRACTICE ONLY'}</button>`).join('')}`;
+      setup.insertAdjacentElement('afterend', subjectPicker);
+      const selectedSubjectInfo = state.subjects.find((subject) => subject.id === selectedSubject);
+      const battleTopics = selectedSubjectInfo?.battleTopics || [];
+      if (!battleTopics.includes(selectedTopic)) selectedTopic = 'all';
+      const topicPicker = document.createElement('label');
+      topicPicker.className = 'battle-topic-picker practice-topic-picker';
+      topicPicker.innerHTML = `Choose battle chapter<select data-battle-chapter aria-label="Choose a battle chapter for ${esc(selectedSubjectInfo?.name || 'this subject')}"><option value="all" ${selectedTopic === 'all' ? 'selected' : ''}>All chapters</option>${battleTopics.map((topic) => `<option value="${esc(topic)}" ${selectedTopic === topic ? 'selected' : ''}>${esc(topic)}</option>`).join('')}</select>`;
+      subjectPicker.insertAdjacentElement('afterend', topicPicker);
+      const invitations = [
+        ...state.incomingChallenges.map((challenge) => `<div class="invite-row"><div class="invite-copy"><strong>${esc(challenge.name)} challenged you · ${challenge.format}${challenge.levelGap >= 5 ? ` · ⚠ ${challenge.levelGap}-level gap` : ''}</strong><span>${challenge.topic ? `${esc(challenge.topic)} · ` : ''}${challenge.hasAccepted ? `Accepted · waiting for teammates (${challenge.accepted}/${challenge.required})` : `${challenge.mode === 'simultaneous' ? 'First correct' : 'Turn based'} · ${challenge.accepted}/${challenge.required} accepted`}</span></div>${challenge.hasAccepted ? '' : `<button class="invite-action accept" data-action="respond" data-id="${esc(challenge.id)}" data-accepted="true" data-level-gap="${challenge.levelGap}">Accept</button><button class="invite-action decline" data-action="respond" data-id="${esc(challenge.id)}" data-accepted="false">Decline</button>`}</div>`),
+        ...state.outgoingChallenges.map((challenge) => `<div class="invite-row outgoing"><div class="invite-copy"><strong>Invite sent to ${esc(challenge.name)} · ${challenge.format}${challenge.levelGap >= 5 ? ` · ⚠ ${challenge.levelGap}-level gap` : ''}</strong><span>${challenge.topic ? `${esc(challenge.topic)} · ` : ''}Accepted ${challenge.accepted}/${challenge.required} · ${challenge.mode === 'simultaneous' ? 'First correct' : 'Turn based'}</span></div><button class="invite-action decline" data-action="respond" data-id="${esc(challenge.id)}" data-accepted="false">Cancel</button></div>`),
+      ];
+      if (invitations.length) rivalList.insertAdjacentHTML('beforebegin', `<div class="invite-list">${invitations.join('')}</div>`);
+      const incoming = state.incomingChallenges[0];
+      if (incoming && incoming.id !== lastChallengeId) {
+        notify(incoming.levelGap >= 5
+          ? `${incoming.name} challenged you with a ${incoming.levelGap}-level gap. This is a boss fight.`
+          : `${incoming.name} challenged you. Accept or decline the duel.`);
+        if (incoming.levelGap >= 5) playBattleSound('boss-warning');
+      }
+      lastChallengeId = incoming?.id || null;
+
+      if (activeSection === 'online') {
+        rivalList.insertAdjacentHTML('afterend', `<section class="study-chat"><h2>Study lounge</h2><p class="eyebrow">Study discussion · curse words are filtered</p><div class="call-note">Study chat is live. Audio/video calls need a deployed WebRTC signaling and TURN service, which this server does not currently provide.</div><div class="chat-actions"><button type="button" data-action="clear-my-chat">Clear my view</button><button type="button" data-action="clear-shared-chat">Clear for everyone</button></div><div class="chat-transcript">${renderStudyMessages()}</div><form class="chat-form" data-study-chat><input name="message" maxlength="240" autocomplete="off" placeholder="Ask a study question or share a tip" required><button type="submit">Send</button></form></section><aside class="study-people-panel" style="margin-top:16px"><h2>Studying solo</h2><div class="study-people">${renderStudyRoomPeople()}</div></aside>`);
+      }
+    }
+
+    function renderStudySession() {
+      const currentSubject = state.subjects.find((subject) => subject.id === studySubject) || state.subjects[0];
+      const homeworkPrompt = homeworkPending
+        ? `<section class="homework-warning" role="status"><h2>Finish it quick!</h2><p>Stay here and get your homework done. When you are finished, press the button below to earn 2 XP.</p><button class="primary-button" data-action="homework-finished" ${homeworkRewardInFlight ? 'disabled' : ''}>Finished</button></section>`
+        : '';
+      app.innerHTML = `<main class="study-layout"><section class="study-main"><button class="mode-back" data-action="solo-picker">← Solo options</button><p class="eyebrow">Solo focus session</p><h1>One thing at a time.</h1>${homeworkPrompt}<p>A 25-minute focus block followed by a five-minute break. The mellow ambient loop is generated in your browser with a steady drum beat and contains no streamed music.</p><div class="study-clock">${String(Math.floor(studyRemaining / 60)).padStart(2, '0')}:${String(studyRemaining % 60).padStart(2, '0')}</div><p class="eyebrow">${studyPhase === 'focus' ? 'FOCUS SESSION' : 'SHORT BREAK'} · ${esc(currentSubject.name)}</p><div class="study-controls"><button class="primary-button" data-action="study-timer">${studyTimerRunning ? 'Pause timer' : 'Start timer'}</button><button data-action="study-reset">Reset</button><button data-action="music">${lofiContext ? 'Stop lofi' : 'Play lofi'}</button><button data-action="sound" aria-pressed="${soundEnabled}">Sound ${soundEnabled ? 'on' : 'off'}</button></div><div class="study-subjects" role="group" aria-label="Study subject">${state.subjects.map((subject) => `<button type="button" data-action="study-subject" data-subject="${esc(subject.id)}" aria-pressed="${studySubject === subject.id}">${esc(subject.name)}</button>`).join('')}</div></section><aside class="study-people-panel"><h2>Studying solo · ${studyRoom.studying.length + 1}</h2><div class="study-person"><span>${esc(state.you.name)} (you)</span><span>${esc(currentSubject.name)}</span></div>${renderStudyRoomPeople()}</aside></main>`;
+      app.querySelector('.study-clock')?.nextElementSibling?.classList.add('study-phase');
+    }
+
+    function renderBattle() {
+      const battle = state.battle;
+      const youTeam = battle.players.filter((player) => player.team === battle.players.find((member) => member.id === state.you.id)?.team);
+      const rivalTeam = battle.players.filter((player) => player.team !== youTeam[0]?.team);
+      const you = { ...youTeam[0], name: youTeam.map((player) => player.name).join(' + '), hp: youTeam.reduce((total, player) => total + player.hp, 0), teamMembers: youTeam };
+      const rival = { ...rivalTeam[0], name: rivalTeam.map((player) => player.name).join(' + '), hp: rivalTeam.reduce((total, player) => total + player.hp, 0), teamMembers: rivalTeam };
+      const yourTurn = battle.isYourTurn;
+      const activeName = battle.players.find((player) => player.id === battle.turnPlayerId)?.name;
+      const question = battle.question;
+      const finished = battle.status === 'finished';
+      const subject = state.subjects.find((item) => item.id === battle.subject) || state.subjects[0];
+      const target = rivalTeam.filter((player) => player.hp > 0).sort((first, second) => first.hp - second.hp)[0] || rivalTeam[0];
+      const fastWindowOpen = question && Date.now() - battle.questionStartedAt <= 2000;
+      const hardQuestion = question?.difficulty === 3;
+      const damageMultiplier = (fastWindowOpen ? 2 : 1) * (hardQuestion ? 1.5 : 1);
+      const hitDamage = Math.round(Math.max(4, 15 + (state.you.attack - 10) - ((target?.defence ?? 2) - 2)) * damageMultiplier);
+      const remaining = Math.max(0, Math.ceil((battle.deadline - Date.now()) / 1000));
+      const answerFeedback = battle.answerFeedback;
+      const answerFeedbackMarkup = answerFeedback
+        ? `<div class="answer-result ${answerFeedback.correct ? 'correct' : 'incorrect'}" role="status" aria-live="polite"><strong>${answerFeedback.correct ? 'Correct answer!' : 'Not quite.'}</strong> Your answer: <span class="answer-result-option">${answerFeedback.selectedAnswer === null ? 'No answer selected' : esc(answerFeedback.selectedAnswer)}</span> · Correct answer: <span class="answer-result-option">${esc(answerFeedback.correctAnswer)}</span></div>`
+        : '';
+      const winner = battle.winnerTeamIndex === null ? null : {
+        id: battle.teams[battle.winnerTeamIndex].some((member) => member.id === state.you.id) ? state.you.id : battle.teams[battle.winnerTeamIndex][0].id,
+        name: battle.winnerName,
+      };
+      const prompt = finished
+        ? `<div class="quiz-state"><div class="state-symbol">${winner?.id === state.you.id ? '✦' : '×'}</div><p class="eyebrow">Duel complete</p><h2>${winner?.id === state.you.id ? 'Victory.' : 'Defeat.'}</h2><p>${winner?.id === state.you.id ? 'Your knowledge held the line.' : 'The next round is yours to take.'}</p><div class="result-mark ${winner?.id === state.you.id ? '' : 'lost'}">${esc(winner?.name || 'No winner')} wins</div><button class="primary-button" data-action="leave">Return to rivals</button></div>`
+        : yourTurn && question
+          ? `<div class="quiz-header"><h2>Your turn</h2><span class="chapter-pill">${esc(question.chapter)}${hardQuestion ? ' · HARD +50% DAMAGE' : ''}</span></div><div class="timer-row"><span class="timer-caption">Answer before the bell</span><span class="timer-value" data-timer>${String(remaining).padStart(2, '0')}s</span></div><div class="timer-track"><div class="timer-fill ${remaining <= 5 ? 'urgent' : ''}" data-timer-bar style="width:${Math.min(100, remaining / 20 * 100)}%"></div></div><p class="question">${esc(question.prompt)}</p><div class="answer-list">${question.options.map((option, index) => `<button class="answer" data-action="answer" data-answer="${index}" data-question-id="${esc(battle.questionId)}" ${busy ? 'disabled' : ''}><span class="answer-key">${String.fromCharCode(65 + index)}</span><span class="answer-text">${esc(option)}</span></button>`).join('')}</div><div class="quiz-feedback">A correct answer deals <strong><span data-hit-damage>${hitDamage}</span> damage</strong> and <strong>+3 HP</strong><span data-fast-bonus>${fastWindowOpen ? ' · 2× FAST ANSWER BONUS ACTIVE' : ' · answer within 2 seconds for double damage'}</span>${hardQuestion ? ' · hard questions deal 50% extra damage' : ''}${battle.parryReady ? ' · PARRY READY: answer correctly within 2 seconds to reflect the last hit' : ''}</div><div class="quiz-footer">A wrong answer or timeout costs 14 HP. The duel ends at 0 HP.${state.you.level >= 50 ? ' A fast, correct answer can parry; hard questions shatter the barrier.' : ''}</div>`
+          : `<div class="quiz-state"><div class="state-symbol waiting">…</div><p class="eyebrow">${battle.mode === 'online' ? 'Player duel' : 'NPC duel'}</p><h2>${battle.mode === 'online' ? 'Their turn.' : `${esc(rival.name)} is thinking.`}</h2><p>${battle.mode === 'online' ? `${esc(activeName || 'Your rival')} is answering. Your next question starts as soon as their turn resolves.` : 'Your rival is working through a question.'}</p></div>`;
+
+      const firstPersonScene = firstPersonBattlesEnabled
+        ? `<div class="pov-scene ${hardQuestion ? 'orb-hard' : ''} ${yourTurn && fastWindowOpen ? 'orb-fast' : ''}" role="group" aria-label="First-person battle view"><div class="pov-opponents">${rivalTeam.map((player) => {
+          const defeat = povDefeatedPlayers.get(player.id);
+          const isDefeated = player.hp === 0;
+          const showExplosion = isDefeated && defeat?.battleId === battle.id && Date.now() - defeat.startedAt < 1_250;
+          const elapsed = showExplosion ? Date.now() - defeat.startedAt : 0;
+          const hp = Math.max(0, Math.min(100, player.hp));
+          return `<div class="pov-opponent ${isDefeated ? 'pov-defeated' : ''} ${showExplosion ? 'pov-exploding' : ''}" data-pov-player="${esc(player.id)}" ${showExplosion ? `style="--pov-elapsed:-${elapsed}ms"` : ''}><div class="pov-block"><div class="pov-head">${esc(player.name.slice(0, 1).toUpperCase())}</div><div class="pov-body"></div><i class="pov-limb left"></i><i class="pov-limb right"></i><i class="pov-leg left"></i><i class="pov-leg right"></i></div><span>${esc(player.name)}</span><div class="pov-mini-health" role="progressbar" aria-label="${esc(player.name)} health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${hp}"><div class="pov-mini-health-track"><div class="pov-mini-health-fill" style="width:${hp}%"></div></div></div></div>`;
+        }).join('')}</div><div class="pov-projectile" aria-hidden="true"></div><div class="pov-hand" aria-hidden="true"><div class="pov-arm"></div><div class="pov-orb"></div></div><div class="pov-health"><div class="pov-health-label"><span>YOUR HEALTH</span><span class="pov-health-value">${Math.max(0, state.you.hp)} / 100</span></div><div class="pov-health-track" role="progressbar" aria-label="Your health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.max(0, state.you.hp)}"><div class="pov-health-fill" style="width:${Math.max(0, state.you.hp)}%"></div></div></div><span class="pov-caption">FIRST-PERSON · ENERGY ORB</span></div>`
+        : '';
+      return `<section class="arena ${firstPersonBattlesEnabled ? 'first-person-arena' : ''}" aria-label="Battle arena"><div class="arena-top"><span class="live-label"><i></i>${finished ? 'MATCH ENDED' : 'LIVE MATCH'}</span><span>${battle.mode === 'online' ? 'PLAYER DUEL' : 'PRACTICE DUEL'} · ${esc(subject.name)}</span></div>${firstPersonScene}<div class="combatants">${fighter(you, false)}<div class="versus"><strong>VS</strong>${finished ? 'FINAL' : 'ROUND'}</div>${fighter(rival, true)}</div><div class="arena-bottom"><span>${esc(subject.name.toUpperCase())} <strong>·</strong> KNOWLEDGE DUEL</span><span>${finished ? 'FINAL HP' : yourTurn ? 'YOUR MOVE' : 'RIVAL MOVE'}</span></div></section><div class="below-arena"><div><h3 class="feed-title">Battle feed</h3><div class="feed-list">${battle.log.map((entry) => `<div class="feed-item ${esc(entry.kind)}"><i class="feed-mark"></i><span>${esc(entry.text)}</span></div>`).join('')}</div></div><div class="round-stat"><p class="eyebrow">Turn clock</p><div class="round-number">${finished ? 'END' : `${remaining}<small style="font:10px var(--mono)"> SEC</small>`}</div><div class="round-caption">${finished ? 'match concluded' : `current turn · ${esc(activeName || '')}`}</div></div></div><div class="quiz-panel">${prompt}${answerFeedbackMarkup}</div>`;
+    }
+
+    function fighter(player, enemy) {
+      if (player.teamMembers) return `<div class="team-group" data-size="${player.teamMembers.length}">${player.teamMembers.map((member) => fighterCard(member, enemy)).join('')}</div>`;
+      return fighterCard(player, enemy);
+    }
+
+    function fighterCard(player, enemy) {
+      const hp = Math.max(0, player.hp);
+      return `<div class="fighter ${enemy ? 'enemy' : ''}" data-player-id="${esc(player.id)}"><div class="fighter-avatar">${esc(player.name.slice(0, 1).toUpperCase())}</div><div class="fighter-name">${esc(player.name)}</div><div class="fighter-role">${player.npc ? 'ARENA NPC' : enemy ? 'RIVAL' : 'YOU · PLAYER'}</div><div class="combat-stats">LVL ${player.level} · ATK ${player.attack} · DEF ${player.defence}</div><div class="hp-wrap"><div class="hp-label"><span>HP</span><span>${hp} / 100</span></div><div class="hp-track"><div class="hp-fill" style="width:${hp}%"></div></div></div></div>`;
+    }
+
+    function render() {
+      if (!state) return;
+      applyAppearance();
+      syncLobbyMusic();
+      const signature = `${JSON.stringify(state)}:${busy}:${activeSection}:${soloView}:${appearance}`;
+      if (signature === lastRenderedState) return;
+      lastRenderedState = signature;
+      document.querySelector('#profile-name').textContent = state.you.name;
+      document.querySelector('#profile-badge').textContent = state.you.name.slice(0, 1).toUpperCase();
+      document.querySelector('#online-count').textContent = `${state.onlinePlayers.length + 1} IN ARENA`;
+      const battle = state.battle;
+      if (!activeSection) {
+        app.innerHTML = renderModePicker();
+        return;
+      }
+      if (activeSection === 'solo' && !battle && soloView === 'choose') {
+        app.innerHTML = renderSoloPicker();
+        return;
+      }
+      if (activeSection === 'solo' && !battle && soloView === 'practice-select') {
+        app.innerHTML = renderPracticeSubjectPicker();
+        return;
+      }
+      if (activeSection === 'solo' && !battle && soloView === 'practice') {
+        renderPracticeSession();
+        return;
+      }
+      if (activeSection === 'solo' && !battle && soloView === 'study') {
+        renderStudySession();
+        return;
+      }
+      const battleLog = battle?.log?.[0];
+      const battleSoundKey = battleLog ? `${battle?.id}:${battleLog.text}` : '';
+      if (battleLog && battleSoundKey !== lastBattleSoundLog) {
+        if (battleLog.kind === 'hit' || battleLog.kind === 'miss') playBattleSound(battleLog.kind);
+        else if (battleLog.kind === 'parry') playBattleSound('parry');
+        else if (battleLog.kind === 'parry-break') playBattleSound('parry-break');
+        else if (battleLog.kind === 'info' && battle?.status === 'active' && /duel begins|steps into the arena/.test(battleLog.text)) playBattleSound('battle-start');
+        else if (battle?.status === 'finished') {
+          const yourTeam = battle.players.find((player) => player.id === state.you.id)?.team;
+          const won = battle.winnerTeamIndex === yourTeam;
+          if (battle.winnerTeamIndex === null) playBattleSound('draw');
+          else if (!won) playBattleSound('defeat');
+          else playBattleSound(battle.mode === 'npc' && battle.bossFight ? 'boss-victory' : 'victory');
+        }
+        lastBattleSoundLog = battleSoundKey;
+      }
+      const turnSoundKey = battle?.status === 'active' && battle.isYourTurn && battle.question
+        ? `${battle.id}:${battle.questionId}`
+        : '';
+      if (turnSoundKey && turnSoundKey !== lastBattleTurnSound) playBattleSound('turn-start');
+      lastBattleTurnSound = turnSoundKey;
+      if (battle?.id !== lastBattleId && battle?.status === 'active') {
+        lastBattleId = battle.id;
+      }
+      if (!battle) lastBattleId = null;
+      const content = battle
+        ? renderBattle()
+        : `<section class="rail"><p class="eyebrow">Player file</p><h2 class="rail-title">Your record</h2><div class="rank-block"><div class="rank-line"><span class="rank-name">${esc(state.you.name)}</span><span class="rank-level">LVL ${String(state.you.level).padStart(2, '0')}</span></div><div class="rank-caption">Arena challenger · unranked</div></div><div class="section-heading"><span>Field stats</span><span>SEASON 01</span></div><div class="stat-row"><span>Health</span><strong>100 / 100</strong></div><div class="stat-row"><span>Win streak</span><strong>0</strong></div><div class="stat-row"><span>Knowledge XP</span><strong>000</strong></div><div class="section-heading"><span>Question set</span><span>TOPICS</span></div><div class="chapter-list"></div><div class="rail-note">Choose a subject to see its question topics.</div></section><main class="main-panel"><div class="page-heading"><div><p class="eyebrow">Knowledge is your weapon</p><h1>Choose your rival.</h1></div><span class="season">ARENA · 01</span></div><section class="arena" aria-label="Battle arena"><div class="arena-top"><span class="live-label"><i class="online-dot"></i>ARENA OPEN</span><span>WAITING FOR MATCH</span></div><div class="combatants"><div class="fighter"><div class="fighter-avatar">${esc(state.you.name.slice(0, 1).toUpperCase())}</div><div class="fighter-name">${esc(state.you.name)}</div><div class="fighter-role">READY · 100 HP</div></div><div class="versus"><strong>VS</strong>SELECT</div><div class="fighter enemy"><div class="fighter-avatar">?</div><div class="fighter-name">Your rival</div><div class="fighter-role">NPC OR PLAYER</div></div></div><div class="arena-bottom"><span>TURN-BASED KNOWLEDGE DUEL</span><span>20 <strong>SEC</strong> PER TURN</span></div></section><div class="lobby-heading"><h2>Available rivals</h2><span>${state.npcs.length} NPC · ${state.onlinePlayers.length} ONLINE</span></div><div class="rival-list">${renderRivals()}</div></main><aside class="quiz-panel"><div class="quiz-state"><div class="state-symbol">✳</div><p class="eyebrow">Ready when you are</p><h2>Enter the duel.</h2><p>Choose an arena rival. Answer each Grade 9 question before the 20-second timer runs out.</p><div class="quiz-footer">A correct answer strikes for 15 HP and restores 3 HP. Wrong or late answers cost 14 HP.</div></div></aside>`;
+      app.innerHTML = `<div class="app-grid-inner">${content}</div>`;
+      const inner = app.firstElementChild;
+      const lobbyTitle = inner.querySelector('.lobby-heading h2');
+      if (lobbyTitle) lobbyTitle.textContent = activeSection === 'solo' ? 'Available rivals' : 'Online players';
+      if (!battle) {
+        const pageHeading = inner.querySelector('.page-heading');
+        if (pageHeading) {
+          const controls = document.createElement('div');
+          controls.className = 'lobby-controls';
+          controls.innerHTML = `<button class="mode-back" data-action="home">← All modes</button><button class="mode-back" data-action="sound" aria-pressed="${soundEnabled}">Sound ${soundEnabled ? 'on' : 'off'}</button>`;
+          pageHeading.append(controls);
+        }
+        const heading = inner.querySelector('.page-heading h1');
+        const eyebrow = inner.querySelector('.page-heading .eyebrow');
+        if (heading) heading.textContent = activeSection === 'solo' ? 'Choose a bot.' : 'Find your rivals.';
+        if (eyebrow) eyebrow.textContent = activeSection === 'solo' ? 'Solo studies · bot battle' : 'Online multiplayer';
+        const subject = state.subjects.find((item) => item.id === selectedSubject) || state.subjects[0];
+        const chapterList = inner.querySelector('.chapter-list');
+        if (chapterList) chapterList.innerHTML = subject.topics.map((topic) => `<span class="chapter-tag ${subject.id === 'scripture' ? 'scripture-topic' : ''}">${esc(topic)}</span>`).join('');
+        const questionSetHeading = [...inner.querySelectorAll('.section-heading')].find((heading) => heading.firstElementChild?.textContent === 'Question set');
+        if (questionSetHeading) {
+          questionSetHeading.firstElementChild.textContent = `${subject.name} · Grade ${subject.grade}`;
+          questionSetHeading.lastElementChild.textContent = `${subject.topics.length} TOPICS`;
+        }
+        const railNote = inner.querySelector('.rail-note');
+        if (railNote) railNote.textContent = subject.id === 'scripture'
+          ? 'Grade 9 Scripture practice questions based on the listed Gospel of Mark, healing, and choices topics.'
+          : `Original Grade 9 ${subject.name} questions, organised by topic.`;
+        const lobbyDescription = inner.querySelector('.quiz-state p:last-of-type');
+        if (lobbyDescription) lobbyDescription.textContent = `Choose an arena rival. Answer each Grade 9 ${subject.name} question before the 20-second timer runs out.`;
+        const rank = inner.querySelector('.rank-level');
+        const record = inner.querySelector('.rank-caption');
+        if (rank) rank.textContent = `LVL ${String(state.you.level).padStart(2, '0')}`;
+        if (record) record.textContent = `${state.you.wins} wins · ${state.you.losses} losses · ${state.you.matches} matches`;
+        const profileStats = inner.querySelectorAll('.stat-row strong');
+        const profileLabels = inner.querySelectorAll('.stat-row span');
+        if (profileStats[0]) profileStats[0].textContent = `${state.you.hp} / 100`;
+        if (profileStats[1]) profileStats[1].textContent = state.you.wins;
+        if (profileStats[2]) profileStats[2].textContent = `${state.you.xpBalance} XP`;
+        if (profileLabels[1]) profileLabels[1].textContent = 'Wins';
+        if (profileLabels[2]) profileLabels[2].textContent = 'XP wallet';
+        if (profileStats[2]) profileStats[2].closest('.stat-row').insertAdjacentHTML('afterend', `<div class="stat-row"><span>Lifetime XP</span><strong>${state.you.totalXp}</strong></div><div class="stat-row"><span>Attack</span><strong>${state.you.attack}</strong></div><div class="stat-row"><span>Defence</span><strong>${state.you.defence}</strong></div>`);
+        const rankBlock = inner.querySelector('.rank-block');
+        const atLevelCap = state.you.level >= state.you.maxLevel;
+        const levelProgress = atLevelCap ? 100 : Math.min(100, state.you.xp / state.you.nextLevelXp * 100);
+        const levelCaption = atLevelCap ? 'MAX LEVEL' : `${state.you.xp} / ${state.you.nextLevelXp} XP to next level`;
+        if (rankBlock) rankBlock.insertAdjacentHTML('beforeend', `<div class="xp-track" aria-label="Level progress"><div class="xp-fill" style="width:${levelProgress}%"></div></div><div class="xp-caption">${levelCaption}</div><div class="xp-caption">ATK ${state.you.attack} · DEF ${state.you.defence}</div>`);
+      }
+      if (battle) {
+        inner.className = `app-grid in-battle ${appearance === 'retro' && activeSection !== null ? 'retro-mode' : ''}`;
+        inner.style.gridTemplateColumns = 'minmax(0, 1fr) 340px';
+        const soundToggle = document.createElement('button');
+        soundToggle.className = 'mode-back';
+        soundToggle.dataset.action = 'sound';
+        soundToggle.setAttribute('aria-pressed', String(soundEnabled));
+        soundToggle.textContent = `Sound ${soundEnabled ? 'on' : 'off'}`;
+        inner.querySelector('.main-panel')?.insertAdjacentElement('afterbegin', soundToggle);
+        if (window.matchMedia('(max-width: 850px)').matches) {
+          inner.style.gridTemplateColumns = 'minmax(0, 1fr)';
+          inner.querySelector('.quiz-panel').style.gridColumn = '1';
+        }
+        const wallet = document.createElement('div');
+        wallet.className = 'wallet-chip';
+        wallet.innerHTML = `XP WALLET <strong>${state.you.xpBalance}</strong>`;
+        inner.querySelector('.round-stat')?.append(wallet);
+        const answerList = inner.querySelector('.answer-list');
+        if (answerList && battle.status === 'active') {
+          const actions = document.createElement('div');
+          actions.className = 'battle-actions';
+          actions.innerHTML = `<button class="hint-button" data-action="hint" ${busy || battle.hintUsed || state.you.xpBalance < 20 ? 'disabled' : ''} title="Costs 20 XP">${battle.hintUsed ? 'Hint used' : 'Hint · 20 XP'}</button><button class="resign-button" data-action="resign" ${busy || state.you.xpBalance < 50 ? 'disabled' : ''} title="Costs 50 XP">Resign · 50 XP</button>`;
+          answerList.insertAdjacentElement('afterend', actions);
+          const hintCopy = document.createElement('p');
+          hintCopy.className = 'hint-copy';
+          hintCopy.hidden = !battle.hint;
+          hintCopy.textContent = battle.hint ? `Hint: ${battle.hint}` : '';
+          actions.insertAdjacentElement('afterend', hintCopy);
+        }
+      } else {
+        inner.className = `app-grid ${appearance === 'retro' && activeSection !== null ? 'retro-mode' : ''}`;
+        inner.style.gridTemplateColumns = '';
+        enhanceLobby(inner);
+      }
+      if (battle?.mode === 'simultaneous' && battle.status === 'active') {
+        const modeLabel = inner.querySelector('.arena-top span:last-child');
+        const roundCaption = inner.querySelector('.round-caption');
+        const moveLabel = inner.querySelector('.arena-bottom span:last-child');
+        if (modeLabel) modeLabel.textContent = 'FIRST CORRECT ANSWER WINS';
+        if (roundCaption) roundCaption.textContent = `SIMULTANEOUS · ROUND ${battle.round}`;
+        if (moveLabel) moveLabel.textContent = battle.hasAnswered ? 'ANSWER SENT' : 'ANSWER NOW';
+        const quizHeading = inner.querySelector('.quiz-header h2');
+        if (quizHeading) quizHeading.textContent = 'Answer now';
+        const waitingHeading = inner.querySelector('.quiz-state h2');
+        if (waitingHeading && battle.hasAnswered) {
+          waitingHeading.textContent = 'Answer locked.';
+          const waitingCopy = inner.querySelector('.quiz-state p:last-child');
+          if (waitingCopy) waitingCopy.textContent = 'Your rival is answering. The next shared question appears when this round resolves.';
+        }
+      }
+      if (battle?.status === 'finished') {
+        const resultTitle = inner.querySelector('.quiz-state h2');
+        const resultCopy = inner.querySelector('.quiz-state p:last-of-type');
+        const resultLabel = inner.querySelector('.result-mark');
+        const victory = battle.winnerTeamIndex === battle.players.find((player) => player.id === state.you.id)?.team;
+        if (battle.winnerTeamIndex === null && resultTitle) resultTitle.textContent = 'Draw.';
+        else if (resultTitle) resultTitle.textContent = victory ? 'Victory.' : 'Defeat.';
+        if (battle.winnerTeamIndex === null && resultCopy) resultCopy.textContent = 'Both teams are out of HP.';
+        if (resultLabel) resultLabel.textContent = battle.winnerName ? `${battle.winnerName} wins` : 'Draw';
+        if (battle.xpEarned !== null) {
+          const resultXp = document.createElement('div');
+          resultXp.className = 'result-xp';
+          resultXp.textContent = battle.xpEarned < 0 ? `${battle.xpEarned} XP resignation penalty` : `+${battle.xpEarned} XP earned`;
+          resultLabel?.insertAdjacentElement('afterend', resultXp);
+        }
+      }
+      if (battle) animateBattleEffects(battle, battleLog);
+      else {
+        lastBattleAnimationKey = '';
+        lastBattleQuestionKey = '';
+      }
+    }
+
+    function animateBattleEffects(battle, battleLog) {
+      const animationKey = battleLog
+        ? `${battle.id}:${battle.questionId}:${battleLog.kind}:${battleLog.playerId || ''}:${battleLog.text}`
+        : '';
+      const questionKey = battle.questionId ? `${battle.id}:${battle.questionId}` : '';
+      const arena = app.querySelector('.arena');
+      const quizPanel = app.querySelector('.quiz-panel');
+      const povScene = arena?.querySelector('.pov-scene');
+      povScene?.classList.toggle('parry-ready', battle.parryReady);
+
+      if (questionKey && questionKey !== lastBattleQuestionKey) {
+        quizPanel?.classList.add('question-enter');
+        setTimeout(() => quizPanel?.classList.remove('question-enter'), 500);
+        lastBattleQuestionKey = questionKey;
+      }
+
+      if (povDamagePending && firstPersonBattlesEnabled && povScene) {
+        povDamagePending = false;
+        document.body.classList.remove('pov-taking-damage');
+        void document.body.offsetWidth;
+        document.body.classList.add('pov-taking-damage');
+        setTimeout(() => document.body.classList.remove('pov-taking-damage'), 520);
+      }
+
+      const isNewBattleAnimation = Boolean(battleLog && animationKey !== lastBattleAnimationKey);
+      if (isNewBattleAnimation) {
+        lastBattleAnimationKey = animationKey;
+        if (battleLog.kind === 'parry' || battleLog.kind === 'parry-break') {
+          const effectClass = battleLog.kind === 'parry' ? 'parry-reflect' : 'parry-break';
+          povScene?.classList.remove(effectClass);
+          void povScene?.offsetWidth;
+          povScene?.classList.add(effectClass);
+          setTimeout(() => povScene?.classList.remove(effectClass), 750);
+        }
+        const attacker = battleLog && battle.players.find((player) => player.id === battleLog.playerId);
+        if (battleLog && firstPersonBattlesEnabled && attacker?.id === state.you.id) {
+          const effect = battleLog.kind === 'hit' || battleLog.kind === 'parry'
+            ? 'throw-shot'
+            : battleLog.kind === 'miss' && battleLog.text.includes('ran out of time')
+              ? 'hand-explode'
+              : '';
+          if (effect) {
+            const duration = effect === 'throw-shot' ? 1_200 : 750;
+            const hitTarget = effect === 'throw-shot'
+              ? battleLog.kind === 'parry' ? { targetId: battleLog.targetId } : pendingPovHit?.battleId === battle.id ? pendingPovHit : null
+              : null;
+            activePovEffect = {
+              key: animationKey,
+              classes: [effect,
+                ...(effect === 'throw-shot' && battleLog.text.includes('(hard question +50%)') ? ['shot-hard'] : []),
+                ...(effect === 'throw-shot' && (battleLog.text.includes('(2× fast answer)') || battleLog.kind === 'parry') ? ['shot-fast'] : []),
+              ],
+              startedAt: Date.now(),
+              targetId: hitTarget?.targetId,
+              expiresAt: Date.now() + duration,
+            };
+            if (hitTarget) pendingPovHit = null;
+            setTimeout(() => {
+              if (activePovEffect?.key === animationKey) activePovEffect = null;
+            }, duration);
+          }
+        }
+      }
+
+      if (activePovEffect?.key === animationKey) {
+        if (Date.now() >= activePovEffect.expiresAt) {
+          activePovEffect = null;
+        } else {
+          const elapsed = Date.now() - activePovEffect.startedAt;
+          povScene?.style.setProperty('--pov-elapsed', `-${elapsed}ms`);
+          activePovEffect.classes.filter((effectClass) => effectClass !== 'throw-shot').forEach((effectClass) => povScene?.classList.add(effectClass));
+          if (activePovEffect.targetId) {
+            const target = povScene?.querySelector(`[data-pov-player="${CSS.escape(activePovEffect.targetId)}"]`);
+            target?.classList.add('pov-projectile-target');
+          }
+          const projectile = povScene?.querySelector('.pov-projectile');
+          const targetBlock = activePovEffect.targetId
+            ? povScene?.querySelector(`[data-pov-player="${CSS.escape(activePovEffect.targetId)}"] .pov-block`)
+            : null;
+          const orb = povScene?.querySelector('.pov-orb');
+          if (projectile && targetBlock && orb) {
+            const sceneRect = povScene.getBoundingClientRect();
+            const orbRect = orb.getBoundingClientRect();
+            const targetRect = targetBlock.getBoundingClientRect();
+            const projectileSize = activePovEffect.classes.includes('shot-fast') ? 72 : 52;
+            const startX = orbRect.left + orbRect.width / 2 - sceneRect.left;
+            const startY = orbRect.top + orbRect.height / 2 - sceneRect.top;
+            projectile.style.right = 'auto';
+            projectile.style.bottom = 'auto';
+            projectile.style.left = `${startX - projectileSize / 2}px`;
+            projectile.style.top = `${startY - projectileSize / 2}px`;
+            const projectileCenterX = startX;
+            const projectileCenterY = startY;
+            projectile.style.setProperty('--flight-x', `${targetRect.left + targetRect.width / 2 - sceneRect.left - projectileCenterX}px`);
+            projectile.style.setProperty('--flight-y', `${targetRect.top + targetRect.height / 2 - sceneRect.top - projectileCenterY}px`);
+            void projectile.offsetWidth;
+          }
+          activePovEffect.classes.filter((effectClass) => effectClass === 'throw-shot').forEach((effectClass) => povScene?.classList.add(effectClass));
+        }
+      }
+
+      if (!isNewBattleAnimation || !['hit', 'miss', 'parry'].includes(battleLog.kind)) return;
+
+      const attacker = battle.players.find((player) => player.id === battleLog.playerId);
+      const attackerCard = attacker && app.querySelector(`[data-player-id="${CSS.escape(attacker.id)}"]`);
+      if (battleLog.kind === 'miss') {
+        attackerCard?.classList.add('is-miss');
+        setTimeout(() => attackerCard?.classList.remove('is-miss'), 400);
+        return;
+      }
+
+      const defender = battleLog.targetId
+        ? battle.players.find((player) => player.id === battleLog.targetId)
+        : attacker && battle.players.find((player) => player.team !== attacker.team);
+      const defenderCard = defender && app.querySelector(`[data-player-id="${CSS.escape(defender.id)}"]`);
+      arena?.classList.add('is-hit');
+      attackerCard?.classList.add('is-attacking');
+      defenderCard?.classList.add('is-hit');
+      setTimeout(() => {
+        arena?.classList.remove('is-hit');
+        attackerCard?.classList.remove('is-attacking');
+        defenderCard?.classList.remove('is-hit');
+      }, 450);
+    }
+
+    app.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-action]');
+      if (!button || button.disabled) return;
+      if (homeworkPending && !['homework-finished', 'study-timer', 'study-reset', 'music', 'sound', 'study-subject'].includes(button.dataset.action)) {
+        notify('Finish your homework first, then press Finished to continue.');
+        return;
+      }
+      if (button.dataset.action === 'homework-finished') {
+        completeHomework();
+        return;
+      }
+      if (button.dataset.action === 'section') {
+        selectSection(button.dataset.section);
+        return;
+      }
+      if (button.dataset.action === 'clear-my-chat') {
+        studyChatClearedAt = Date.now();
+        localStorage.setItem(`ict-quattle-chat-clear:${state.you.id}`, String(studyChatClearedAt));
+        app.querySelector('.chat-transcript').innerHTML = renderStudyMessages();
+        return;
+      }
+      if (button.dataset.action === 'clear-shared-chat') {
+        if (!window.confirm('Clear the shared study chat for everyone? This cannot be undone.')) return;
+        request('/api/study-chat/clear', {
+          method: 'POST',
+          body: JSON.stringify({ playerId: state.you.id }),
+        }).then(async () => {
+          studyChatClearedAt = Date.now();
+          localStorage.setItem(`ict-quattle-chat-clear:${state.you.id}`, String(studyChatClearedAt));
+          studyRoom.messages = [];
+          await refreshStudyRoom();
+          notify('Shared study chat cleared for everyone.');
+        }).catch((error) => notify(error.message));
+        return;
+      }
+      if (button.dataset.action === 'home') {
+        selectSection(null);
+        return;
+      }
+      if (button.dataset.action === 'solo-view') {
+        soloView = button.dataset.view;
+        if (soloView === 'study') {
+          updateStudyStatus(true);
+          startAmbientAudio();
+          refreshStudyRoom();
+        }
+        lastRenderedState = '';
+        render();
+        return;
+      }
+      if (button.dataset.action === 'practice-subject-picker') {
+        soloView = 'practice-select';
+        lastRenderedState = '';
+        render();
+        return;
+      }
+      if (button.dataset.action === 'practice-subject') {
+        practice = { ...practice, subject: button.dataset.subject, topic: 'all', question: null, feedback: null, score: 0, attempts: 0 };
+        soloView = 'practice';
+        loadPracticeQuestion(button.dataset.subject, 'all');
+        return;
+      }
+      if (button.dataset.action === 'practice-answer') {
+        submitPracticeAnswer(button);
+        return;
+      }
+      if (button.dataset.action === 'practice-next') {
+        loadPracticeQuestion();
+        return;
+      }
+      if (button.dataset.action === 'solo-picker') {
+        updateStudyStatus(false);
+        stopAmbientAudio();
+        if (studyTimerRunning) studyRemaining = Math.max(0, Math.ceil((studyDeadline - Date.now()) / 1000));
+        studyTimerRunning = false;
+        studyDeadline = null;
+        soloView = 'choose';
+        lastRenderedState = '';
+        render();
+        return;
+      }
+      if (button.dataset.action === 'study-timer') {
+        if (studyTimerRunning) {
+          studyRemaining = Math.max(0, Math.ceil((studyDeadline - Date.now()) / 1000));
+          studyTimerRunning = false;
+          studyDeadline = null;
+        } else {
+          studyDeadline = Date.now() + studyRemaining * 1000;
+          studyTimerRunning = true;
+        }
+        lastRenderedState = '';
+        render();
+        return;
+      }
+      if (button.dataset.action === 'study-reset') {
+        studyPhase = 'focus';
+        studyRemaining = 25 * 60;
+        studyTimerRunning = false;
+        studyDeadline = null;
+        lastRenderedState = '';
+        render();
+        return;
+      }
+      if (button.dataset.action === 'music') {
+        if (lofiContext) stopAmbientAudio();
+        else startAmbientAudio();
+        lastRenderedState = '';
+        render();
+        return;
+      }
+      if (button.dataset.action === 'study-subject') {
+        studySubject = button.dataset.subject;
+        updateStudyStatus(true);
+        lastRenderedState = '';
+        render();
+        return;
+      }
+      if (button.dataset.action === 'sound') {
+        soundEnabled = !soundEnabled;
+        if (soundEnabled) wakeBattleAudio();
+        lastRenderedState = '';
+        render();
+        return;
+      }
+      if (button.dataset.action === 'battle') {
+        if (state.subjects.find((subject) => subject.id === selectedSubject)?.battleAvailable === false) {
+          notify(`${state.subjects.find((subject) => subject.id === selectedSubject).name} is available in Solo Practice. Switch to Solo Studies for its questions.`);
+          return;
+        }
+        const npcLevel = Number(button.dataset.level);
+        const levelGap = npcLevel - state.you.level;
+        if ((levelGap >= 5 || npcLevel >= 50)
+          && !window.confirm(`${button.closest('.rival-row').querySelector('.rival-name').textContent} is level ${npcLevel}, a boss fight. Start the battle?`)) return;
+        const audioReady = wakeBattleAudio();
+        if (levelGap >= 5 || npcLevel >= 50) audioReady.then(() => playBattleSound('boss-warning'));
+        act('/api/battle', { opponentId: button.dataset.id, subject: selectedSubject, topic: selectedTopic === 'all' ? null : selectedTopic });
+      }
+      if (button.dataset.action === 'answer') {
+        wakeBattleAudio();
+        act('/api/answer', { answer: button.dataset.answer, questionId: button.dataset.questionId });
+      }
+      if (button.dataset.action === 'hint') act('/api/hint');
+      if (button.dataset.action === 'resign' && window.confirm('Resign from this match and lose 50 XP?')) act('/api/resign');
+      if (button.dataset.action === 'leave') act('/api/leave');
+      if (button.dataset.action === 'respond') {
+        if (button.dataset.accepted === 'true') {
+          const levelGap = Number(button.dataset.levelGap);
+          if (levelGap >= 5 && !window.confirm(`This duel has a ${levelGap}-level gap. Continue with the boss fight?`)) return;
+          wakeBattleAudio();
+        }
+        act('/api/respond', { challengeId: button.dataset.id, accepted: button.dataset.accepted === 'true' });
+      }
+      if (button.dataset.action === 'mode') {
+        selectedMode = button.dataset.mode;
+        app.querySelectorAll('[data-action="mode"]').forEach((modeButton) => modeButton.setAttribute('aria-pressed', String(modeButton.dataset.mode === selectedMode)));
+      }
+      if (button.dataset.action === 'subject') {
+        selectedSubject = button.dataset.subject;
+        selectedTopic = 'all';
+        const subject = state.subjects.find((item) => item.id === selectedSubject);
+        if (subject?.battleAvailable === false) {
+          practice.subject = selectedSubject;
+          notify(`${subject.name} is available in Solo Practice. Switch to Solo Studies for its questions.`);
+        }
+        lastRenderedState = '';
+        render();
+      }
+      if (button.dataset.action === 'format') {
+        selectedFormat = button.dataset.format;
+        selectedOpponentIds = [];
+        lastRenderedState = '';
+        render();
+      }
+      if (button.dataset.action === 'select-player') {
+        const id = button.dataset.id;
+        const required = selectedFormat === '2v2' ? 3 : selectedFormat === '1v2' ? 2 : 1;
+        const nextSelection = selectedOpponentIds.includes(id)
+          ? selectedOpponentIds.filter((selectedId) => selectedId !== id)
+          : selectedOpponentIds.length < required ? [...selectedOpponentIds, id] : selectedOpponentIds;
+        const levelGap = selectedPlayerLevelGap(nextSelection);
+        if (levelGap > 10) {
+          notify('Player duels are disabled when opposing players are more than 10 levels apart.');
+          return;
+        }
+        selectedOpponentIds = nextSelection;
+        lastRenderedState = '';
+        render();
+      }
+      if (button.dataset.action === 'send-team-challenge') {
+        if (state.subjects.find((subject) => subject.id === selectedSubject)?.battleAvailable === false) {
+          notify(`${state.subjects.find((subject) => subject.id === selectedSubject).name} is available in Solo Practice. Switch to Solo Studies for its questions.`);
+          return;
+        }
+        const levelGap = selectedPlayerLevelGap();
+        if (levelGap > 10) {
+          notify('Player duels are disabled when opposing players are more than 10 levels apart.');
+          return;
+        }
+        if (levelGap >= 5 && !window.confirm(`This duel has a ${levelGap}-level gap. Send the invite and start a boss fight?`)) return;
+        const audioReady = wakeBattleAudio();
+        if (levelGap >= 5) audioReady.then(() => playBattleSound('boss-warning'));
+        act('/api/challenge', { opponentIds: selectedOpponentIds, format: selectedFormat, mode: selectedMode, subject: selectedSubject, topic: selectedTopic === 'all' ? null : selectedTopic });
+      }
+    });
+
+    app.addEventListener('submit', (event) => {
+      if (event.target.matches('[data-study-chat]')) {
+        event.preventDefault();
+        sendStudyMessage(event.target);
+      }
+    });
+
+    app.addEventListener('change', (event) => {
+      if (event.target.matches('[data-practice-chapter]')) {
+        loadPracticeQuestion(practice.subject, event.target.value);
+        return;
+      }
+      if (event.target.matches('[data-battle-chapter]')) selectedTopic = event.target.value;
+    });
+
+    joinForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const submit = joinForm.querySelector('button');
+      submit.disabled = true;
+      try {
+        const endpoint = authMode === 'register' ? '/api/register' : '/api/login';
+        const result = await request(endpoint, {
+          method: 'POST',
+          body: JSON.stringify({
+            username: joinForm.elements.username.value,
+            password: joinForm.elements.password.value,
+          }),
+        });
+        finishLogin(result);
+        joinForm.reset();
+        setAuthMode('login');
+        openHomeworkReminder();
+      } catch (error) {
+        notify(error.message);
+      } finally {
+        submit.disabled = false;
+      }
+    });
+
+    document.querySelector('#auth-toggle').addEventListener('click', () => {
+      setAuthMode(authMode === 'login' ? 'register' : 'login');
+    });
+
+    document.querySelector('#profile-button').addEventListener('click', async () => {
+      if (!state) return;
+      openAccountDialog(false);
+    });
+
+    document.querySelector('#settings-button').addEventListener('click', () => settingsDialog.showModal());
+    document.querySelector('#settings-close').addEventListener('click', () => settingsDialog.close());
+    document.querySelector('#settings-personalise').addEventListener('click', () => {
+      settingsDialog.close();
+      personalizeDialog.showModal();
+    });
+    document.querySelector('#settings-account').addEventListener('click', () => {
+      settingsDialog.close();
+      if (!state) {
+        notify('Sign in or create an account to manage your player profile.');
+        return;
+      }
+      openAccountDialog(!state.you.hasPassword);
+    });
+    document.querySelector('#account-close').addEventListener('click', () => accountDialog.close());
+    document.querySelector('#account-logout').addEventListener('click', () => {
+      localStorage.removeItem(playerKey);
+      state = null;
+      accountDialog.close();
+      joinScreen.hidden = false;
+      setAuthMode('login');
+    });
+    document.querySelector('#account-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const submit = document.querySelector('#account-submit');
+      const username = event.currentTarget.elements.username.value;
+      const password = event.currentTarget.elements.password.value;
+      const confirmation = event.currentTarget.elements.passwordConfirm.value;
+      if ((accountSetupRequired || password) && password !== confirmation) {
+        notify('The new passwords do not match.');
+        return;
+      }
+      submit.disabled = true;
+      try {
+        const endpoint = accountSetupRequired ? '/api/account/setup' : '/api/account';
+        const result = await request(endpoint, {
+          method: 'POST',
+          body: JSON.stringify({
+            playerId: state.you.id,
+            username,
+            password,
+            currentPassword: event.currentTarget.elements.currentPassword.value,
+          }),
+        });
+        finishLogin(result);
+        accountDialog.close();
+        notify('Account saved.');
+        if (accountSetupRequired) openHomeworkReminder();
+        accountSetupRequired = false;
+      } catch (error) {
+        notify(error.message);
+      } finally {
+        submit.disabled = false;
+      }
+    });
+    accountDialog.addEventListener('cancel', (event) => {
+      if (accountSetupRequired) event.preventDefault();
+    });
+
+    homeworkDialog.addEventListener('cancel', (event) => event.preventDefault());
+    document.querySelector('#homework-yes').addEventListener('click', async () => {
+      try {
+        const result = await request('/api/homework-check', {
+          method: 'POST',
+          body: JSON.stringify({ playerId: state.you.id, completed: true }),
+        });
+        state = result;
+        homeworkDialog.close();
+        celebrateCorrectAnswer();
+        notify(result.xpAwarded ? `Good job! +${result.xpAwarded} XP.` : 'Good job! You already earned today’s homework XP.');
+        lastRenderedState = '';
+        render();
+      } catch (error) {
+        notify(error.message);
+      }
+    });
+    document.querySelector('#homework-no').addEventListener('click', () => {
+      homeworkDialog.close();
+      enterHomeworkPomodoro();
+    });
+    document.querySelector('.topbar').addEventListener('click', (event) => {
+      if (!homeworkPending) return;
+      event.preventDefault();
+      event.stopPropagation();
+      notify('Finish your homework first, then press Finished to continue.');
+    }, true);
+
+    function openHomeworkReminder() {
+      const pendingKey = `ict-quattle-homework-pending:${state.you.id}`;
+      if (localStorage.getItem(pendingKey) === 'true') {
+        enterHomeworkPomodoro();
+        return;
+      }
+      homeworkDialog.showModal();
+    }
+
+    function enterHomeworkPomodoro() {
+      homeworkPending = true;
+      localStorage.setItem(`ict-quattle-homework-pending:${state.you.id}`, 'true');
+      activeSection = 'solo';
+      soloView = 'study';
+      studyTimerRunning = true;
+      studyDeadline = Date.now() + studyRemaining * 1000;
+      updateStudyStatus(true);
+      startAmbientAudio();
+      refreshStudyRoom();
+      lastRenderedState = '';
+      render();
+    }
+
+    async function completeHomework() {
+      if (homeworkRewardInFlight) return;
+      homeworkRewardInFlight = true;
+      lastRenderedState = '';
+      render();
+      try {
+        const result = await request('/api/homework-check', {
+          method: 'POST',
+          body: JSON.stringify({ playerId: state.you.id, completed: true }),
+        });
+        state = result;
+        homeworkPending = false;
+        localStorage.removeItem(`ict-quattle-homework-pending:${state.you.id}`);
+        celebrateCorrectAnswer();
+        notify(result.xpAwarded ? `Good job! +${result.xpAwarded} XP.` : 'Good job! You already earned today’s homework XP.');
+      } catch (error) {
+        notify(error.message);
+      } finally {
+        homeworkRewardInFlight = false;
+        lastRenderedState = '';
+        render();
+      }
+    }
+
+    document.querySelector('#personalize-close').addEventListener('click', () => personalizeDialog.close());
+    const updatesDialog = document.querySelector('#updates-dialog');
+    document.querySelector('#updates-button').addEventListener('click', () => updatesDialog.showModal());
+    document.querySelector('#updates-close').addEventListener('click', () => updatesDialog.close());
+    personalizeDialog.addEventListener('click', (event) => {
+      const option = event.target.closest('[data-theme-option]');
+      if (!option) return;
+      appearance = option.dataset.themeOption;
+      localStorage.setItem('ict-quattle-appearance', appearance);
+      applyAppearance();
+      lastRenderedState = '';
+      render();
+    });
+    document.querySelector('#confetti-enabled').addEventListener('change', (event) => {
+      confettiEnabled = event.target.checked;
+      localStorage.setItem('ict-quattle-confetti', String(confettiEnabled));
+    });
+    document.querySelector('#lobby-music-enabled').addEventListener('change', (event) => {
+      lobbyMusicEnabled = event.target.checked;
+      localStorage.setItem('ict-quattle-lobby-music', String(lobbyMusicEnabled));
+      lobbyMusicNeedsGesture = false;
+      syncLobbyMusic();
+    });
+    document.querySelector('#music-volume').addEventListener('input', (event) => {
+      musicVolume = Number(event.target.value);
+      localStorage.setItem('ict-quattle-music-volume', String(musicVolume));
+      updateAudioVolumes();
+    });
+    document.querySelector('#effects-volume').addEventListener('input', (event) => {
+      effectsVolume = Number(event.target.value);
+      localStorage.setItem('ict-quattle-effects-volume', String(effectsVolume));
+      updateAudioVolumes();
+    });
+    document.querySelector('#first-person-battles-enabled').addEventListener('change', (event) => {
+      firstPersonBattlesEnabled = event.target.checked;
+      localStorage.setItem('ict-quattle-first-person-battles', String(firstPersonBattlesEnabled));
+      lastRenderedState = '';
+      render();
+    });
+    document.querySelector('#custom-solid-color').addEventListener('input', (event) => {
+      customColor = event.target.value;
+      appearance = 'custom';
+      localStorage.setItem('ict-quattle-custom-color', customColor);
+      localStorage.setItem('ict-quattle-appearance', appearance);
+      applyAppearance();
+    });
+    document.addEventListener('pointerdown', () => {
+      if (!lobbyMusicEnabled) return;
+      lobbyMusicNeedsGesture = false;
+      syncLobbyMusic();
+    }, { capture: true });
+
+    async function boot() {
+      const playerId = localStorage.getItem(playerKey);
+      if (playerId) {
+        try {
+          state = await request(`/api/state?playerId=${encodeURIComponent(playerId)}`);
+          studyChatClearedAt = Number(localStorage.getItem(`ict-quattle-chat-clear:${state.you.id}`) || 0);
+          joinScreen.hidden = true;
+          render();
+          if (state.you.hasPassword) openHomeworkReminder();
+          else openAccountDialog(true);
+        } catch (error) {
+          joinScreen.hidden = false;
+          if (error.message === 'Player session not found') {
+            localStorage.removeItem(playerKey);
+            notify('Your saved profile could not be found on this server. Join again to start a new profile.');
+          } else {
+            notify('Could not reconnect. Your saved profile was kept; refresh to try again.');
+          }
+        }
+      } else {
+        joinScreen.hidden = false;
+      }
+      setAuthMode('login');
+    }
+
+    setInterval(refresh, 2000);
+    setInterval(refreshStudyRoom, 5000);
+    setInterval(updateStudyClock, 1000);
+    setInterval(() => {
+      if (!state?.battle || state.battle.status !== 'active') return;
+      const remaining = Math.max(0, Math.ceil((state.battle.deadline - Date.now()) / 1000));
+      const timerWarningKey = `${state.battle.id}:${state.battle.questionId}`;
+      if (remaining <= 5 && remaining > 0 && timerWarningKey !== lastTimerWarningSound) {
+        playBattleSound('time-warning');
+        lastTimerWarningSound = timerWarningKey;
+      }
+      const fastWindowOpen = Date.now() - state.battle.questionStartedAt <= 2000;
+      document.querySelector('.pov-scene')?.classList.toggle('orb-fast', state.battle.isYourTurn && fastWindowOpen);
+      const timer = document.querySelector('[data-timer]');
+      const bar = document.querySelector('[data-timer-bar]');
+      const round = document.querySelector('.round-number');
+      const hitDamage = document.querySelector('[data-hit-damage]');
+      const fastBonus = document.querySelector('[data-fast-bonus]');
+      const rival = state.battle.players
+        .filter((player) => player.team !== state.battle.players.find((member) => member.id === state.you.id)?.team && player.hp > 0)
+        .sort((first, second) => first.hp - second.hp)[0];
+      const baseDamage = Math.max(4, 15 + (state.you.attack - 10) - ((rival?.defence ?? 2) - 2));
+      const hardMultiplier = state.battle.question?.difficulty === 3 ? 1.5 : 1;
+      if (hitDamage) hitDamage.textContent = String(Math.round(baseDamage * (fastWindowOpen ? 2 : 1) * hardMultiplier));
+      if (fastBonus) fastBonus.textContent = fastWindowOpen ? ' · 2× FAST ANSWER BONUS ACTIVE' : ' · answer within 2 seconds for double damage';
+      if (timer) timer.textContent = `${String(remaining).padStart(2, '0')}s`;
+      if (bar) {
+        bar.style.width = `${Math.min(100, remaining / 20 * 100)}%`;
+        bar.classList.toggle('urgent', remaining <= 5);
+      }
+      if (round) round.innerHTML = `${remaining}<small style="font:10px var(--mono)"> SEC</small>`;
+    }, 200);
+    applyAppearance();
+    boot();
+  </script>
+</body>
+</html>
