@@ -39,9 +39,12 @@ test('local accounts enforce unique usernames and store password hashes, not pla
 	);
 	const signedIn = await post(api, '/api/login', { username: 'studyknight', password: 'strong password' });
 	assert.equal(signedIn.you.id, registered.you.id);
+	await post(api, '/api/homework-check', { playerId: signedIn.you.id, completed: true });
 	const exported = await post(api, '/api/export-local-account', { username: 'StudyKnight', password: 'strong password' });
 	assert.equal(exported.format, 'ict-quattle-local-account-v1');
 	assert.equal(exported.account.username, 'StudyKnight');
+	assert.equal(exported.account.totalXp, 2);
+	assert.equal(exported.account.xpBalance, 2);
 	assert.equal('passwordHash' in exported.account, false);
 	await assert.rejects(
 		post(api, '/api/export-local-account', { username: 'StudyKnight', password: 'wrong password' }),

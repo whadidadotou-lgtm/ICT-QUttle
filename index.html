@@ -65,6 +65,8 @@
     .account-actions button { min-height: 38px; padding: 0 12px; border: 1px solid var(--line); background: transparent; cursor: pointer; font: 10px var(--mono); }
     .account-actions .primary-button { border: 0; color: var(--paper-bright); background: var(--forest); }
     .account-close[hidden], .account-logout[hidden] { display: none; }
+    .account-export { width: 100%; min-height: 38px; margin-top: 10px; padding: 0 12px; border: 1px solid var(--line); background: var(--paper); cursor: pointer; font: 10px var(--mono); }
+    .account-export[hidden] { display: none; }
     .updates-dialog { width: min(560px, calc(100vw - 28px)); max-height: min(720px, calc(100vh - 32px)); overflow: auto; padding: 24px; border: 1px solid var(--line); color: var(--ink); background: var(--paper-bright); box-shadow: 0 20px 70px #172b2440; }
     .updates-dialog::backdrop { background: #172b2488; }
     .homework-dialog { width: min(460px, calc(100vw - 28px)); padding: 28px; border: 1px solid var(--line); color: var(--ink); background: var(--paper-bright); box-shadow: 0 20px 70px #172b2480; }
@@ -74,6 +76,8 @@
     .homework-dialog-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
     .homework-dialog-actions button { min-height: 42px; padding: 0 14px; border: 1px solid var(--line); background: var(--paper); cursor: pointer; font-weight: 600; }
     .homework-dialog-actions .primary-button { border-color: var(--forest); color: var(--paper-bright); background: var(--forest); }
+    .daily-verse { margin: 16px 0; padding: 18px; border-left: 3px solid var(--forest); background: var(--paper); font-size: 17px; line-height: 1.6; }
+    .daily-verse-reference { margin-bottom: 0; color: var(--forest) !important; font: 11px var(--mono); }
     .homework-warning { margin: 18px 0; padding: 18px; border: 2px solid var(--orange); background: var(--paper-bright); }
     .homework-warning h2 { margin: 0 0 6px; font-size: 20px; }
     .homework-warning p { margin: 0 0 12px; line-height: 1.5; }
@@ -572,6 +576,15 @@
       <button id="homework-no" type="button">No, not yet</button>
     </div>
   </dialog>
+  <dialog class="homework-dialog" id="verse-dialog" aria-labelledby="verse-title">
+    <p class="eyebrow">A moment to reflect</p>
+    <h2 id="verse-title">Verse of the day</h2>
+    <blockquote class="daily-verse" id="daily-verse-text"></blockquote>
+    <p class="daily-verse-reference" id="daily-verse-reference"></p>
+    <div class="homework-dialog-actions">
+      <button class="primary-button" id="verse-close" type="button">Continue</button>
+    </div>
+  </dialog>
   <div class="join-screen" id="join-screen" hidden>
     <form class="join-box" id="join-form">
       <p class="eyebrow">Enter the arena</p>
@@ -620,6 +633,7 @@
           <button class="account-logout" id="account-logout" type="button">Log out</button>
           <button class="primary-button" id="account-submit" type="submit">Save changes</button>
         </div>
+        <button class="account-export" id="account-export" type="button" hidden>Export save</button>
       </form>
     </div>
   </dialog>
@@ -660,6 +674,16 @@
     const settingsDialog = document.querySelector('#settings-dialog');
     const accountDialog = document.querySelector('#account-dialog');
     const homeworkDialog = document.querySelector('#homework-dialog');
+    const verseDialog = document.querySelector('#verse-dialog');
+    const dailyVerses = [
+      { text: 'Thy word is a lamp unto my feet, and a light unto my path.', reference: 'Psalm 119:105' },
+      { text: 'I can do all things through Christ which strengtheneth me.', reference: 'Philippians 4:13' },
+      { text: 'Trust in the LORD with all thine heart; and lean not unto thine own understanding.', reference: 'Proverbs 3:5' },
+      { text: 'Be strong and of a good courage; be not afraid, neither be thou dismayed: for the LORD thy God is with thee whithersoever thou goest.', reference: 'Joshua 1:9' },
+      { text: 'But they that wait upon the LORD shall renew their strength; they shall mount up with wings as eagles; they shall run, and not be weary; and they shall walk, and not faint.', reference: 'Isaiah 40:31' },
+      { text: 'And we know that all things work together for good to them that love God, to them who are the called according to his purpose.', reference: 'Romans 8:28' },
+      { text: 'Come unto me, all ye that labour and are heavy laden, and I will give you rest.', reference: 'Matthew 11:28' },
+    ];
     let state = null;
     let busy = false;
     let pollInFlight = false;
@@ -746,6 +770,65 @@
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Request failed');
       return data;
+    }
+
+    function downloadSave(save) {
+      const file = new Blob([JSON.stringify(save, null, 2)], { type: 'application/json' });
+      const downloadUrl = URL.createObjectURL(file);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `${save.account.username}-ict-quattle-save.json`;
+      link.hidden = true;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+      notify('Save exported. Use Import browser save to move it to another server or browser.');
+    }
+
+    async function exportLocalSave(username, password) {
+      const save = await localGame.handle('/api/export-local-account', {
+        method: 'POST',
+        body: JSON.stringify({ username, password }),
+      });
+      downloadSave(save);
+    }
+
+    async function exportAccountSave(password) {
+      if (localOnly) {
+        await exportLocalSave(state.you.username || state.you.name, password);
+        return;
+      }
+      let save;
+      try {
+        save = await request('/api/export-account', {
+          method: 'POST',
+          body: JSON.stringify({ playerId: state.you.id, password }),
+        });
+      } catch (error) {
+        if (!['Not found', 'Player session not found'].includes(error.message)) throw error;
+        const authenticated = await request('/api/login', {
+          method: 'POST',
+          body: JSON.stringify({ username: state.you.username || state.you.name, password }),
+        });
+        const player = authenticated.you;
+        save = {
+          format: 'ict-quattle-local-account-v1',
+          account: {
+            username: player.username || player.name,
+            xp: player.xp,
+            totalXp: player.totalXp,
+            xpBalance: player.xpBalance,
+            xpSpent: player.totalXp - player.xpBalance,
+            level: player.level,
+            matches: player.matches,
+            wins: player.wins,
+            losses: player.losses,
+            draws: player.draws,
+          },
+        };
+      }
+      downloadSave(save);
     }
 
     function notify(message) {
@@ -1479,6 +1562,7 @@
       document.querySelector('#account-current-password').value = '';
       document.querySelector('#account-password').value = '';
       document.querySelector('#account-password-confirm').value = '';
+      document.querySelector('#account-export').hidden = requireSetup || !state.you.hasPassword;
       if (!accountDialog.open) accountDialog.showModal();
       if (requireSetup) document.querySelector('#account-username').focus();
     }
@@ -2283,21 +2367,7 @@
 
     document.querySelector('#auth-export').addEventListener('click', async () => {
       try {
-        const save = await localGame.handle('/api/export-local-account', {
-          method: 'POST',
-          body: JSON.stringify({
-            username: joinForm.elements.username.value,
-            password: joinForm.elements.password.value,
-          }),
-        });
-        const file = new Blob([JSON.stringify(save, null, 2)], { type: 'application/json' });
-        const downloadUrl = URL.createObjectURL(file);
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = `${save.account.username}-ict-quattle-save.json`;
-        link.click();
-        URL.revokeObjectURL(downloadUrl);
-        notify('Browser save exported. Import that file on the server sign-in screen.');
+        await exportLocalSave(joinForm.elements.username.value, joinForm.elements.password.value);
       } catch (error) {
         notify(error.message);
       }
@@ -2364,6 +2434,19 @@
       openAccountDialog(!state.you.hasPassword);
     });
     document.querySelector('#account-close').addEventListener('click', () => accountDialog.close());
+    document.querySelector('#account-export').addEventListener('click', async () => {
+      const password = document.querySelector('#account-current-password');
+      if (!password.value) {
+        notify('Enter your current password to export your save.');
+        password.focus();
+        return;
+      }
+      try {
+        await exportAccountSave(password.value);
+      } catch (error) {
+        notify(error.message);
+      }
+    });
     document.querySelector('#account-logout').addEventListener('click', () => {
       localStorage.removeItem(playerKey);
       state = null;
@@ -2409,6 +2492,14 @@
     });
 
     homeworkDialog.addEventListener('cancel', (event) => event.preventDefault());
+    document.querySelector('#verse-close').addEventListener('click', () => verseDialog.close());
+    function showVerseOfDay() {
+      const verse = dailyVerses[Math.floor(Date.now() / 86_400_000) % dailyVerses.length];
+      document.querySelector('#daily-verse-text').textContent = `“${verse.text}”`;
+      document.querySelector('#daily-verse-reference').textContent = verse.reference;
+      verseDialog.showModal();
+    }
+
     document.querySelector('#homework-yes').addEventListener('click', async () => {
       try {
         const result = await request('/api/homework-check', {
@@ -2421,6 +2512,7 @@
         notify(result.xpAwarded ? `Good job! +${result.xpAwarded} XP.` : 'Good job! You already earned today’s homework XP.');
         lastRenderedState = '';
         render();
+        showVerseOfDay();
       } catch (error) {
         notify(error.message);
       }
@@ -2474,6 +2566,7 @@
         localStorage.removeItem(`ict-quattle-homework-pending:${state.you.id}`);
         celebrateCorrectAnswer();
         notify(result.xpAwarded ? `Good job! +${result.xpAwarded} XP.` : 'Good job! You already earned today’s homework XP.');
+        showVerseOfDay();
       } catch (error) {
         notify(error.message);
       } finally {

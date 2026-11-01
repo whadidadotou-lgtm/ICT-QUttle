@@ -116,6 +116,25 @@ function validateImportedAccount(value) {
 		.map((field) => [field, value[field] ?? ''])) };
 }
 
+function exportAccountProgress(player) {
+	return {
+		format: 'ict-quattle-local-account-v1',
+		account: {
+			username: player.username,
+			xp: player.xp,
+			totalXp: player.totalXp,
+			xpBalance: player.xpBalance,
+			xpSpent: player.xpSpent,
+			level: player.level,
+			matches: player.matches,
+			wins: player.wins,
+			losses: player.losses,
+			draws: player.draws,
+			homeworkRewardDate: player.homeworkRewardDate || '',
+		},
+	};
+}
+
 function mergeImportedProgress(player, imported) {
 	player.totalXp = Math.max(player.totalXp, imported.totalXp);
 	player.xpBalance = Math.max(player.xpBalance, imported.xpBalance);
@@ -1078,6 +1097,15 @@ function handleApi(request, response, url) {
 		}).catch((error) => json(response, 400, { error: error.message }));
 	}
 
+	if (request.method === 'POST' && url.pathname === '/api/export-account') {
+		return readBody(request).then(({ playerId, password }) => {
+			const player = players.get(String(playerId || ''));
+			if (!player) return json(response, 404, { error: 'Player session not found' });
+			if (!verifyPassword(password, player)) return json(response, 401, { error: 'Current password is incorrect' });
+			return json(response, 200, exportAccountProgress(player));
+		}).catch((error) => json(response, 400, { error: error.message }));
+	}
+
 	if (request.method === 'POST' && url.pathname === '/api/homework-check') {
 		return readBody(request).then(({ playerId, completed }) => {
 			const player = players.get(String(playerId || ''));
@@ -1335,6 +1363,7 @@ module.exports = {
 	loadSavedPlayers,
 	hashPassword,
 	mergeImportedProgress,
+	exportAccountProgress,
 	normalizeUsername,
 	validateImportedAccount,
 	isFastAnswer,

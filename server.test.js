@@ -20,6 +20,7 @@ const {
 	answerSoloPracticeQuestion,
 	loadSavedPlayers,
 	hashPassword,
+	exportAccountProgress,
 	normalizeUsername,
 	npcWinXp,
 	savePlayers,
@@ -313,6 +314,30 @@ test('browser save imports validate progress and merge without replacing server 
 	assert.equal(serverPlayer.wins, 7);
 	assert.equal(serverPlayer.homeworkRewardDate, '2026-10-31');
 	assert.equal(verifyPassword('server account password', serverPlayer), true);
+});
+
+test('server account exports use the portable save format without exposing credentials', () => {
+	const credentials = hashPassword('server account password');
+	const exported = exportAccountProgress({
+		username: 'SavedPlayer',
+		...credentials,
+		xp: 40,
+		totalXp: 340,
+		xpBalance: 300,
+		xpSpent: 40,
+		level: 3,
+		matches: 12,
+		wins: 7,
+		losses: 4,
+		draws: 1,
+		homeworkRewardDate: '2026-10-30',
+	});
+
+	assert.equal(exported.format, 'ict-quattle-local-account-v1');
+	assert.equal(exported.account.username, 'SavedPlayer');
+	assert.equal(exported.account.totalXp, 340);
+	assert.equal('passwordHash' in exported.account, false);
+	assert.equal('passwordSalt' in exported.account, false);
 });
 
 test('account credentials survive saved-player reloads without exposing passwords', (context) => {
