@@ -664,7 +664,7 @@
   </dialog>
   <div class="toast" id="toast" role="status" hidden></div>
   <script src="./grade9-practice.js"></script>
-  <script src="./local-game.js?v=20261101-export-fix"></script>
+  <script src="./local-game.js?v=20261101-export-fix2"></script>
   <script>
     const app = document.querySelector('#app');
     const joinScreen = document.querySelector('#join-screen');
@@ -787,10 +787,35 @@
     }
 
     async function exportLocalSave(username, password) {
-      const save = await localGame.handle('/api/export-local-account', {
-        method: 'POST',
-        body: JSON.stringify({ username, password }),
-      });
+      let save;
+      try {
+        save = await localGame.handle('/api/export-local-account', {
+          method: 'POST',
+          body: JSON.stringify({ username, password }),
+        });
+      } catch (error) {
+        if (!['Not found', 'This feature is not available in local browser mode.'].includes(error.message)) throw error;
+        const authenticated = await localGame.handle('/api/login', {
+          method: 'POST',
+          body: JSON.stringify({ username, password }),
+        });
+        const player = authenticated.you;
+        save = {
+          format: 'ict-quattle-local-account-v1',
+          account: {
+            username: player.username || player.name,
+            xp: player.xp,
+            totalXp: player.totalXp,
+            xpBalance: player.xpBalance,
+            xpSpent: player.totalXp - player.xpBalance,
+            level: player.level,
+            matches: player.matches,
+            wins: player.wins,
+            losses: player.losses,
+            draws: player.draws,
+          },
+        };
+      }
       downloadSave(save);
     }
 
