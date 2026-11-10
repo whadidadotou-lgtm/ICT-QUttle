@@ -6,6 +6,7 @@ const test = require('node:test');
 const {
 	SUBJECTS,
 	addExperience,
+	completeStalinChallenge,
 	awardHomeworkXp,
 	buildTurnOrder,
 	censorProfanity,
@@ -31,6 +32,7 @@ const {
 	MAX_PVP_LEVEL_GAP,
 	PARRY_LEVEL,
 	getAvailableNpcs,
+	getStudyGuide,
 	levelGapBetweenTeams,
 	parryDamageFor,
 } = require('./server');
@@ -52,7 +54,7 @@ test('online players stay visible while showing whether they can be challenged',
 	]);
 });
 
-test('XP thresholds level players up and refresh combat stats', () => {
+test('XP thresholds call Stalin before leveling up and refresh combat stats after victory', () => {
 	const player = { xp: 0, totalXp: 0, xpBalance: 0, level: 1 };
 
 	addExperience(player, 99);
@@ -61,11 +63,18 @@ test('XP thresholds level players up and refresh combat stats', () => {
 	assert.deepEqual(combatStats(player.level), { attack: 10, defence: 2 });
 
 	addExperience(player, 1);
+	assert.equal(player.level, 1);
+	assert.equal(player.xp, 100);
+	assert.equal(player.stalinChallengePending, true);
+	assert.equal(completeStalinChallenge(player), true);
 	assert.equal(player.level, 2);
 	assert.equal(player.xp, 0);
 	assert.deepEqual(combatStats(player.level), { attack: 11, defence: 2 });
 
 	addExperience(player, 200);
+	assert.equal(player.level, 2);
+	assert.equal(player.stalinChallengePending, true);
+	assert.equal(completeStalinChallenge(player), true);
 	assert.equal(player.level, 3);
 	assert.equal(player.xp, 0);
 	assert.deepEqual(combatStats(player.level), { attack: 12, defence: 3 });
@@ -73,10 +82,11 @@ test('XP thresholds level players up and refresh combat stats', () => {
 	assert.equal(player.xpBalance, 300);
 });
 
-test('progression caps at level 100 and unlocks one new bot for each level', () => {
+test('progression caps at level 100 and unlocks one new arena opponent for each level', () => {
 	assert.equal(MAX_LEVEL, 100);
 	const player = { xp: 0, totalXp: 0, xpBalance: 0, level: 1 };
 	addExperience(player, 495_000);
+	while (player.stalinChallengePending) completeStalinChallenge(player);
 	assert.equal(player.level, MAX_LEVEL);
 	assert.equal(player.xp, 0);
 	assert.deepEqual(combatStats(player.level), { attack: 109, defence: 51 });
@@ -86,12 +96,9 @@ test('progression caps at level 100 and unlocks one new bot for each level', () 
 
 	const levelOneBots = getAvailableNpcs(1);
 	const levelTwoBots = getAvailableNpcs(2);
-	assert.deepEqual(levelOneBots.slice(0, 2).map(({ id, name, level }) => ({ id, name, level })), [
-		{ id: 'npc-prannoy', name: 'Prannoy', level: 1 },
-		{ id: 'npc-stalin', name: 'Stalin', level: 2 },
-	]);
-	assert.equal(levelOneBots.length, 12);
-	assert.equal(levelTwoBots.length, 13);
+	assert.equal(levelOneBots.some((npc) => ['Prannoy', 'Stalin'].includes(npc.name)), false);
+	assert.equal(levelOneBots.length, 10);
+	assert.equal(levelTwoBots.length, 11);
 	assert.equal(levelTwoBots.at(-1).level, 12);
 	assert.deepEqual(
 		levelTwoBots.filter((npc) => !levelOneBots.some((oldNpc) => oldNpc.id === npc.id)).map((npc) => npc.level),
@@ -166,10 +173,10 @@ test('study chat censors profanity without changing ordinary words', () => {
 	assert.equal(censorProfanity('The classic is helpful.'), 'The classic is helpful.');
 });
 
-test('all Grade 9 syllabus subjects have at least 100 solo practice questions', () => {
+test('all Grade 9 syllabus subjects have at least 200 solo practice questions', () => {
 	assert.equal(SUBJECTS.length, 11);
 	for (const subject of SUBJECTS) {
-		assert.ok(subject.questionCount >= 100, `${subject.name} question count`);
+		assert.ok(subject.questionCount >= 200, `${subject.name} question count`);
 		assert.ok(subject.source.length > 0, `${subject.name} curriculum source`);
 	}
 
@@ -184,6 +191,20 @@ test('all Grade 9 syllabus subjects have at least 100 solo practice questions', 
 		assert.equal(answerSoloPracticeQuestion('practice-player', 'old-question', 0), null);
 		assert.equal(answerSoloPracticeQuestion('practice-player', result.question.id, 0), null);
 	}
+});
+
+test('solo practice avoids repeating questions across 50 prompts in one subject', () => {
+	const prompts = Array.from({ length: 50 }, () =>
+		getSoloPracticeQuestion('question-rotation-player', 'computers').question.prompt);
+	assert.equal(new Set(prompts).size, prompts.length);
+});
+
+test('Prannoy can explain topics in every subject that has practice questions', () => {
+	const guide = getStudyGuide('computers', '3');
+	assert.ok(guide);
+	assert.equal(guide.subject, 'Computers');
+	assert.ok(guide.explanations.length > 0);
+	assert.equal(getStudyGuide('computers', 'not-a-topic'), null);
 });
 
 test('winning against higher-level NPCs grants more XP', () => {

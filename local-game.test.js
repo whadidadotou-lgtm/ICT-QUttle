@@ -80,10 +80,24 @@ test('local practice awards and saves XP on the player profile', async () => {
 		questionId: question.id,
 		answer: 0,
 	});
-	assert.equal(result.xpAwarded, result.correct ? 2 : 0);
+	assert.equal(result.xpAwarded, result.correct ? 1 : 0);
 	const signedIn = await post(api, '/api/login', { username: 'PracticeHero', password: 'strong password' });
 	assert.equal(signedIn.you.totalXp, result.xpAwarded);
 	assert.equal(signedIn.you.xpBalance, result.xpAwarded);
+});
+
+test('local practice avoids repeating questions across 50 prompts in one subject', async () => {
+	const api = createLocalGame(createStorage(), webcrypto, grade9Practice);
+	const registered = await post(api, '/api/register', { username: 'QuestionRotator', password: 'strong password' });
+	const prompts = [];
+	for (let index = 0; index < 50; index += 1) {
+		const result = await post(api, '/api/practice-question', {
+			playerId: registered.you.id,
+			subject: 'computers',
+		});
+		prompts.push(result.question.prompt);
+	}
+	assert.equal(new Set(prompts).size, prompts.length);
 });
 
 test('local account edits require the current password and remain available after reload', async () => {
@@ -113,15 +127,12 @@ test('local account edits require the current password and remain available afte
 	assert.equal(signedIn.you.name, 'RenamedHero');
 });
 
-test('local browser mode can start a bot battle and advance to the bot turn', async () => {
+test('local browser mode can start an NPC battle and advance to the NPC turn', async () => {
 	const storage = createStorage();
 	const api = createLocalGame(storage, webcrypto, grade9Practice);
 	const registered = await post(api, '/api/register', { username: 'BotFighter', password: 'strong password' });
 	const initialState = await api.handle(`/api/state?playerId=${encodeURIComponent(registered.you.id)}`);
-	assert.deepEqual(initialState.npcs.slice(0, 2).map(({ id, name, level }) => ({ id, name, level })), [
-		{ id: 'npc-prannoy', name: 'Prannoy', level: 1 },
-		{ id: 'npc-stalin', name: 'Stalin', level: 2 },
-	]);
+	assert.equal(initialState.npcs.some((npc) => ['Prannoy', 'Stalin'].includes(npc.name)), false);
 	const started = await post(api, '/api/battle', {
 		playerId: registered.you.id,
 		opponentId: 'npc-bit',
@@ -141,6 +152,30 @@ test('local browser mode can start a bot battle and advance to the bot turn', as
 	const nextTurn = await api.handle(`/api/state?playerId=${encodeURIComponent(registered.you.id)}`);
 	assert.equal(nextTurn.battle.status, 'active');
 	assert.equal(nextTurn.battle.isYourTurn, true);
+});
+
+test('Prannoy explains a topic and Stalin challenges at the player level before a level-up', async () => {
+	const storage = createStorage();
+	const api = createLocalGame(storage, webcrypto, grade9Practice);
+	const registered = await post(api, '/api/register', { username: 'LevelChallenger', password: 'strong password' });
+	const guide = await api.handle(`/api/study-guide?playerId=${encodeURIComponent(registered.you.id)}&subject=computers&topic=3`);
+	assert.ok(guide.explanations.length > 0);
+
+	const records = JSON.parse(storage.values.get('ict-quattle-local-players'));
+	records[0].xp = 100;
+	records[0].stalinChallengePending = true;
+	storage.values.set('ict-quattle-local-players', JSON.stringify(records));
+	await assert.rejects(
+		post(api, '/api/battle', { playerId: registered.you.id, opponentId: 'npc-bit', subject: 'computers' }),
+		/Beat Stalin/i,
+	);
+	const challenge = await post(api, '/api/stalin-challenge', {
+		playerId: registered.you.id,
+		subject: 'computers',
+	});
+	const stalin = challenge.battle.players.find((player) => player.id === 'npc-stalin');
+	assert.equal(challenge.battle.levelUpChallenge, true);
+	assert.equal(stalin.level, challenge.you.level);
 });
 
 test('local mode clearly rejects multiplayer that needs a server', async () => {

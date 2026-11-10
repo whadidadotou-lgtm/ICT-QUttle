@@ -25,7 +25,7 @@ const NPC_LOSS_XP = 30;
 const DUEL_WIN_XP = 100;
 const DUEL_LOSS_XP = 45;
 const DRAW_XP = 30;
-const SOLO_PRACTICE_XP = 2;
+const SOLO_PRACTICE_XP = 1;
 const HOMEWORK_CHECK_XP = 2;
 const BASE_HIT_DAMAGE = 15;
 const HIT_HEAL = 3;
@@ -40,10 +40,7 @@ const studyStatuses = new Map();
 const studyMessages = [];
 const MAX_STUDY_MESSAGES = 50;
 const soloPracticeSessions = new Map();
-const starterNpcs = [
-	{ id: 'npc-prannoy', name: 'Prannoy', level: 1 },
-	{ id: 'npc-stalin', name: 'Stalin', level: 2 },
-].map((npc) => ({ ...npc, ...combatStats(npc.level), hp: MAX_HP }));
+const questionHistory = new Map();
 
 function combatStats(level) {
 	const cappedLevel = Math.max(1, Math.min(MAX_LEVEL, level));
@@ -53,6 +50,48 @@ function combatStats(level) {
 function getAvailableNpcs(playerLevel) {
 	const highestLevel = Math.min(MAX_NPC_LEVEL, playerLevel + 10);
 	return npcs.filter((npc) => npc.level <= highestLevel);
+}
+
+function stalinForLevel(level) {
+	return { id: 'npc-stalin', name: 'Stalin', level, ...combatStats(level), hp: MAX_HP };
+}
+
+function completeStalinChallenge(player) {
+	if (!player.stalinChallengePending || player.level >= MAX_LEVEL) return false;
+	player.xp -= player.level * 100;
+	player.level += 1;
+	player.stalinChallengePending = player.level < MAX_LEVEL && player.xp >= player.level * 100;
+	Object.assign(player, combatStats(player.level));
+	if (player.level === MAX_LEVEL) {
+		player.xp = 0;
+		player.stalinChallengePending = false;
+	}
+	return true;
+}
+
+function questionHistoryKey(playerId, subject) {
+	return `${playerId}:${subject}`;
+}
+
+function chooseQuestion(questionList, playerIds, subject) {
+	if (!questionList.length) return null;
+	const histories = playerIds.map((playerId) => {
+		const key = questionHistoryKey(playerId, subject);
+		let history = questionHistory.get(key);
+		if (!history) {
+			history = [];
+			questionHistory.set(key, history);
+		}
+		return { key, history };
+	});
+	const unseenQuestions = questionList.filter((question) => histories.every(({ history }) => !history.includes(question.prompt)));
+	const choices = unseenQuestions.length ? unseenQuestions : questionList;
+	const question = choices[Math.floor(Math.random() * choices.length)];
+	for (const { history } of histories) {
+		history.push(question.prompt);
+		if (history.length > 40) history.shift();
+	}
+	return question;
 }
 
 function levelGapBetweenTeams(teams, playerMap = players) {
@@ -108,7 +147,9 @@ function validateImportedAccount(value) {
 	const account = normalizeUsername(value.username);
 	const integerFields = ['totalXp', 'xpBalance', 'xpSpent', 'matches', 'wins', 'losses', 'draws'];
 	if (!Number.isInteger(value.level) || value.level < 1 || value.level > MAX_LEVEL
-		|| !Number.isInteger(value.xp) || value.xp < 0 || value.xp >= value.level * 100
+		|| !Number.isInteger(value.xp) || value.xp < 0
+		|| (value.stalinChallengePending !== undefined && typeof value.stalinChallengePending !== 'boolean')
+		|| (value.xp >= value.level * 100 && value.stalinChallengePending !== true)
 		|| integerFields.some((field) => !Number.isSafeInteger(value[field]) || value[field] < 0)
 		|| value.xpBalance > value.totalXp
 		|| value.xpBalance + value.xpSpent !== value.totalXp
@@ -116,8 +157,12 @@ function validateImportedAccount(value) {
 			&& !/^\d{4}-\d{2}-\d{2}$/.test(value.homeworkRewardDate))) {
 		throw new Error('The browser save file contains invalid player progress');
 	}
-	return { ...account, ...Object.fromEntries(['xp', ...integerFields, 'level', 'homeworkRewardDate']
-		.map((field) => [field, value[field] ?? ''])) };
+	return {
+		...account,
+		...Object.fromEntries(['xp', ...integerFields, 'level', 'homeworkRewardDate']
+			.map((field) => [field, value[field] ?? ''])),
+		stalinChallengePending: value.stalinChallengePending === true,
+	};
 }
 
 function exportAccountProgress(player) {
@@ -135,21 +180,25 @@ function exportAccountProgress(player) {
 			losses: player.losses,
 			draws: player.draws,
 			homeworkRewardDate: player.homeworkRewardDate || '',
+			stalinChallengePending: Boolean(player.stalinChallengePending),
 		},
 	};
 }
 
 function mergeImportedProgress(player, imported) {
+	const existingProgress = { level: player.level, xp: player.xp, pending: Boolean(player.stalinChallengePending) };
+	const importedProgress = { level: imported.level, xp: imported.xp, pending: imported.stalinChallengePending };
+	const progress = importedProgress.level > existingProgress.level
+		|| (importedProgress.level === existingProgress.level && importedProgress.xp > existingProgress.xp)
+		? importedProgress
+		: existingProgress;
 	player.totalXp = Math.max(player.totalXp, imported.totalXp);
 	player.xpBalance = Math.max(player.xpBalance, imported.xpBalance);
 	player.xpSpent = Math.max(0, player.totalXp - player.xpBalance);
-	let earnedXp = player.totalXp;
-	player.level = 1;
-	while (player.level < MAX_LEVEL && earnedXp >= player.level * 100) {
-		earnedXp -= player.level * 100;
-		player.level += 1;
-	}
-	player.xp = player.level === MAX_LEVEL ? 0 : earnedXp;
+	player.level = progress.level;
+	player.xp = player.level === MAX_LEVEL ? 0 : progress.xp;
+	player.stalinChallengePending = player.level < MAX_LEVEL
+		&& (progress.pending || player.xp >= player.level * 100);
 	for (const field of ['matches', 'wins', 'losses', 'draws']) {
 		player[field] = Math.max(player[field], imported[field]);
 	}
@@ -172,6 +221,7 @@ function loadSavedPlayers(filePath) {
 	const loadedPlayers = new Map(records.map((record) => {
 		if (!record || typeof record.id !== 'string' || typeof record.name !== 'string'
 			|| !Number.isInteger(record.level) || record.level < 1 || record.level > MAX_LEVEL
+			|| (record.stalinChallengePending !== undefined && typeof record.stalinChallengePending !== 'boolean')
 			|| (record.homeworkRewardDate !== undefined && typeof record.homeworkRewardDate !== 'string')
 			|| PLAYER_PROGRESS_FIELDS.some((field) => field !== 'name' && !Number.isFinite(record[field]))
 			|| ACCOUNT_FIELDS.some((field) => record[field] !== undefined && typeof record[field] !== 'string')) {
@@ -208,6 +258,7 @@ function savePlayers(filePath, playerMap) {
 		...Object.fromEntries(PLAYER_PROGRESS_FIELDS.map((field) => [field, player[field]])),
 		...Object.fromEntries(ACCOUNT_FIELDS.map((field) => [field, player[field] || ''])),
 		homeworkRewardDate: player.homeworkRewardDate || '',
+		stalinChallengePending: Boolean(player.stalinChallengePending),
 	}));
 	fs.mkdirSync(path.dirname(filePath), { recursive: true });
 	const temporaryFile = `${filePath}.${process.pid}.${crypto.randomUUID()}.tmp`;
@@ -447,14 +498,14 @@ const legacyNpcNames = {
 };
 const npcFirstNames = ['Ari', 'Blaze', 'Cora', 'Dax', 'Echo', 'Freya', 'Gale', 'Hale', 'Indigo', 'Juno', 'Kestrel'];
 const npcLastNames = ['Ashfall', 'Blackwell', 'Cross', 'Dawnbreak', 'Ember', 'Frost', 'Graves', 'Hawke', 'Ironwood', 'Jett', 'Knight', 'Locke', 'Morrow'];
-const npcs = [...starterNpcs, ...Array.from({ length: MAX_NPC_LEVEL - 1 }, (_, index) => {
+const npcs = Array.from({ length: MAX_NPC_LEVEL - 1 }, (_, index) => {
 	const level = index + 2;
 	const [id, name] = legacyNpcNames[level] || [
 		`npc-level-${level}`,
 		`${npcFirstNames[(level - 2) % npcFirstNames.length]} ${npcLastNames[Math.floor((level - 2) / npcFirstNames.length) % npcLastNames.length]}`,
 	];
 	return { id, name, level, ...combatStats(level), hp: MAX_HP };
-})];
+});
 
 function json(response, status, value) {
 	response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -475,12 +526,12 @@ function readBody(request) {
 	});
 }
 
-function getQuestion(subject, topic = null) {
+function getQuestion(subject, topic = null, playerIds = []) {
 	const questionPool = questionPools[subject];
 	if (!questionPool) return null;
 	const topicQuestions = questionPool.filter((question) => !topic || question.chapter === topic);
 	if (!topicQuestions.length) return null;
-	const question = topicQuestions[Math.floor(Math.random() * topicQuestions.length)];
+	const question = chooseQuestion(topicQuestions, playerIds, subject);
 	const correctPosition = nextCorrectPosition[subject];
 	nextCorrectPosition[subject] = (correctPosition + 1) % question.options.length;
 	const options = [...question.options];
@@ -492,9 +543,12 @@ function getQuestion(subject, topic = null) {
 function getSoloPracticeQuestion(playerId, subjectId, topic = null) {
 	const subject = grade9Practice[subjectId];
 	if (!subject || (topic && !subject.practiceTopics.includes(topic))) return null;
-	const availableQuestions = topic ? subject.questions.filter((question) => question.chapter === topic) : subject.questions;
+	const availableQuestions = [
+		...(subject.questions || []),
+		...(subject.computerScienceQuestions || []),
+	].filter((question) => !topic || question.chapter === topic);
 	if (!availableQuestions.length) return null;
-	const source = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
+	const source = chooseQuestion(availableQuestions, [playerId], subjectId);
 	const correctPosition = Math.floor(Math.random() * source.options.length);
 	const options = [...source.options];
 	const [correctAnswer] = options.splice(source.correct, 1);
@@ -518,6 +572,21 @@ function getSoloPracticeQuestion(playerId, subjectId, topic = null) {
 	});
 	const { correct, hint, ...publicQuestion } = question;
 	return { question: publicQuestion, score: soloPracticeSessions.get(playerId).score, attempts: soloPracticeSessions.get(playerId).attempts };
+}
+
+function getStudyGuide(subjectId, topic) {
+	const subject = grade9Practice[subjectId];
+	if (!subject || typeof topic !== 'string' || !topic.trim()) return null;
+	const questions = [
+		...(subject.questions || []),
+		...(subject.computerScienceQuestions || []),
+	].filter((question) => question.chapter === topic);
+	if (!questions.length) return null;
+	return {
+		subject: subject.name,
+		topic,
+		explanations: [...new Set(questions.map((question) => question.hint).filter(Boolean))].slice(0, 6),
+	};
 }
 
 function answerSoloPracticeQuestion(playerId, questionId, answer) {
@@ -551,13 +620,7 @@ function addExperience(player, amount) {
 	player.xpBalance += amount;
 	if (player.level >= MAX_LEVEL) return;
 	player.xp += amount;
-	while (player.level < MAX_LEVEL && player.xp >= player.level * 100) {
-		player.xp -= player.level * 100;
-		player.level += 1;
-	}
-
-	Object.assign(player, combatStats(player.level));
-	if (player.level === MAX_LEVEL) player.xp = 0;
+	if (player.xp >= player.level * 100) player.stalinChallengePending = true;
 }
 
 function awardHomeworkXp(player, date = new Date().toISOString().slice(0, 10)) {
@@ -654,6 +717,9 @@ function finishBattle(battle, winnerTeamIndex, resignedPlayerId = null) {
 			? didWin ? npcWinXp(battle.npc?.level || 1) : NPC_LOSS_XP
 			: didWin ? DUEL_WIN_XP : DUEL_LOSS_XP;
 		addExperience(player, xp);
+		if (battle.levelUpChallenge && didWin && id === battle.challengerId) {
+			completeStalinChallenge(player);
+		}
 		player.matches += 1;
 		if (isDraw) player.draws += 1;
 		else if (didWin) player.wins += 1;
@@ -694,7 +760,7 @@ function startTurn(battle, playerId) {
 	battle.turnPlayerId = battle.mode === 'simultaneous' ? null : playerId;
 	battle.questionId = crypto.randomUUID();
 	battle.questionStartedAt = Date.now();
-	battle.question = getQuestion(battle.subject, battle.topic);
+	battle.question = getQuestion(battle.subject, battle.topic, battle.playerIds.filter((id) => !id.startsWith('npc-')));
 	battle.deadline = battle.questionStartedAt + TURN_MS;
 	battle.answers = new Set();
 	battle.hints = new Map();
@@ -851,6 +917,7 @@ function publicBattle(battle, viewerId) {
 		deadline: battle.deadline,
 		winnerId: battle.winnerId,
 		winnerTeamIndex: battle.winnerTeamIndex,
+		levelUpChallenge: battle.levelUpChallenge,
 		winnerName: winnerTeam ? winnerTeam.map((id) => participant(battle, id)?.name || 'Player').join(' + ') : null,
 		xpEarned: battle.rewards?.[viewerId] ?? null,
 		hint: battle.hints.get(viewerId) || null,
@@ -859,7 +926,7 @@ function publicBattle(battle, viewerId) {
 	};
 }
 
-function createBattle(mode, teams, npc = null, challengerId = null, subject = 'computers', topic = null) {
+function createBattle(mode, teams, npc = null, challengerId = null, subject = 'computers', topic = null, levelUpChallenge = false) {
 	const playerIds = teams.flat();
 	const battle = {
 		id: crypto.randomUUID(),
@@ -871,6 +938,7 @@ function createBattle(mode, teams, npc = null, challengerId = null, subject = 'c
 		turnOrder: buildTurnOrder(teams, mode === 'online'),
 		challengerId,
 		npc,
+		levelUpChallenge,
 		status: 'active',
 		round: 0,
 		answers: new Set(),
@@ -949,6 +1017,7 @@ function getPlayerState(playerId) {
 			xpBalance: player.xpBalance,
 			level: player.level,
 			maxLevel: MAX_LEVEL,
+			stalinChallengePending: Boolean(player.stalinChallengePending),
 			nextLevelXp: player.level < MAX_LEVEL ? player.level * 100 : null,
 			attack: player.attack,
 			defence: player.defence,
@@ -1008,6 +1077,7 @@ function handleApi(request, response, url) {
 				losses: imported.losses,
 				draws: imported.draws,
 				homeworkRewardDate: imported.homeworkRewardDate,
+				stalinChallengePending: imported.stalinChallengePending,
 				hp: MAX_HP,
 				battleId: null,
 				challengeId: null,
@@ -1037,6 +1107,7 @@ function handleApi(request, response, url) {
 				xpBalance: 0,
 				xpSpent: 0,
 				level: 1,
+				stalinChallengePending: false,
 				...combatStats(1),
 				matches: 0,
 				wins: 0,
@@ -1143,7 +1214,13 @@ function handleApi(request, response, url) {
 		return room ? json(response, 200, room) : json(response, 404, { error: 'Player session not found' });
 	}
 
-	if (request.method === 'POST' && ['/api/study-status', '/api/study-chat', '/api/study-chat/clear', '/api/practice-question', '/api/practice-answer', '/api/battle', '/api/challenge', '/api/respond', '/api/answer', '/api/hint', '/api/resign', '/api/leave'].includes(url.pathname)) {
+	if (request.method === 'GET' && url.pathname === '/api/study-guide') {
+		if (!players.has(String(url.searchParams.get('playerId') || ''))) return json(response, 404, { error: 'Player session not found' });
+		const guide = getStudyGuide(url.searchParams.get('subject'), url.searchParams.get('topic'));
+		return guide ? json(response, 200, guide) : json(response, 400, { error: 'Choose a subject and topic available in Solo Practice' });
+	}
+
+	if (request.method === 'POST' && ['/api/study-status', '/api/study-chat', '/api/study-chat/clear', '/api/practice-question', '/api/practice-answer', '/api/battle', '/api/stalin-challenge', '/api/challenge', '/api/respond', '/api/answer', '/api/hint', '/api/resign', '/api/leave'].includes(url.pathname)) {
 		return readBody(request).then(({ playerId, opponentId, opponentIds, answer, questionId, mode, format, challengeId, accepted, subject, topic, studying, message }) => {
 			const player = players.get(String(playerId || ''));
 			if (!player) return json(response, 404, { error: 'Player session not found' });
@@ -1197,6 +1274,7 @@ function handleApi(request, response, url) {
 				});
 			} else if (url.pathname === '/api/battle') {
 				if (player.battleId || player.challengeId) return json(response, 409, { error: 'Finish your current match or invitation first' });
+				if (player.stalinChallengePending) return json(response, 409, { error: 'Beat Stalin in your level-up challenge before starting another battle' });
 				const selectedSubject = SUBJECTS.find((item) => item.id === subject)?.id;
 				if (!selectedSubject) return json(response, 400, { error: 'Choose a Grade 9 subject' });
 				const subjectInfo = SUBJECTS.find((item) => item.id === selectedSubject);
@@ -1210,8 +1288,20 @@ function handleApi(request, response, url) {
 					return json(response, 409, { error: 'Reach a higher level to unlock that arena rival' });
 				}
 				createBattle('npc', [[player.id], [npc.id]], { ...npc, hp: MAX_HP }, null, selectedSubject, topic || null);
+			} else if (url.pathname === '/api/stalin-challenge') {
+				if (player.battleId || player.challengeId) return json(response, 409, { error: 'Finish your current match or invitation first' });
+				if (!player.stalinChallengePending) return json(response, 409, { error: 'Stalin has not challenged you to a level-up battle' });
+				const selectedSubject = SUBJECTS.find((item) => item.id === subject)?.id;
+				if (!selectedSubject || SUBJECTS.find((item) => item.id === selectedSubject)?.battleAvailable === false) {
+					return json(response, 400, { error: 'Choose a subject available for battles' });
+				}
+				const subjectInfo = SUBJECTS.find((item) => item.id === selectedSubject);
+				if (topic && !subjectInfo.battleTopics.includes(topic)) return json(response, 400, { error: 'Choose a valid topic for this battle' });
+				const stalin = stalinForLevel(player.level);
+				createBattle('npc', [[player.id], [stalin.id]], stalin, player.id, selectedSubject, topic || null, true);
 			} else if (url.pathname === '/api/challenge') {
 				if (player.battleId || player.challengeId) return json(response, 409, { error: 'Finish your current match or invitation first' });
+				if (player.stalinChallengePending) return json(response, 409, { error: 'Beat Stalin in your level-up challenge before starting another battle' });
 				const selectedSubject = SUBJECTS.find((item) => item.id === subject)?.id;
 				if (!selectedSubject) return json(response, 400, { error: 'Choose a Grade 9 subject' });
 				const subjectInfo = SUBJECTS.find((item) => item.id === selectedSubject);
@@ -1351,6 +1441,7 @@ module.exports = {
 	MAX_PVP_LEVEL_GAP,
 	PARRY_LEVEL,
 	addExperience,
+	completeStalinChallenge,
 	awardHomeworkXp,
 	answerSoloPracticeQuestion,
 	buildTurnOrder,
@@ -1361,6 +1452,7 @@ module.exports = {
 	getSoloPracticeQuestion,
 	getOnlinePlayers,
 	getAvailableNpcs,
+	getStudyGuide,
 	levelGapBetweenTeams,
 	parryDamageFor,
 	isStudyRelatedMessage,

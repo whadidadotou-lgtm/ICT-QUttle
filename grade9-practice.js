@@ -3,6 +3,10 @@ const questionStems = [
 	(prompt) => `Quick revision: ${prompt}`,
 	(prompt) => `Choose the best answer: ${prompt}`,
 	(prompt) => `Exam-style check: ${prompt[0].toLowerCase()}${prompt.slice(1)}`,
+	(prompt) => `Test your understanding. ${prompt}`,
+	(prompt) => `Recall this idea: ${prompt}`,
+	(prompt) => `Select the accurate answer. ${prompt}`,
+	(prompt) => `Knowledge check: ${prompt}`,
 ];
 
 const curriculum = {

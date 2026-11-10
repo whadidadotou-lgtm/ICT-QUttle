@@ -406,6 +406,22 @@
     .answer-result { margin: 15px 0; padding: 12px; border-left: 4px solid; font-size: 11px; line-height: 1.6; }
     .answer-result.correct { border-color: #3f8059; color: #214b31; background: #e4f2e7; }
     .answer-result.incorrect { border-color: #bd5142; color: #7d3029; background: #fae8e4; }
+    .study-guide { max-width: 820px; margin: 24px auto; padding: 22px; }
+    .study-guide-panel { padding: 26px; border: 1px solid var(--line); background: var(--paper-bright); }
+    .study-guide-panel h1 { margin: 6px 0 12px; font-size: 30px; letter-spacing: -.05em; }
+    .guide-controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    .guide-controls .practice-topic-picker { margin: 10px 0; }
+    .guide-explanation { margin-top: 20px; padding: 16px; border-left: 3px solid var(--forest); background: var(--paper); color: var(--ink); font-size: 13px; line-height: 1.7; }
+    .guide-explanation li + li { margin-top: 8px; }
+    .subject-reminder { margin: 16px 0; padding: 14px; border: 1px solid var(--orange); background: #e5794d12; }
+    .subject-reminder p { margin: 0 0 9px; color: var(--ink); font-size: 12px; line-height: 1.5; }
+    .subject-reminder-options { display: flex; flex-wrap: wrap; gap: 7px; }
+    .subject-reminder-options button { min-height: 32px; padding: 0 10px; border: 1px solid var(--forest); color: var(--forest); background: transparent; cursor: pointer; font: 9px var(--mono); }
+    .stalin-challenge-screen { max-width: 700px; margin: 8vh auto; padding: 22px; }
+    .stalin-challenge-panel { padding: 28px; border: 1px solid var(--line); background: var(--paper-bright); }
+    .stalin-challenge-panel h1 { margin: 8px 0; font-size: 32px; }
+    .stalin-challenge-panel p { color: var(--muted); line-height: 1.6; }
+    .stalin-challenge-panel .practice-topic-picker { margin: 18px 0; }
     .answer-result-option { display: inline-block; margin: 2px 3px 2px 0; padding: 2px 6px; border: 1px solid currentColor; font-weight: 600; }
     .appearance-toggle { display: flex; align-items: center; gap: 9px; margin-top: 17px; padding: 12px; border: 1px solid var(--line); font-size: 12px; }
     .appearance-toggle input { accent-color: var(--forest); }
@@ -516,6 +532,16 @@
     <p class="eyebrow">Release notes</p>
     <h2 id="updates-title">Update log</h2>
     <div class="updates-list">
+      <article class="update-entry">
+        <time datetime="2026-11-10">10 November 2026</time>
+        <h3>Prannoy’s study guide and Stalin’s level-up challenges</h3>
+        <ul>
+          <li>Made Prannoy a Solo Studies guide who explains topics and gives feedback when you miss a practice answer.</li>
+          <li>Changed Stalin into a level-matched rival who challenges you before each level-up.</li>
+          <li>Added a reminder to try another subject after 30 solo questions or 5 multiplayer battles in one subject.</li>
+          <li>Changed correct solo-practice answers to 1 XP and expanded question variations while avoiding recent repeats.</li>
+        </ul>
+      </article>
       <article class="update-entry">
         <time datetime="2026-11-10">10 November 2026</time>
         <h3>About and multiplayer bot picker</h3>
@@ -630,7 +656,7 @@
       <p class="eyebrow">About</p>
       <h3 id="about-title">ICT QUttle</h3>
       <p>Founded by Bentin Nehemiah and Daniel Nelson.</p>
-      <p>Meet Prannoy (Level 1) and Stalin (Level 2), beginner bots who introduce the basics: choose a subject and chapter, answer before time runs out, and learn how correct and missed answers affect the battle.</p>
+      <p>Prannoy is the Solo Studies guide: ask him to explain a topic or learn from his feedback after a wrong answer. Stalin is your level-matched rival and challenges you before each level-up.</p>
     </section>
   </dialog>
   <dialog class="personalize-dialog account-dialog" id="account-dialog" aria-labelledby="account-title">
@@ -685,7 +711,7 @@
   </dialog>
   <div class="toast" id="toast" role="status" hidden></div>
   <script src="./grade9-practice.js"></script>
-  <script src="./local-game.js?v=20261101-export-fix2"></script>
+  <script src="./local-game.js?v=20261101-stalin-guide"></script>
   <script>
     const app = document.querySelector('#app');
     const joinScreen = document.querySelector('#join-screen');
@@ -714,6 +740,7 @@
     let lastBattleId = null;
     let lastChallengeId = null;
     let lastRenderedState = '';
+    let lastCountedMultiplayerBattleId = null;
     let selectedMode = 'online';
     let selectedFormat = '1v1';
     let selectedSubject = 'computers';
@@ -773,6 +800,10 @@
     let lastTimerWarningSound = '';
     let studyRoomInFlight = false;
     let practice = { subject: 'business', topic: 'all', question: null, feedback: null, score: 0, attempts: 0, loading: false };
+    let studyGuide = { subject: 'computers', topic: '', explanation: null, loading: false };
+    let subjectReminder = null;
+    const soloQuestionCounts = new Map();
+    const multiplayerBattleCounts = new Map();
     const playerKey = 'ict-quattle-player';
 
     async function request(url, options = {}) {
@@ -847,6 +878,7 @@
           xpBalance: player.xpBalance,
           xpSpent: player.xpSpent,
           level: player.level,
+          stalinChallengePending: Boolean(player.stalinChallengePending),
           matches: player.matches,
           wins: player.wins,
           losses: player.losses,
@@ -970,11 +1002,46 @@
     }
 
     function renderSoloPicker() {
-      return `<main class="submode-screen"><button class="mode-back" data-action="home">← All modes</button><p class="eyebrow">Solo studies</p><h1>Pick a way to focus.</h1><div class="submode-options">      <button class="submode-card" data-action="solo-view" data-view="battle"><strong>Battle bots</strong><span>Battle in every subject except English, Maths, and Business Studies, with chapter choices for each.</span></button><button class="submode-card" data-action="solo-view" data-view="practice-select"><strong>Solo practice questions</strong><span>Practice any of the 12 subjects from your Grade 9 syllabus with chapter choices and source references.</span></button><button class="submode-card" data-action="solo-view" data-view="study"><strong>Pomodoro study room</strong><span>Start a 25/5 Pomodoro, play an original ambient lo-fi loop, and see who else is studying.</span></button></div></main>`;
+      return `<main class="submode-screen"><button class="mode-back" data-action="home">← All modes</button><p class="eyebrow">Solo studies</p><h1>Pick a way to focus.</h1><div class="submode-options"><button class="submode-card" data-action="solo-view" data-view="battle"><strong>Battle bots</strong><span>Battle in every subject except English, Maths, and Business Studies, with chapter choices for each.</span></button><button class="submode-card" data-action="solo-view" data-view="practice-select"><strong>Solo practice questions</strong><span>Practice any of the 12 subjects from your Grade 9 syllabus with chapter choices and source references.</span></button><button class="submode-card" data-action="solo-view" data-view="guide"><strong>Ask Prannoy · study guide</strong><span>Choose a subject and chapter for a clear topic explanation, or learn from his feedback after a wrong answer.</span></button><button class="submode-card" data-action="solo-view" data-view="study"><strong>Pomodoro study room</strong><span>Start a 25/5 Pomodoro, play an original ambient lo-fi loop, and see who else is studying.</span></button></div></main>`;
     }
 
     function renderPracticeSubjectPicker() {
       return `<main class="submode-screen"><button class="mode-back" data-action="solo-picker">← Solo options</button><p class="eyebrow">Grade 9 · solo practice</p><h1>Choose a subject.</h1><div class="submode-options">${state.subjects.map((subject) => `<button class="submode-card" data-action="practice-subject" data-subject="${esc(subject.id)}"><strong>${esc(subject.name)}</strong><span>${esc(subject.questionCount || 100)} original practice questions · ${(subject.practiceTopics || subject.topics).slice(0, 3).map(esc).join(' · ')}</span></button>`).join('')}</div></main>`;
+    }
+
+    function renderSubjectReminder(section) {
+      if (!subjectReminder || subjectReminder.section !== section) return '';
+      const alternatives = state.subjects.filter((subject) => subject.id !== subjectReminder.subject
+        && (section !== 'online' || subject.battleAvailable !== false)).slice(0, 4);
+      const buttons = alternatives.map((subject) => `<button data-action="${section === 'solo' ? 'practice-subject' : 'subject'}" data-subject="${esc(subject.id)}">${esc(subject.name)}</button>`).join('');
+      return `<aside class="subject-reminder" role="status"><p>You’ve spent a while on ${esc((state.subjects.find((subject) => subject.id === subjectReminder.subject) || {}).name || 'this subject')}. A change of subject can help you keep learning broadly. Want to try one of these?</p><div class="subject-reminder-options">${buttons}<button data-action="dismiss-subject-reminder">Keep this subject</button></div></aside>`;
+    }
+
+    async function loadStudyGuide(subjectId = studyGuide.subject, topic = studyGuide.topic) {
+      studyGuide = { ...studyGuide, subject: subjectId, topic, explanation: null, loading: true };
+      renderStudyGuide();
+      try {
+        const query = new URLSearchParams({ playerId: state.you.id, subject: subjectId, topic });
+        const explanation = await request(`/api/study-guide?${query}`);
+        studyGuide = { ...studyGuide, explanation, loading: false };
+      } catch (error) {
+        studyGuide = { ...studyGuide, loading: false };
+        notify(error.message);
+      }
+      renderStudyGuide();
+    }
+
+    function renderStudyGuide() {
+      const subject = state.subjects.find((item) => item.id === studyGuide.subject) || state.subjects[0];
+      const topics = subject.practiceTopics || subject.topics || [];
+      const selectedTopic = topics.includes(studyGuide.topic) ? studyGuide.topic : topics[0];
+      const explanations = studyGuide.explanation?.explanations || [];
+      const explanation = studyGuide.loading
+        ? '<p>Prannoy is putting an explanation together…</p>'
+        : explanations.length
+          ? `<p><strong>Prannoy explains ${esc(studyGuide.explanation.topic)}:</strong></p><ul>${explanations.map((item) => `<li>${esc(item)}</li>`).join('')}</ul>`
+          : '<p>Choose a chapter and ask Prannoy to explain it. He will break down the key ideas from the practice material.</p>';
+      return `<main class="study-guide"><button class="mode-back" data-action="solo-picker">← Solo options</button><section class="study-guide-panel"><p class="eyebrow">Solo Studies · your underrated teacher</p><h1>Ask Prannoy.</h1><p>Pick a subject and chapter. Prannoy will pull together the key ideas you need to understand before you practise.</p><div class="guide-controls"><label class="practice-topic-picker">Choose subject<select data-guide-subject aria-label="Choose a subject for Prannoy’s explanation">${state.subjects.map((item) => `<option value="${esc(item.id)}" ${item.id === subject.id ? 'selected' : ''}>${esc(item.name)}</option>`).join('')}</select></label><label class="practice-topic-picker">Choose chapter<select data-guide-topic aria-label="Choose a chapter for Prannoy’s explanation">${topics.map((topic) => `<option value="${esc(topic)}" ${topic === selectedTopic ? 'selected' : ''}>${esc(topic)}</option>`).join('')}</select></label></div><button class="primary-button" data-action="explain-topic" ${studyGuide.loading || !selectedTopic ? 'disabled' : ''}>Explain this topic</button><section class="guide-explanation" aria-live="polite">${explanation}</section></section></main>`;
     }
 
     function renderPracticeSession() {
@@ -991,9 +1058,10 @@
         return `<button class="answer${answerClass}" data-action="practice-answer" data-answer="${index}" data-question-id="${esc(question.id)}" ${practice.feedback || practice.loading ? 'disabled' : ''}><span class="answer-key">${String.fromCharCode(65 + index)}</span><span class="answer-text">${esc(option)}${icon}</span></button>`;
       }).join('') : '';
       const feedback = practice.feedback
-        ? `${practice.feedback.correct ? `Correct! +${practice.feedback.xpAwarded} XP. ` : `Not quite. The answer is “${practice.feedback.correctAnswer}”. `}${practice.feedback.explanation}`
+        ? `${practice.feedback.correct ? `Prannoy: That’s right! +${practice.feedback.xpAwarded} XP. ` : `Prannoy: Not quite. The answer is “${practice.feedback.correctAnswer}”. `}${practice.feedback.explanation}`
         : 'Choose an answer to check your understanding.';
-      app.innerHTML = `<main class="practice-screen"><button class="mode-back" data-action="practice-subject-picker">← Subjects</button><section class="practice-panel"><div class="practice-heading"><div><p class="eyebrow">${esc(subject.name)} · Grade 9</p><h1>Solo practice</h1></div><button class="mode-back" data-action="sound" aria-pressed="${soundEnabled}">Sound ${soundEnabled ? 'on' : 'off'}</button></div>${topicPicker}<p class="practice-count">SCORE ${practice.score} / ${practice.attempts} · ${esc(question?.chapter || '')}</p>${practice.loading ? '<p class="practice-prompt">Loading your next question…</p>' : question ? `<p class="practice-prompt">${esc(question.prompt)}</p><div class="practice-options">${answerOptions}</div><p class="practice-feedback ${practice.feedback ? practice.feedback.correct ? 'correct' : 'incorrect' : ''}" role="status" aria-live="polite">${feedback}</p><button class="primary-button" data-action="practice-next" ${!practice.feedback || practice.loading ? 'disabled' : ''}>Next question</button>` : '<p class="practice-prompt">Choose a subject to start.</p>'}<p class="practice-source">Curriculum references: ${sourceLinks || 'See the listed Grade 9 syllabus topics.'} · Questions are original practice material, not copied from the sources.</p></section></main>`;
+      const reminder = subjectReminder?.section === 'solo' ? renderSubjectReminder('solo') : '';
+      app.innerHTML = `<main class="practice-screen"><button class="mode-back" data-action="practice-subject-picker">← Subjects</button>${reminder}<section class="practice-panel"><div class="practice-heading"><div><p class="eyebrow">${esc(subject.name)} · Grade 9</p><h1>Solo practice</h1></div><button class="mode-back" data-action="sound" aria-pressed="${soundEnabled}">Sound ${soundEnabled ? 'on' : 'off'}</button></div>${topicPicker}<p class="practice-count">SCORE ${practice.score} / ${practice.attempts} · ${esc(question?.chapter || '')}</p>${practice.loading ? '<p class="practice-prompt">Loading your next question…</p>' : question ? `<p class="practice-prompt">${esc(question.prompt)}</p><div class="practice-options">${answerOptions}</div><p class="practice-feedback ${practice.feedback ? practice.feedback.correct ? 'correct' : 'incorrect' : ''}" role="status" aria-live="polite">${feedback}</p><button class="primary-button" data-action="practice-next" ${!practice.feedback || practice.loading ? 'disabled' : ''}>Next question</button>` : '<p class="practice-prompt">Choose a subject to start.</p>'}<p class="practice-source">Curriculum references: ${sourceLinks || 'See the listed Grade 9 syllabus topics.'} · Questions are original practice material, not copied from the sources.</p></section></main>`;
     }
 
     async function loadPracticeQuestion(subjectId = practice.subject, topic = practice.topic) {
@@ -1023,6 +1091,13 @@
           body: JSON.stringify({ playerId: state.you.id, questionId: button.dataset.questionId, answer: Number(button.dataset.answer) }),
         });
         practice = { ...practice, ...result, loading: false, feedback: result };
+        const subjectQuestionCount = (soloQuestionCounts.get(practice.subject) || 0) + 1;
+        if (subjectQuestionCount >= 30) {
+          soloQuestionCounts.set(practice.subject, 0);
+          subjectReminder = { section: 'solo', subject: practice.subject };
+        } else {
+          soloQuestionCounts.set(practice.subject, subjectQuestionCount);
+        }
         if (result.progress) state.you = { ...state.you, ...result.progress };
         playBattleSound(result.correct ? 'correct' : 'incorrect');
         if (result.correct) celebrateCorrectAnswer();
@@ -1636,6 +1711,7 @@
       try {
         const previous = state;
         state = await request(`/api/state?playerId=${encodeURIComponent(playerId)}`);
+        recordCompletedMultiplayerBattle(previous, state);
         celebrateBattleHit(previous, state);
         announceNewBots(previous, state);
         render();
@@ -1647,6 +1723,21 @@
         }
       } finally {
         pollInFlight = false;
+      }
+    }
+
+    function recordCompletedMultiplayerBattle(previous, next) {
+      if (previous?.battle?.status !== 'active' || next?.battle?.status !== 'finished'
+        || previous.battle.id !== next.battle.id || previous.battle.mode === 'npc'
+        || lastCountedMultiplayerBattleId === next.battle.id) return;
+      lastCountedMultiplayerBattleId = next.battle.id;
+      const subject = next.battle.subject;
+      const count = (multiplayerBattleCounts.get(subject) || 0) + 1;
+      if (count >= 5) {
+        multiplayerBattleCounts.set(subject, 0);
+        subjectReminder = { section: 'online', subject };
+      } else {
+        multiplayerBattleCounts.set(subject, count);
       }
     }
 
@@ -1721,6 +1812,7 @@
       try {
         const previous = state;
         state = await request(endpoint, { method: 'POST', body: JSON.stringify({ playerId: state.you.id, ...payload }) });
+        recordCompletedMultiplayerBattle(previous, state);
         celebrateBattleHit(previous, state);
         announceNewBots(previous, state);
         if (endpoint === '/api/challenge') selectedOpponentIds = [];
@@ -1796,6 +1888,9 @@
       topicPicker.className = 'battle-topic-picker practice-topic-picker';
       topicPicker.innerHTML = `Choose battle chapter<select data-battle-chapter aria-label="Choose a battle chapter for ${esc(selectedSubjectInfo?.name || 'this subject')}"><option value="all" ${selectedTopic === 'all' ? 'selected' : ''}>All chapters</option>${battleTopics.map((topic) => `<option value="${esc(topic)}" ${selectedTopic === topic ? 'selected' : ''}>${esc(topic)}</option>`).join('')}</select>`;
       subjectPicker.insertAdjacentElement('afterend', topicPicker);
+      if (activeSection === 'online' && subjectReminder?.section === 'online') {
+        topicPicker.insertAdjacentHTML('afterend', renderSubjectReminder('online'));
+      }
       if (activeSection === 'online') {
         const botPicker = document.createElement('div');
         botPicker.className = 'bot-challenge';
@@ -1856,7 +1951,7 @@
         name: battle.winnerName,
       };
       const prompt = finished
-        ? `<div class="quiz-state"><div class="state-symbol">${winner?.id === state.you.id ? '✦' : '×'}</div><p class="eyebrow">Duel complete</p><h2>${winner?.id === state.you.id ? 'Victory.' : 'Defeat.'}</h2><p>${winner?.id === state.you.id ? 'Your knowledge held the line.' : 'The next round is yours to take.'}</p><div class="result-mark ${winner?.id === state.you.id ? '' : 'lost'}">${esc(winner?.name || 'No winner')} wins</div><button class="primary-button" data-action="leave">Return to rivals</button></div>`
+        ? `<div class="quiz-state"><div class="state-symbol">${winner?.id === state.you.id ? '✦' : '×'}</div><p class="eyebrow">Duel complete</p><h2>${winner?.id === state.you.id ? 'Victory.' : 'Defeat.'}</h2><p>${battle.levelUpChallenge ? winner?.id === state.you.id ? `You defeated Stalin and reached Level ${state.you.level}.` : 'You did not beat Stalin this time. Your XP is safe; return and challenge him again.' : winner?.id === state.you.id ? 'Your knowledge held the line.' : 'The next round is yours to take.'}</p><div class="result-mark ${winner?.id === state.you.id ? '' : 'lost'}">${esc(winner?.name || 'No winner')} wins</div><button class="primary-button" data-action="leave">Return to rivals</button></div>`
         : yourTurn && question
           ? `<div class="quiz-header"><h2>Your turn</h2><span class="chapter-pill">${esc(question.chapter)}${hardQuestion ? ' · HARD +50% DAMAGE' : ''}</span></div><div class="timer-row"><span class="timer-caption">Answer before the bell</span><span class="timer-value" data-timer>${String(remaining).padStart(2, '0')}s</span></div><div class="timer-track"><div class="timer-fill ${remaining <= 5 ? 'urgent' : ''}" data-timer-bar style="width:${Math.min(100, remaining / 20 * 100)}%"></div></div><p class="question">${esc(question.prompt)}</p><div class="answer-list">${question.options.map((option, index) => `<button class="answer" data-action="answer" data-answer="${index}" data-question-id="${esc(battle.questionId)}" ${busy ? 'disabled' : ''}><span class="answer-key">${String.fromCharCode(65 + index)}</span><span class="answer-text">${esc(option)}</span></button>`).join('')}</div><div class="quiz-feedback">A correct answer deals <strong><span data-hit-damage>${hitDamage}</span> damage</strong> and <strong>+3 HP</strong><span data-fast-bonus>${fastWindowOpen ? ' · 2× FAST ANSWER BONUS ACTIVE' : ' · answer within 2 seconds for double damage'}</span>${hardQuestion ? ' · hard questions deal 50% extra damage' : ''}${battle.parryReady ? ' · PARRY READY: answer correctly within 2 seconds to reflect the last hit' : ''}</div><div class="quiz-footer">A wrong answer or timeout costs 14 HP. The duel ends at 0 HP.${state.you.level >= 50 ? ' A fast, correct answer can parry; hard questions shatter the barrier.' : ''}</div>`
           : `<div class="quiz-state"><div class="state-symbol waiting">…</div><p class="eyebrow">${battle.mode === 'online' ? 'Player duel' : 'NPC duel'}</p><h2>${battle.mode === 'online' ? 'Their turn.' : `${esc(rival.name)} is thinking.`}</h2><p>${battle.mode === 'online' ? `${esc(activeName || 'Your rival')} is answering. Your next question starts as soon as their turn resolves.` : 'Your rival is working through a question.'}</p></div>`;
@@ -1884,6 +1979,13 @@
       return `<div class="fighter ${enemy ? 'enemy' : ''}" data-player-id="${esc(player.id)}"><div class="fighter-avatar">${esc(player.name.slice(0, 1).toUpperCase())}</div><div class="fighter-name">${esc(player.name)}</div><div class="fighter-role">${player.npc ? 'ARENA NPC' : enemy ? 'RIVAL' : 'YOU · PLAYER'}</div><div class="combat-stats">LVL ${player.level} · ATK ${player.attack} · DEF ${player.defence}</div><div class="hp-wrap"><div class="hp-label"><span>HP</span><span>${hp} / 100</span></div><div class="hp-track"><div class="hp-fill" style="width:${hp}%"></div></div></div></div>`;
     }
 
+    function renderStalinChallenge() {
+      const availableSubjects = state.subjects.filter((subject) => subject.battleAvailable !== false);
+      const selected = availableSubjects.find((subject) => subject.id === selectedSubject) || availableSubjects[0];
+      if (selected) selectedSubject = selected.id;
+      return `<main class="stalin-challenge-screen"><section class="stalin-challenge-panel"><p class="eyebrow">Level-up challenge · required duel</p><h1>Stalin challenges you.</h1><p>You have enough XP for the next level. Stalin is now Level ${state.you.level}, just like you. Beat him in a knowledge duel to claim your level-up. If you lose, your XP is kept and you can challenge him again.</p><p>Battle basics: answer correctly to hit Stalin and restore 3 HP. A wrong or late answer costs you 14 HP. Answer within 2 seconds for double damage.</p><label class="practice-topic-picker">Choose battle subject<select data-stalin-subject aria-label="Choose the subject for Stalin’s challenge">${availableSubjects.map((subject) => `<option value="${esc(subject.id)}" ${subject.id === selectedSubject ? 'selected' : ''}>${esc(subject.name)}</option>`).join('')}</select></label><button class="primary-button" data-action="challenge-stalin" ${busy || !selected ? 'disabled' : ''}>Accept Stalin’s challenge</button></section></main>`;
+    }
+
     function render() {
       if (!state) return;
       applyAppearance();
@@ -1895,6 +1997,10 @@
       document.querySelector('#profile-badge').textContent = state.you.name.slice(0, 1).toUpperCase();
       document.querySelector('#online-count').textContent = localOnly ? 'LOCAL PLAYER' : `${state.onlinePlayers.length + 1} IN ARENA`;
       const battle = state.battle;
+      if (!battle && state.you.stalinChallengePending) {
+        app.innerHTML = renderStalinChallenge();
+        return;
+      }
       if (!activeSection) {
         app.innerHTML = renderModePicker();
         return;
@@ -1905,6 +2011,10 @@
       }
       if (activeSection === 'solo' && !battle && soloView === 'practice-select') {
         app.innerHTML = renderPracticeSubjectPicker();
+        return;
+      }
+      if (activeSection === 'solo' && !battle && soloView === 'guide') {
+        renderStudyGuide();
         return;
       }
       if (activeSection === 'solo' && !battle && soloView === 'practice') {
@@ -2234,9 +2344,13 @@
           updateStudyStatus(true);
           startAmbientAudio();
           refreshStudyRoom();
+        } else if (soloView === 'guide') {
+          const subject = state.subjects.find((item) => item.id === studyGuide.subject) || state.subjects[0];
+          studyGuide = { ...studyGuide, subject: subject.id, topic: (subject.practiceTopics || subject.topics)[0], explanation: null };
         }
         lastRenderedState = '';
         render();
+        if (soloView === 'guide') loadStudyGuide();
         return;
       }
       if (button.dataset.action === 'practice-subject-picker') {
@@ -2246,9 +2360,24 @@
         return;
       }
       if (button.dataset.action === 'practice-subject') {
+        subjectReminder = null;
         practice = { ...practice, subject: button.dataset.subject, topic: 'all', question: null, feedback: null, score: 0, attempts: 0 };
         soloView = 'practice';
         loadPracticeQuestion(button.dataset.subject, 'all');
+        return;
+      }
+      if (button.dataset.action === 'explain-topic') {
+        loadStudyGuide(studyGuide.subject, app.querySelector('[data-guide-topic]')?.value || studyGuide.topic);
+        return;
+      }
+      if (button.dataset.action === 'challenge-stalin') {
+        act('/api/stalin-challenge', { subject: selectedSubject });
+        return;
+      }
+      if (button.dataset.action === 'dismiss-subject-reminder') {
+        subjectReminder = null;
+        lastRenderedState = '';
+        render();
         return;
       }
       if (button.dataset.action === 'practice-answer') {
@@ -2351,6 +2480,7 @@
         app.querySelectorAll('[data-action="mode"]').forEach((modeButton) => modeButton.setAttribute('aria-pressed', String(modeButton.dataset.mode === selectedMode)));
       }
       if (button.dataset.action === 'subject') {
+        subjectReminder = null;
         selectedSubject = button.dataset.subject;
         selectedTopic = 'all';
         const subject = state.subjects.find((item) => item.id === selectedSubject);
@@ -2412,6 +2542,16 @@
         return;
       }
       if (event.target.matches('[data-battle-chapter]')) selectedTopic = event.target.value;
+      if (event.target.matches('[data-stalin-subject]')) selectedSubject = event.target.value;
+      if (event.target.matches('[data-guide-subject]')) {
+        const subject = state.subjects.find((item) => item.id === event.target.value);
+        if (subject) studyGuide = { subject: subject.id, topic: (subject.practiceTopics || subject.topics)[0], explanation: null, loading: false };
+        renderStudyGuide();
+      }
+      if (event.target.matches('[data-guide-topic]')) {
+        studyGuide = { ...studyGuide, topic: event.target.value, explanation: null };
+        renderStudyGuide();
+      }
       if (event.target.matches('[data-bot-opponent]')) {
         const npc = state.npcs.find((item) => item.id === event.target.value);
         const challengeButton = app.querySelector('.bot-challenge [data-action="battle"]');
