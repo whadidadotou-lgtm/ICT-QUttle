@@ -86,8 +86,12 @@ test('progression caps at level 100 and unlocks one new bot for each level', () 
 
 	const levelOneBots = getAvailableNpcs(1);
 	const levelTwoBots = getAvailableNpcs(2);
-	assert.equal(levelOneBots.length, 10);
-	assert.equal(levelTwoBots.length, 11);
+	assert.deepEqual(levelOneBots.slice(0, 2).map(({ id, name, level }) => ({ id, name, level })), [
+		{ id: 'npc-prannoy', name: 'Prannoy', level: 1 },
+		{ id: 'npc-stalin', name: 'Stalin', level: 2 },
+	]);
+	assert.equal(levelOneBots.length, 12);
+	assert.equal(levelTwoBots.length, 13);
 	assert.equal(levelTwoBots.at(-1).level, 12);
 	assert.deepEqual(
 		levelTwoBots.filter((npc) => !levelOneBots.some((oldNpc) => oldNpc.id === npc.id)).map((npc) => npc.level),

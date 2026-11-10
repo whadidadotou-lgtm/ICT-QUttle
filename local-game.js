@@ -8,6 +8,10 @@
 	const BATTLE_TIME_MS = 20_000;
 	const MAX_NPC_LEVEL = 110;
 	const STORAGE_ERROR = 'Could not save local game data. Check that browser storage is enabled and has space.';
+	const starterNpcs = [
+		{ id: 'npc-prannoy', name: 'Prannoy', level: 1 },
+		{ id: 'npc-stalin', name: 'Stalin', level: 2 },
+	];
 	const legacyNpcNames = {
 		2: ['npc-bit', 'Mira Sparks'],
 		4: ['npc-circuit', 'Theo Quill'],
@@ -128,7 +132,7 @@
 		}
 
 		function makeNpcs(level) {
-			return Array.from({ length: Math.min(MAX_NPC_LEVEL, level + 10) - 1 }, (_, index) => {
+			const availableNpcs = Array.from({ length: Math.min(MAX_NPC_LEVEL, level + 10) - 1 }, (_, index) => {
 				const npcLevel = index + 2;
 				const [id, name] = legacyNpcNames[npcLevel] || [
 					`npc-level-${npcLevel}`,
@@ -136,6 +140,10 @@
 				];
 				return { id, name, level: npcLevel, ...playerStats(npcLevel), hp: MAX_HP };
 			});
+			return [
+				...starterNpcs.map((npc) => ({ ...npc, ...playerStats(npc.level), hp: MAX_HP })),
+				...availableNpcs,
+			];
 		}
 
 		function getSubjects() {

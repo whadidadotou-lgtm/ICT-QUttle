@@ -117,6 +117,11 @@ test('local browser mode can start a bot battle and advance to the bot turn', as
 	const storage = createStorage();
 	const api = createLocalGame(storage, webcrypto, grade9Practice);
 	const registered = await post(api, '/api/register', { username: 'BotFighter', password: 'strong password' });
+	const initialState = await api.handle(`/api/state?playerId=${encodeURIComponent(registered.you.id)}`);
+	assert.deepEqual(initialState.npcs.slice(0, 2).map(({ id, name, level }) => ({ id, name, level })), [
+		{ id: 'npc-prannoy', name: 'Prannoy', level: 1 },
+		{ id: 'npc-stalin', name: 'Stalin', level: 2 },
+	]);
 	const started = await post(api, '/api/battle', {
 		playerId: registered.you.id,
 		opponentId: 'npc-bit',

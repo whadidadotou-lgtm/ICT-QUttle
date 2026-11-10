@@ -40,6 +40,10 @@ const studyStatuses = new Map();
 const studyMessages = [];
 const MAX_STUDY_MESSAGES = 50;
 const soloPracticeSessions = new Map();
+const starterNpcs = [
+	{ id: 'npc-prannoy', name: 'Prannoy', level: 1 },
+	{ id: 'npc-stalin', name: 'Stalin', level: 2 },
+].map((npc) => ({ ...npc, ...combatStats(npc.level), hp: MAX_HP }));
 
 function combatStats(level) {
 	const cappedLevel = Math.max(1, Math.min(MAX_LEVEL, level));
@@ -443,14 +447,14 @@ const legacyNpcNames = {
 };
 const npcFirstNames = ['Ari', 'Blaze', 'Cora', 'Dax', 'Echo', 'Freya', 'Gale', 'Hale', 'Indigo', 'Juno', 'Kestrel'];
 const npcLastNames = ['Ashfall', 'Blackwell', 'Cross', 'Dawnbreak', 'Ember', 'Frost', 'Graves', 'Hawke', 'Ironwood', 'Jett', 'Knight', 'Locke', 'Morrow'];
-const npcs = Array.from({ length: MAX_NPC_LEVEL - 1 }, (_, index) => {
+const npcs = [...starterNpcs, ...Array.from({ length: MAX_NPC_LEVEL - 1 }, (_, index) => {
 	const level = index + 2;
 	const [id, name] = legacyNpcNames[level] || [
 		`npc-level-${level}`,
 		`${npcFirstNames[(level - 2) % npcFirstNames.length]} ${npcLastNames[Math.floor((level - 2) / npcFirstNames.length) % npcLastNames.length]}`,
 	];
 	return { id, name, level, ...combatStats(level), hp: MAX_HP };
-});
+})];
 
 function json(response, status, value) {
 	response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });

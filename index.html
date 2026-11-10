@@ -57,6 +57,9 @@
     .settings-dialog::backdrop { background: #172b2488; }
     .settings-options { display: grid; gap: 9px; margin-top: 18px; }
     .settings-options button { min-height: 42px; border: 1px solid var(--line); background: var(--paper); cursor: pointer; text-align: left; padding: 0 12px; }
+    .settings-about { margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--line); }
+    .settings-about h3 { margin: 5px 0 8px; font-size: 15px; }
+    .settings-about p:not(.eyebrow) { margin: 7px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
     .account-dialog { width: min(430px, calc(100vw - 28px)); }
     .account-form { display: grid; gap: 8px; margin-top: 20px; }
     .account-form label { margin-top: 4px; font: 10px var(--mono); text-transform: uppercase; }
@@ -273,6 +276,9 @@
     .challenge-button { min-height: 31px; padding: 0 10px; border: 1px solid var(--forest); color: var(--forest); background: transparent; cursor: pointer; font: 9px var(--mono); text-transform: uppercase; }
     .challenge-button:hover { color: white; background: var(--forest); }
     .empty-rivals { padding: 15px 0; color: var(--muted); font-size: 11px; }
+    .bot-challenge { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 9px; margin: 12px 0; }
+    .bot-challenge .practice-topic-picker { max-width: none; margin: 0; }
+    .bot-challenge .challenge-button { min-height: 38px; }
     .quiz-state { min-height: 300px; display: flex; flex-direction: column; justify-content: center; }
     .state-symbol { width: 46px; height: 46px; margin-bottom: 19px; display: grid; place-items: center; background: var(--lime); color: var(--forest); font-size: 22px; }
     .state-symbol.waiting { color: #355e6a; background: #c7dde0; }
@@ -611,6 +617,12 @@
       <button id="settings-personalise" type="button">Personalise</button>
       <button id="settings-account" type="button">Account</button>
     </div>
+    <section class="settings-about" aria-labelledby="about-title">
+      <p class="eyebrow">About</p>
+      <h3 id="about-title">ICT QUttle</h3>
+      <p>Founded by Bentin Nehemiah and Daniel Nelson.</p>
+      <p>Meet Prannoy (Level 1) and Stalin (Level 2), beginner bots who introduce the basics: choose a subject and chapter, answer before time runs out, and learn how correct and missed answers affect the battle.</p>
+    </section>
   </dialog>
   <dialog class="personalize-dialog account-dialog" id="account-dialog" aria-labelledby="account-title">
     <div class="personalize-content">
@@ -1716,7 +1728,7 @@
 
     function renderRivals() {
       const rivals = [
-        ...state.npcs.map((npc) => ({
+        ...(activeSection === 'solo' ? state.npcs : []).map((npc) => ({
           ...npc,
           kind: 'npc',
           detail: `LEVEL ${npc.level}${npc.level >= 50 || npc.level - state.you.level >= 5 ? ' · BOSS FIGHT' : ''}`,
@@ -1727,7 +1739,11 @@
           detail: player.status === 'available' ? `LVL ${player.level} · ATK ${player.attack} · DEF ${player.defence}` : player.status === 'in-match' ? 'IN MATCH' : 'INVITATION PENDING',
         }))),
       ];
-      if (!rivals.length) return '<div class="empty-rivals">No other players online. Your rivals are ready.</div>';
+      if (!rivals.length) {
+        return activeSection === 'solo'
+          ? '<div class="empty-rivals">No bots are available right now.</div>'
+          : '<div class="empty-rivals">No other players online right now. Choose a bot above or wait for someone to join.</div>';
+      }
       return rivals.map((rival) => {
         const isPlayer = rival.kind === 'player';
         const selected = selectedOpponentIds.includes(rival.id);
@@ -1771,6 +1787,12 @@
       topicPicker.className = 'battle-topic-picker practice-topic-picker';
       topicPicker.innerHTML = `Choose battle chapter<select data-battle-chapter aria-label="Choose a battle chapter for ${esc(selectedSubjectInfo?.name || 'this subject')}"><option value="all" ${selectedTopic === 'all' ? 'selected' : ''}>All chapters</option>${battleTopics.map((topic) => `<option value="${esc(topic)}" ${selectedTopic === topic ? 'selected' : ''}>${esc(topic)}</option>`).join('')}</select>`;
       subjectPicker.insertAdjacentElement('afterend', topicPicker);
+      if (activeSection === 'online') {
+        const botPicker = document.createElement('div');
+        botPicker.className = 'bot-challenge';
+        botPicker.innerHTML = `<label class="practice-topic-picker">Challenge a bot<select data-bot-opponent aria-label="Choose a bot to battle">${state.npcs.length ? `<option value="">Choose a bot</option>${state.npcs.map((npc) => `<option value="${esc(npc.id)}">${esc(npc.name)} · Level ${npc.level}</option>`).join('')}` : '<option value="">No bots unlocked</option>'}</select></label><button type="button" class="challenge-button" data-action="battle" data-id="" data-level="" disabled>Challenge bot</button>`;
+        topicPicker.insertAdjacentElement('afterend', botPicker);
+      }
       const invitations = [
         ...state.incomingChallenges.map((challenge) => `<div class="invite-row"><div class="invite-copy"><strong>${esc(challenge.name)} challenged you · ${challenge.format}${challenge.levelGap >= 5 ? ` · ⚠ ${challenge.levelGap}-level gap` : ''}</strong><span>${challenge.topic ? `${esc(challenge.topic)} · ` : ''}${challenge.hasAccepted ? `Accepted · waiting for teammates (${challenge.accepted}/${challenge.required})` : `${challenge.mode === 'simultaneous' ? 'First correct' : 'Turn based'} · ${challenge.accepted}/${challenge.required} accepted`}</span></div>${challenge.hasAccepted ? '' : `<button class="invite-action accept" data-action="respond" data-id="${esc(challenge.id)}" data-accepted="true" data-level-gap="${challenge.levelGap}">Accept</button><button class="invite-action decline" data-action="respond" data-id="${esc(challenge.id)}" data-accepted="false">Decline</button>`}</div>`),
         ...state.outgoingChallenges.map((challenge) => `<div class="invite-row outgoing"><div class="invite-copy"><strong>Invite sent to ${esc(challenge.name)} · ${challenge.format}${challenge.levelGap >= 5 ? ` · ⚠ ${challenge.levelGap}-level gap` : ''}</strong><span>${challenge.topic ? `${esc(challenge.topic)} · ` : ''}Accepted ${challenge.accepted}/${challenge.required} · ${challenge.mode === 'simultaneous' ? 'First correct' : 'Turn based'}</span></div><button class="invite-action decline" data-action="respond" data-id="${esc(challenge.id)}" data-accepted="false">Cancel</button></div>`),
@@ -1911,7 +1933,7 @@
       if (!battle) lastBattleId = null;
       const content = battle
         ? renderBattle()
-        : `<section class="rail"><p class="eyebrow">Player file</p><h2 class="rail-title">Your record</h2><div class="rank-block"><div class="rank-line"><span class="rank-name">${esc(state.you.name)}</span><span class="rank-level">LVL ${String(state.you.level).padStart(2, '0')}</span></div><div class="rank-caption">Arena challenger · unranked</div></div><div class="section-heading"><span>Field stats</span><span>SEASON 01</span></div><div class="stat-row"><span>Health</span><strong>100 / 100</strong></div><div class="stat-row"><span>Win streak</span><strong>0</strong></div><div class="stat-row"><span>Knowledge XP</span><strong>000</strong></div><div class="section-heading"><span>Question set</span><span>TOPICS</span></div><div class="chapter-list"></div><div class="rail-note">Choose a subject to see its question topics.</div></section><main class="main-panel"><div class="page-heading"><div><p class="eyebrow">Knowledge is your weapon</p><h1>Choose your rival.</h1></div><span class="season">ARENA · 01</span></div><section class="arena" aria-label="Battle arena"><div class="arena-top"><span class="live-label"><i class="online-dot"></i>ARENA OPEN</span><span>WAITING FOR MATCH</span></div><div class="combatants"><div class="fighter"><div class="fighter-avatar">${esc(state.you.name.slice(0, 1).toUpperCase())}</div><div class="fighter-name">${esc(state.you.name)}</div><div class="fighter-role">READY · 100 HP</div></div><div class="versus"><strong>VS</strong>SELECT</div><div class="fighter enemy"><div class="fighter-avatar">?</div><div class="fighter-name">Your rival</div><div class="fighter-role">NPC OR PLAYER</div></div></div><div class="arena-bottom"><span>TURN-BASED KNOWLEDGE DUEL</span><span>20 <strong>SEC</strong> PER TURN</span></div></section><div class="lobby-heading"><h2>Available rivals</h2><span>${state.npcs.length} NPC · ${state.onlinePlayers.length} ONLINE</span></div><div class="rival-list">${renderRivals()}</div></main><aside class="quiz-panel"><div class="quiz-state"><div class="state-symbol">✳</div><p class="eyebrow">Ready when you are</p><h2>Enter the duel.</h2><p>Choose an arena rival. Answer each Grade 9 question before the 20-second timer runs out.</p><div class="quiz-footer">A correct answer strikes for 15 HP and restores 3 HP. Wrong or late answers cost 14 HP.</div></div></aside>`;
+        : `<section class="rail"><p class="eyebrow">Player file</p><h2 class="rail-title">Your record</h2><div class="rank-block"><div class="rank-line"><span class="rank-name">${esc(state.you.name)}</span><span class="rank-level">LVL ${String(state.you.level).padStart(2, '0')}</span></div><div class="rank-caption">Arena challenger · unranked</div></div><div class="section-heading"><span>Field stats</span><span>SEASON 01</span></div><div class="stat-row"><span>Health</span><strong>100 / 100</strong></div><div class="stat-row"><span>Win streak</span><strong>0</strong></div><div class="stat-row"><span>Knowledge XP</span><strong>000</strong></div><div class="section-heading"><span>Question set</span><span>TOPICS</span></div><div class="chapter-list"></div><div class="rail-note">Choose a subject to see its question topics.</div></section><main class="main-panel"><div class="page-heading"><div><p class="eyebrow">Knowledge is your weapon</p><h1>Choose your rival.</h1></div><span class="season">ARENA · 01</span></div><section class="arena" aria-label="Battle arena"><div class="arena-top"><span class="live-label"><i class="online-dot"></i>ARENA OPEN</span><span>WAITING FOR MATCH</span></div><div class="combatants"><div class="fighter"><div class="fighter-avatar">${esc(state.you.name.slice(0, 1).toUpperCase())}</div><div class="fighter-name">${esc(state.you.name)}</div><div class="fighter-role">READY · 100 HP</div></div><div class="versus"><strong>VS</strong>SELECT</div><div class="fighter enemy"><div class="fighter-avatar">?</div><div class="fighter-name">Your rival</div><div class="fighter-role">NPC OR PLAYER</div></div></div><div class="arena-bottom"><span>TURN-BASED KNOWLEDGE DUEL</span><span>20 <strong>SEC</strong> PER TURN</span></div></section><div class="lobby-heading"><h2>Available rivals</h2><span>${activeSection === 'solo' ? `${state.npcs.length} NPC · ` : ''}${state.onlinePlayers.length} ONLINE</span></div><div class="rival-list">${renderRivals()}</div></main><aside class="quiz-panel"><div class="quiz-state"><div class="state-symbol">✳</div><p class="eyebrow">Ready when you are</p><h2>Enter the duel.</h2><p>Choose an arena rival. Answer each Grade 9 question before the 20-second timer runs out.</p><div class="quiz-footer">A correct answer strikes for 15 HP and restores 3 HP. Wrong or late answers cost 14 HP.</div></div></aside>`;
       app.innerHTML = `<div class="app-grid-inner">${content}</div>`;
       const inner = app.firstElementChild;
       const lobbyTitle = inner.querySelector('.lobby-heading h2');
@@ -2287,10 +2309,15 @@
           notify(`${state.subjects.find((subject) => subject.id === selectedSubject).name} is available in Solo Practice. Switch to Solo Studies for its questions.`);
           return;
         }
-        const npcLevel = Number(button.dataset.level);
+        const npc = state.npcs.find((item) => item.id === button.dataset.id);
+        if (!npc) {
+          notify('Choose an available bot to battle.');
+          return;
+        }
+        const npcLevel = npc.level;
         const levelGap = npcLevel - state.you.level;
         if ((levelGap >= 5 || npcLevel >= 50)
-          && !window.confirm(`${button.closest('.rival-row').querySelector('.rival-name').textContent} is level ${npcLevel}, a boss fight. Start the battle?`)) return;
+          && !window.confirm(`${npc.name} is level ${npcLevel}, a boss fight. Start the battle?`)) return;
         const audioReady = wakeBattleAudio();
         if (levelGap >= 5 || npcLevel >= 50) audioReady.then(() => playBattleSound('boss-warning'));
         act('/api/battle', { opponentId: button.dataset.id, subject: selectedSubject, topic: selectedTopic === 'all' ? null : selectedTopic });
@@ -2376,6 +2403,15 @@
         return;
       }
       if (event.target.matches('[data-battle-chapter]')) selectedTopic = event.target.value;
+      if (event.target.matches('[data-bot-opponent]')) {
+        const npc = state.npcs.find((item) => item.id === event.target.value);
+        const challengeButton = app.querySelector('.bot-challenge [data-action="battle"]');
+        if (challengeButton) {
+          challengeButton.dataset.id = npc?.id || '';
+          challengeButton.dataset.level = npc?.level || '';
+          challengeButton.disabled = busy || !npc;
+        }
+      }
     });
 
     joinForm.addEventListener('submit', async (event) => {
