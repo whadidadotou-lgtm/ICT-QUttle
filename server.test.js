@@ -6,7 +6,8 @@ const test = require('node:test');
 const {
 	SUBJECTS,
 	addExperience,
-	completeStalinChallenge,
+	completeSubjectChallenge,
+	createSubjectProgress,
 	awardHomeworkXp,
 	buildTurnOrder,
 	censorProfanity,
@@ -54,57 +55,46 @@ test('online players stay visible while showing whether they can be challenged',
 	]);
 });
 
-test('XP thresholds call Stalin before leveling up and refresh combat stats after victory', () => {
-	const player = { xp: 0, totalXp: 0, xpBalance: 0, level: 1 };
+test('XP and level-up challenges are independent for each subject', () => {
+	const player = { totalXp: 0, xpBalance: 0, subjectProgress: createSubjectProgress() };
 
-	addExperience(player, 99);
-	assert.equal(player.level, 1);
-	assert.equal(player.xp, 99);
-	assert.deepEqual(combatStats(player.level), { attack: 10, defence: 2 });
+	addExperience(player, 99, 'chemistry');
+	assert.deepEqual(player.subjectProgress.chemistry, { level: 1, xp: 99, challengePending: false });
+	assert.deepEqual(player.subjectProgress.english, { level: 1, xp: 0, challengePending: false });
 
-	addExperience(player, 1);
-	assert.equal(player.level, 1);
-	assert.equal(player.xp, 100);
-	assert.equal(player.stalinChallengePending, true);
-	assert.equal(completeStalinChallenge(player), true);
-	assert.equal(player.level, 2);
-	assert.equal(player.xp, 0);
-	assert.deepEqual(combatStats(player.level), { attack: 11, defence: 2 });
+	addExperience(player, 1, 'chemistry');
+	assert.equal(player.subjectProgress.chemistry.challengePending, true);
+	assert.equal(completeSubjectChallenge(player, 'chemistry'), true);
+	assert.deepEqual(player.subjectProgress.chemistry, { level: 2, xp: 0, challengePending: false });
+	assert.deepEqual(combatStats(player.subjectProgress.chemistry.level), { attack: 11, defence: 2 });
+	assert.equal(player.subjectProgress.english.level, 1);
 
-	addExperience(player, 200);
-	assert.equal(player.level, 2);
-	assert.equal(player.stalinChallengePending, true);
-	assert.equal(completeStalinChallenge(player), true);
-	assert.equal(player.level, 3);
-	assert.equal(player.xp, 0);
-	assert.deepEqual(combatStats(player.level), { attack: 12, defence: 3 });
-	assert.equal(player.totalXp, 300);
-	assert.equal(player.xpBalance, 300);
+	addExperience(player, 100, 'english');
+	assert.equal(player.subjectProgress.english.challengePending, true);
+	assert.equal(player.totalXp, 200);
+	assert.equal(player.xpBalance, 200);
 });
 
-test('progression caps at level 100 and unlocks one new arena opponent for each level', () => {
+test('subject progression caps at level 100 and bots beyond the 10-level gap are hidden', () => {
 	assert.equal(MAX_LEVEL, 100);
-	const player = { xp: 0, totalXp: 0, xpBalance: 0, level: 1 };
-	addExperience(player, 495_000);
-	while (player.stalinChallengePending) completeStalinChallenge(player);
-	assert.equal(player.level, MAX_LEVEL);
-	assert.equal(player.xp, 0);
-	assert.deepEqual(combatStats(player.level), { attack: 109, defence: 51 });
-	addExperience(player, 100);
-	assert.equal(player.level, MAX_LEVEL);
+	const player = { totalXp: 0, xpBalance: 0, subjectProgress: createSubjectProgress() };
+	addExperience(player, 495_000, 'chemistry');
+	while (player.subjectProgress.chemistry.challengePending) completeSubjectChallenge(player, 'chemistry');
+	assert.equal(player.subjectProgress.chemistry.level, MAX_LEVEL);
+	assert.equal(player.subjectProgress.chemistry.xp, 0);
+	assert.deepEqual(combatStats(player.subjectProgress.chemistry.level), { attack: 109, defence: 51 });
+	assert.equal(player.subjectProgress.english.level, 1);
+	addExperience(player, 100, 'chemistry');
+	assert.equal(player.subjectProgress.chemistry.level, MAX_LEVEL);
 	assert.equal(player.totalXp, 495_100);
 
-	const levelOneBots = getAvailableNpcs(1);
-	const levelTwoBots = getAvailableNpcs(2);
-	assert.equal(levelOneBots.some((npc) => ['Prannoy', 'Stalin'].includes(npc.name)), false);
-	assert.equal(levelOneBots.length, 10);
-	assert.equal(levelTwoBots.length, 11);
-	assert.equal(levelTwoBots.at(-1).level, 12);
-	assert.deepEqual(
-		levelTwoBots.filter((npc) => !levelOneBots.some((oldNpc) => oldNpc.id === npc.id)).map((npc) => npc.level),
-		[12],
-	);
-	assert.equal(getAvailableNpcs(MAX_LEVEL).at(-1).level, 110);
+	assert.deepEqual(getAvailableNpcs(15, 'chemistry').map((npc) => npc.level).slice(0, 1), [6]);
+	assert.equal(getAvailableNpcs(15, 'chemistry').some((npc) => npc.level <= 5), false);
+	assert.equal(getAvailableNpcs(15, 'chemistry').at(-1).level, 25);
+	assert.equal(getAvailableNpcs(15, 'chemistry').some((npc) => npc.name === 'Prannoy'), true);
+	assert.equal(getAvailableNpcs(15, 'physics').some((npc) => npc.name === 'Stalin'), true);
+	assert.equal(getAvailableNpcs(15, 'chemistry').some((npc) => npc.id === getAvailableNpcs(15, 'physics')[0].id), false);
+	assert.equal(getAvailableNpcs(MAX_LEVEL, 'computers').at(-1).level, 110);
 });
 
 test('homework check XP is awarded once per date', () => {
@@ -174,7 +164,8 @@ test('study chat censors profanity without changing ordinary words', () => {
 });
 
 test('all Grade 9 syllabus subjects have at least 200 solo practice questions', () => {
-	assert.equal(SUBJECTS.length, 11);
+	assert.equal(SUBJECTS.length, 10);
+	assert.equal(SUBJECTS.some((subject) => subject.id === 'global-perspectives'), false);
 	for (const subject of SUBJECTS) {
 		assert.ok(subject.questionCount >= 200, `${subject.name} question count`);
 		assert.ok(subject.source.length > 0, `${subject.name} curriculum source`);
@@ -235,11 +226,15 @@ test('player levels, XP, and match records survive saving and loading', (context
 	const originalPlayers = new Map([['player-one', {
 		id: 'player-one',
 		name: 'Test Player',
-		xp: 75,
+		xp: 0,
 		totalXp: 475,
 		xpBalance: 400,
 		xpSpent: 25,
 		level: 3,
+		subjectProgress: {
+			...createSubjectProgress(),
+			chemistry: { level: 3, xp: 75, challengePending: false },
+		},
 		matches: 9,
 		wins: 5,
 		losses: 3,
@@ -255,11 +250,10 @@ test('player levels, XP, and match records survive saving and loading', (context
 	const restoredPlayers = loadSavedPlayers(filePath);
 	assert.equal(restoredPlayers.size, 1);
 	assert.deepEqual(
-		Object.fromEntries(['name', 'xp', 'totalXp', 'xpBalance', 'xpSpent', 'level', 'matches', 'wins', 'losses', 'draws']
+		Object.fromEntries(['name', 'totalXp', 'xpBalance', 'xpSpent', 'level', 'matches', 'wins', 'losses', 'draws']
 			.map((field) => [field, restoredPlayers.get('player-one')[field]])),
 		{
 			name: 'Test Player',
-			xp: 75,
 			totalXp: 475,
 			xpBalance: 400,
 			xpSpent: 25,
@@ -270,6 +264,8 @@ test('player levels, XP, and match records survive saving and loading', (context
 			draws: 1,
 		},
 	);
+	assert.deepEqual(restoredPlayers.get('player-one').subjectProgress.chemistry, { level: 3, xp: 75, challengePending: false });
+	assert.equal(restoredPlayers.get('player-one').subjectProgress.english.level, 1);
 	assert.equal(restoredPlayers.get('player-one').hp, 100);
 	assert.equal(restoredPlayers.get('player-one').homeworkRewardDate, '2026-10-28');
 	assert.equal(restoredPlayers.get('player-one').battleId, null);
@@ -305,6 +301,10 @@ test('browser save imports validate progress and merge without replacing server 
 		losses: 4,
 		draws: 1,
 		homeworkRewardDate: '2026-10-30',
+		subjectProgress: {
+			...createSubjectProgress(),
+			chemistry: { level: 3, xp: 40, challengePending: false },
+		},
 	});
 	assert.equal(imported.usernameKey, 'savedplayer');
 	assert.throws(() => validateImportedAccount({ ...imported, xpBalance: 400 }), /invalid player progress/i);
@@ -326,12 +326,17 @@ test('browser save imports validate progress and merge without replacing server 
 		losses: 3,
 		draws: 1,
 		homeworkRewardDate: '2026-10-31',
+		subjectProgress: {
+			...createSubjectProgress(),
+			chemistry: { level: 2, xp: 25, challengePending: false },
+		},
 	};
 
 	mergeImportedProgress(serverPlayer, imported);
 	assert.equal(serverPlayer.id, 'server-player');
 	assert.equal(serverPlayer.level, 3);
-	assert.equal(serverPlayer.xp, 40);
+	assert.equal(serverPlayer.xp, 0);
+	assert.deepEqual(serverPlayer.subjectProgress.chemistry, { level: 3, xp: 40, challengePending: false });
 	assert.equal(serverPlayer.totalXp, 340);
 	assert.equal(serverPlayer.xpBalance, 300);
 	assert.equal(serverPlayer.xpSpent, 40);
@@ -481,11 +486,8 @@ test('Computers and Scripture topic filters only return questions from populated
 	}
 });
 
-test('all subjects except English, Mathematics, and Business support battles by populated chapter', () => {
-	assert.deepEqual(
-		SUBJECTS.filter((subject) => !subject.battleAvailable).map((subject) => subject.id).sort(),
-		['business', 'english', 'mathematics'],
-	);
+test('all remaining subjects support battles by populated chapter', () => {
+	assert.equal(SUBJECTS.every((subject) => subject.battleAvailable), true);
 	for (const subject of SUBJECTS) {
 		assert.ok(subject.practiceTopics.length, `${subject.id} exposes practice chapters`);
 		for (const topic of subject.practiceTopics) {
@@ -494,7 +496,7 @@ test('all subjects except English, Mathematics, and Business support battles by 
 			assert.equal(question.question.chapter, topic);
 		}
 	}
-	for (const subject of SUBJECTS.filter((item) => item.battleAvailable)) {
+	for (const subject of SUBJECTS) {
 		assert.ok(subject.battleTopics.length, `${subject.id} exposes battle chapters`);
 		for (const topic of subject.battleTopics) {
 			const question = getQuestion(subject.id, topic);

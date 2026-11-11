@@ -533,6 +533,17 @@
     <h2 id="updates-title">Update log</h2>
     <div class="updates-list">
       <article class="update-entry">
+        <time datetime="2026-11-11">11 November 2026</time>
+        <h3>THE GREAT SUBJECTS UPRISING</h3>
+        <ul>
+          <li>Removed Global Perspectives and gave every remaining subject its own XP, level, level-up challenge, and named bot roster.</li>
+          <li>Matched subject bosses to Prannoy, Stalin, Joshua, and Solomon, with character-specific battle dialogue; English and every other subject now have rivals.</li>
+          <li>Hide bots more than 10 levels below you in the selected subject, and removed surnames from bot names.</li>
+          <li>Made Prannoy's teaching more supportive and step-by-step, and amplified the generated boss soundtrack with a faster tempo, extra lead layers, and bigger crashes.</li>
+          <li>Reset server save slots. Server players must create new accounts; browser-local saves on users' devices are unchanged.</li>
+        </ul>
+      </article>
+      <article class="update-entry">
         <time datetime="2026-11-10">10 November 2026</time>
         <h3>Prannoy’s study guide and Stalin’s level-up challenges</h3>
         <ul>
@@ -656,7 +667,7 @@
       <p class="eyebrow">About</p>
       <h3 id="about-title">ICT QUttle</h3>
       <p>Founded by Bentin Nehemiah and Daniel Nelson.</p>
-      <p>Prannoy is the Solo Studies guide: ask him to explain a topic or learn from his feedback after a wrong answer. Stalin is your level-matched rival and challenges you before each level-up.</p>
+      <p>Prannoy is the Solo Studies guide: ask him to explain a topic or learn from his supportive feedback after a wrong answer. Each subject has its own level-matched boss who challenges you before its level-ups.</p>
     </section>
   </dialog>
   <dialog class="personalize-dialog account-dialog" id="account-dialog" aria-labelledby="account-title">
@@ -744,6 +755,14 @@
     let selectedMode = 'online';
     let selectedFormat = '1v1';
     let selectedSubject = 'computers';
+    const subjectRivals = {
+      chemistry: 'Prannoy', english: 'Prannoy', french: 'Prannoy',
+      biology: 'Stalin', physics: 'Stalin', hindi: 'Joshua', computers: 'Solomon',
+      mathematics: 'Mira', business: 'Avery', scripture: 'Noah',
+    };
+    function rivalNameFor(subjectId) {
+      return subjectRivals[subjectId] || 'Avery';
+    }
     let selectedTopic = 'all';
     let selectedOpponentIds = [];
     let activeSection = null;
@@ -1002,7 +1021,7 @@
     }
 
     function renderSoloPicker() {
-      return `<main class="submode-screen"><button class="mode-back" data-action="home">← All modes</button><p class="eyebrow">Solo studies</p><h1>Pick a way to focus.</h1><div class="submode-options"><button class="submode-card" data-action="solo-view" data-view="battle"><strong>Battle bots</strong><span>Battle in every subject except English, Maths, and Business Studies, with chapter choices for each.</span></button><button class="submode-card" data-action="solo-view" data-view="practice-select"><strong>Solo practice questions</strong><span>Practice any of the 12 subjects from your Grade 9 syllabus with chapter choices and source references.</span></button><button class="submode-card" data-action="solo-view" data-view="guide"><strong>Ask Prannoy · study guide</strong><span>Choose a subject and chapter for a clear topic explanation, or learn from his feedback after a wrong answer.</span></button><button class="submode-card" data-action="solo-view" data-view="study"><strong>Pomodoro study room</strong><span>Start a 25/5 Pomodoro, play an original ambient lo-fi loop, and see who else is studying.</span></button></div></main>`;
+      return `<main class="submode-screen"><button class="mode-back" data-action="home">← All modes</button><p class="eyebrow">Solo studies</p><h1>Pick a way to focus.</h1><div class="submode-options"><button class="submode-card" data-action="solo-view" data-view="battle"><strong>Battle bots</strong><span>Choose a named rival in any subject, with chapter choices for each.</span></button><button class="submode-card" data-action="solo-view" data-view="practice-select"><strong>Solo practice questions</strong><span>Practice any of the 10 subjects from your Grade 9 syllabus with chapter choices and source references.</span></button><button class="submode-card" data-action="solo-view" data-view="guide"><strong>Ask Prannoy · study guide</strong><span>Choose a subject and chapter for a clear topic explanation, or learn from his feedback after a wrong answer.</span></button><button class="submode-card" data-action="solo-view" data-view="study"><strong>Pomodoro study room</strong><span>Start a 25/5 Pomodoro, play an original ambient lo-fi loop, and see who else is studying.</span></button></div></main>`;
     }
 
     function renderPracticeSubjectPicker() {
@@ -1039,9 +1058,9 @@
       const explanation = studyGuide.loading
         ? '<p>Prannoy is putting an explanation together…</p>'
         : explanations.length
-          ? `<p><strong>Prannoy explains ${esc(studyGuide.explanation.topic)}:</strong></p><ul>${explanations.map((item) => `<li>${esc(item)}</li>`).join('')}</ul>`
+          ? `<p><strong>Prannoy:</strong> ${esc(studyGuide.explanation.coachIntro || `Let's work through ${studyGuide.explanation.topic} together.`)}</p><ul>${explanations.map((item) => `<li>${esc(item)}</li>`).join('')}</ul><p>${esc(studyGuide.explanation.encouragement || 'You can build this up one idea at a time.')}</p>`
           : '<p>Choose a chapter and ask Prannoy to explain it. He will break down the key ideas from the practice material.</p>';
-      app.innerHTML = `<main class="study-guide"><button class="mode-back" data-action="solo-picker">← Solo options</button><section class="study-guide-panel"><p class="eyebrow">Solo Studies · your underrated teacher</p><h1>Ask Prannoy.</h1><p>Pick a subject and chapter. Prannoy will pull together the key ideas you need to understand before you practise.</p><div class="guide-controls"><label class="practice-topic-picker">Choose subject<select data-guide-subject aria-label="Choose a subject for Prannoy’s explanation">${state.subjects.map((item) => `<option value="${esc(item.id)}" ${item.id === subject.id ? 'selected' : ''}>${esc(item.name)}</option>`).join('')}</select></label><label class="practice-topic-picker">Choose chapter<select data-guide-topic aria-label="Choose a chapter for Prannoy’s explanation">${topics.map((topic) => `<option value="${esc(topic)}" ${topic === selectedTopic ? 'selected' : ''}>${esc(topic)}</option>`).join('')}</select></label></div><button class="primary-button" data-action="explain-topic" ${studyGuide.loading || !selectedTopic ? 'disabled' : ''}>Explain this topic</button><section class="guide-explanation" aria-live="polite">${explanation}</section></section></main>`;
+      app.innerHTML = `<main class="study-guide"><button class="mode-back" data-action="solo-picker">← Solo options</button><section class="study-guide-panel"><p class="eyebrow">Solo Studies · your patient, sharp teacher</p><h1>Ask Prannoy.</h1><p>Pick a subject and chapter. Prannoy will explain the key ideas clearly, step by step, and help you learn from mistakes.</p><div class="guide-controls"><label class="practice-topic-picker">Choose subject<select data-guide-subject aria-label="Choose a subject for Prannoy’s explanation">${state.subjects.map((item) => `<option value="${esc(item.id)}" ${item.id === subject.id ? 'selected' : ''}>${esc(item.name)}</option>`).join('')}</select></label><label class="practice-topic-picker">Choose chapter<select data-guide-topic aria-label="Choose a chapter for Prannoy’s explanation">${topics.map((topic) => `<option value="${esc(topic)}" ${topic === selectedTopic ? 'selected' : ''}>${esc(topic)}</option>`).join('')}</select></label></div><button class="primary-button" data-action="explain-topic" ${studyGuide.loading || !selectedTopic ? 'disabled' : ''}>Explain this topic</button><section class="guide-explanation" aria-live="polite">${explanation}</section></section></main>`;
     }
 
     function renderPracticeSession() {
@@ -1058,7 +1077,7 @@
         return `<button class="answer${answerClass}" data-action="practice-answer" data-answer="${index}" data-question-id="${esc(question.id)}" ${practice.feedback || practice.loading ? 'disabled' : ''}><span class="answer-key">${String.fromCharCode(65 + index)}</span><span class="answer-text">${esc(option)}${icon}</span></button>`;
       }).join('') : '';
       const feedback = practice.feedback
-        ? `${practice.feedback.correct ? `Prannoy: That’s right! +${practice.feedback.xpAwarded} XP. ` : `Prannoy: Not quite. The answer is “${practice.feedback.correctAnswer}”. `}${practice.feedback.explanation}`
+        ? `${practice.feedback.correct ? `Prannoy: Exactly right! Nice work spotting it. +${practice.feedback.xpAwarded} XP. ` : `Prannoy: Not quite—and that is how practice works. The answer is “${practice.feedback.correctAnswer}”. `}${practice.feedback.explanation}`
         : 'Choose an answer to check your understanding.';
       const reminder = subjectReminder?.section === 'solo' ? renderSubjectReminder('solo') : '';
       app.innerHTML = `<main class="practice-screen"><button class="mode-back" data-action="practice-subject-picker">← Subjects</button>${reminder}<section class="practice-panel"><div class="practice-heading"><div><p class="eyebrow">${esc(subject.name)} · Grade 9</p><h1>Solo practice</h1></div><button class="mode-back" data-action="sound" aria-pressed="${soundEnabled}">Sound ${soundEnabled ? 'on' : 'off'}</button></div>${topicPicker}<p class="practice-count">SCORE ${practice.score} / ${practice.attempts} · ${esc(question?.chapter || '')}</p>${practice.loading ? '<p class="practice-prompt">Loading your next question…</p>' : question ? `<p class="practice-prompt">${esc(question.prompt)}</p><div class="practice-options">${answerOptions}</div><p class="practice-feedback ${practice.feedback ? practice.feedback.correct ? 'correct' : 'incorrect' : ''}" role="status" aria-live="polite">${feedback}</p><button class="primary-button" data-action="practice-next" ${!practice.feedback || practice.loading ? 'disabled' : ''}>Next question</button>` : '<p class="practice-prompt">Choose a subject to start.</p>'}<p class="practice-source">Curriculum references: ${sourceLinks || 'See the listed Grade 9 syllabus topics.'} · Questions are original practice material, not copied from the sources.</p></section></main>`;
@@ -1088,7 +1107,7 @@
         await wakeBattleAudio();
         const result = await request('/api/practice-answer', {
           method: 'POST',
-          body: JSON.stringify({ playerId: state.you.id, questionId: button.dataset.questionId, answer: Number(button.dataset.answer) }),
+          body: JSON.stringify({ playerId: state.you.id, subject: practice.subject, questionId: button.dataset.questionId, answer: Number(button.dataset.answer) }),
         });
         practice = { ...practice, ...result, loading: false, feedback: result };
         const subjectQuestionCount = (soloQuestionCounts.get(practice.subject) || 0) + 1;
@@ -1180,7 +1199,7 @@
       master.connect(compressor);
       compressor.connect(context.destination);
 
-      const bpm = mode === 'critical' ? 168 : mode === 'boss' ? 152 : 132;
+      const bpm = mode === 'critical' ? 180 : mode === 'boss' ? 164 : 132;
       const sixteenth = 60 / bpm / 4;
       const chords = [
         { root: 110, fifth: 164.81, notes: [110, 164.81, 220] },
@@ -1328,8 +1347,12 @@
           const riffNote = (mode === 'lobby' ? guitarRiffs : bossRiffs)[bar][beatStep];
           if (riffNote) {
             playGuitar(riffNote, nextStepTime, sixteenth * 1.8, beatStep % 4 === 0 ? 0.13 : 0.1);
-            playGuitar(riffNote * 2, nextStepTime, sixteenth * 1.5, mode === 'lobby' ? 0.035 : 0.055);
-            if (mode !== 'lobby') playGuitar(riffNote / 2, nextStepTime, sixteenth * 1.8, 0.06);
+            playGuitar(riffNote * 2, nextStepTime, sixteenth * 1.5, mode === 'lobby' ? 0.035 : 0.075);
+            if (mode !== 'lobby') playGuitar(riffNote / 2, nextStepTime, sixteenth * 1.8, 0.075);
+          }
+          if (mode !== 'lobby' && beatStep % 4 === 0) {
+            const leadNotes = [chord.notes[2] * 2, chord.fifth * 2, chord.root * 4, chord.fifth * 2];
+            playTone(leadNotes[beatStep / 4], nextStepTime, sixteenth * 3, mode === 'critical' ? 0.075 : 0.05, 'square', 2800);
           }
           if (beatStep === 0 || beatStep === 8) playKick(nextStepTime);
           if (mode !== 'lobby' && (beatStep === 2 || beatStep === 6 || beatStep === 10 || beatStep === 14)) {
@@ -1710,7 +1733,7 @@
       pollInFlight = true;
       try {
         const previous = state;
-        state = await request(`/api/state?playerId=${encodeURIComponent(playerId)}`);
+        state = await request(`/api/state?playerId=${encodeURIComponent(playerId)}&subject=${encodeURIComponent(selectedSubject)}`);
         recordCompletedMultiplayerBattle(previous, state);
         celebrateBattleHit(previous, state);
         announceNewBots(previous, state);
@@ -1785,7 +1808,7 @@
     }
 
     function announceNewBots(previous, next) {
-      if (!previous || next.you.level <= previous.you.level) return;
+      if (!previous || previous.selectedSubject !== next.selectedSubject || next.you.level <= previous.you.level) return;
       const previousBotIds = new Set(previous.npcs.map((npc) => npc.id));
       const unlocked = next.npcs.filter((npc) => !previousBotIds.has(npc.id));
       if (!unlocked.length) return;
@@ -1811,7 +1834,10 @@
       render();
       try {
         const previous = state;
-        state = await request(endpoint, { method: 'POST', body: JSON.stringify({ playerId: state.you.id, ...payload }) });
+        state = await request(endpoint, {
+          method: 'POST',
+          body: JSON.stringify({ playerId: state.you.id, subject: state.battle?.subject || selectedSubject, ...payload }),
+        });
         recordCompletedMultiplayerBattle(previous, state);
         celebrateBattleHit(previous, state);
         announceNewBots(previous, state);
@@ -1832,7 +1858,7 @@
         ...(activeSection === 'solo' ? state.npcs : []).map((npc) => ({
           ...npc,
           kind: 'npc',
-          detail: `LEVEL ${npc.level}${npc.level >= 50 || npc.level - state.you.level >= 5 ? ' · BOSS FIGHT' : ''}`,
+          detail: `LEVEL ${npc.level}${npc.bossFight ? ' · BOSS FIGHT' : ''}`,
         })),
         ...(activeSection === 'solo' ? [] : state.onlinePlayers.map((player) => ({
           ...player,
@@ -1951,7 +1977,7 @@
         name: battle.winnerName,
       };
       const prompt = finished
-        ? `<div class="quiz-state"><div class="state-symbol">${winner?.id === state.you.id ? '✦' : '×'}</div><p class="eyebrow">Duel complete</p><h2>${winner?.id === state.you.id ? 'Victory.' : 'Defeat.'}</h2><p>${battle.levelUpChallenge ? winner?.id === state.you.id ? `You defeated Stalin and reached Level ${state.you.level}.` : 'You did not beat Stalin this time. Your XP is safe; return and challenge him again.' : winner?.id === state.you.id ? 'Your knowledge held the line.' : 'The next round is yours to take.'}</p><div class="result-mark ${winner?.id === state.you.id ? '' : 'lost'}">${esc(winner?.name || 'No winner')} wins</div><button class="primary-button" data-action="leave">Return to rivals</button></div>`
+        ? `<div class="quiz-state"><div class="state-symbol">${winner?.id === state.you.id ? '✦' : '×'}</div><p class="eyebrow">Duel complete</p><h2>${winner?.id === state.you.id ? 'Victory.' : 'Defeat.'}</h2><p>${battle.levelUpChallenge ? winner?.id === state.you.id ? `You defeated ${esc(rival.name)} and reached Level ${state.you.level}.` : `You did not beat ${esc(rival.name)} this time. Your XP is safe; return and challenge them again.` : winner?.id === state.you.id ? 'Your knowledge held the line.' : 'The next round is yours to take.'}</p><div class="result-mark ${winner?.id === state.you.id ? '' : 'lost'}">${esc(winner?.name || 'No winner')} wins</div><button class="primary-button" data-action="leave">Return to rivals</button></div>`
         : yourTurn && question
           ? `<div class="quiz-header"><h2>Your turn</h2><span class="chapter-pill">${esc(question.chapter)}${hardQuestion ? ' · HARD +50% DAMAGE' : ''}</span></div><div class="timer-row"><span class="timer-caption">Answer before the bell</span><span class="timer-value" data-timer>${String(remaining).padStart(2, '0')}s</span></div><div class="timer-track"><div class="timer-fill ${remaining <= 5 ? 'urgent' : ''}" data-timer-bar style="width:${Math.min(100, remaining / 20 * 100)}%"></div></div><p class="question">${esc(question.prompt)}</p><div class="answer-list">${question.options.map((option, index) => `<button class="answer" data-action="answer" data-answer="${index}" data-question-id="${esc(battle.questionId)}" ${busy ? 'disabled' : ''}><span class="answer-key">${String.fromCharCode(65 + index)}</span><span class="answer-text">${esc(option)}</span></button>`).join('')}</div><div class="quiz-feedback">A correct answer deals <strong><span data-hit-damage>${hitDamage}</span> damage</strong> and <strong>+3 HP</strong><span data-fast-bonus>${fastWindowOpen ? ' · 2× FAST ANSWER BONUS ACTIVE' : ' · answer within 2 seconds for double damage'}</span>${hardQuestion ? ' · hard questions deal 50% extra damage' : ''}${battle.parryReady ? ' · PARRY READY: answer correctly within 2 seconds to reflect the last hit' : ''}</div><div class="quiz-footer">A wrong answer or timeout costs 14 HP. The duel ends at 0 HP.${state.you.level >= 50 ? ' A fast, correct answer can parry; hard questions shatter the barrier.' : ''}</div>`
           : `<div class="quiz-state"><div class="state-symbol waiting">…</div><p class="eyebrow">${battle.mode === 'online' ? 'Player duel' : 'NPC duel'}</p><h2>${battle.mode === 'online' ? 'Their turn.' : `${esc(rival.name)} is thinking.`}</h2><p>${battle.mode === 'online' ? `${esc(activeName || 'Your rival')} is answering. Your next question starts as soon as their turn resolves.` : 'Your rival is working through a question.'}</p></div>`;
@@ -1980,10 +2006,12 @@
     }
 
     function renderStalinChallenge() {
-      const availableSubjects = state.subjects.filter((subject) => subject.battleAvailable !== false);
+      const availableSubjects = state.subjects.filter((subject) => subject.battleAvailable !== false
+        && state.you.subjectProgress?.[subject.id]?.challengePending);
       const selected = availableSubjects.find((subject) => subject.id === selectedSubject) || availableSubjects[0];
       if (selected) selectedSubject = selected.id;
-      return `<main class="stalin-challenge-screen"><section class="stalin-challenge-panel"><p class="eyebrow">Level-up challenge · required duel</p><h1>Stalin challenges you.</h1><p>You have enough XP for the next level. Stalin is now Level ${state.you.level}, just like you. Beat him in a knowledge duel to claim your level-up. If you lose, your XP is kept and you can challenge him again.</p><p>Battle basics: answer correctly to hit Stalin and restore 3 HP. A wrong or late answer costs you 14 HP. Answer within 2 seconds for double damage.</p><label class="practice-topic-picker">Choose battle subject<select data-stalin-subject aria-label="Choose the subject for Stalin’s challenge">${availableSubjects.map((subject) => `<option value="${esc(subject.id)}" ${subject.id === selectedSubject ? 'selected' : ''}>${esc(subject.name)}</option>`).join('')}</select></label><button class="primary-button" data-action="challenge-stalin" ${busy || !selected ? 'disabled' : ''}>Accept Stalin’s challenge</button></section></main>`;
+      const rival = rivalNameFor(selectedSubject);
+      return `<main class="stalin-challenge-screen"><section class="stalin-challenge-panel"><p class="eyebrow">Level-up challenge · required duel</p><h1>${esc(rival)} challenges you.</h1><p>You have enough ${esc(selected?.name || 'subject')} XP for the next level. ${esc(rival)} is now Level ${state.you.level}, just like you. Beat this rival in a knowledge duel to claim your level-up. If you lose, your XP is kept and you can try again.</p><p>Battle basics: answer correctly to hit ${esc(rival)} and restore 3 HP. A wrong or late answer costs you 14 HP. Answer within 2 seconds for double damage.</p><label class="practice-topic-picker">Choose battle subject<select data-stalin-subject aria-label="Choose the subject for ${esc(rival)}’s challenge">${availableSubjects.map((subject) => `<option value="${esc(subject.id)}" ${subject.id === selectedSubject ? 'selected' : ''}>${esc(subject.name)}</option>`).join('')}</select></label><button class="primary-button" data-action="challenge-stalin" ${busy || !selected ? 'disabled' : ''}>Accept ${esc(rival)}’s challenge</button></section></main>`;
     }
 
     function render() {
@@ -2086,7 +2114,7 @@
         const rank = inner.querySelector('.rank-level');
         const record = inner.querySelector('.rank-caption');
         if (rank) rank.textContent = `LVL ${String(state.you.level).padStart(2, '0')}`;
-        if (record) record.textContent = `${state.you.wins} wins · ${state.you.losses} losses · ${state.you.matches} matches`;
+        if (record) record.textContent = `${subject.name} level · ${state.you.wins} wins · ${state.you.losses} losses · ${state.you.matches} matches`;
         const profileStats = inner.querySelectorAll('.stat-row strong');
         const profileLabels = inner.querySelectorAll('.stat-row span');
         if (profileStats[0]) profileStats[0].textContent = `${state.you.hp} / 100`;
@@ -2361,8 +2389,10 @@
       }
       if (button.dataset.action === 'practice-subject') {
         subjectReminder = null;
+        selectedSubject = button.dataset.subject;
         practice = { ...practice, subject: button.dataset.subject, topic: 'all', question: null, feedback: null, score: 0, attempts: 0 };
         soloView = 'practice';
+        refresh();
         loadPracticeQuestion(button.dataset.subject, 'all');
         return;
       }
@@ -2453,11 +2483,10 @@
           return;
         }
         const npcLevel = npc.level;
-        const levelGap = npcLevel - state.you.level;
-        if ((levelGap >= 5 || npcLevel >= 50)
+        if (npc.bossFight
           && !window.confirm(`${npc.name} is level ${npcLevel}, a boss fight. Start the battle?`)) return;
         const audioReady = wakeBattleAudio();
-        if (levelGap >= 5 || npcLevel >= 50) audioReady.then(() => playBattleSound('boss-warning'));
+        if (npc.bossFight) audioReady.then(() => playBattleSound('boss-warning'));
         act('/api/battle', { opponentId: button.dataset.id, subject: selectedSubject, topic: selectedTopic === 'all' ? null : selectedTopic });
       }
       if (button.dataset.action === 'answer') {
@@ -2490,6 +2519,7 @@
         }
         lastRenderedState = '';
         render();
+        refresh();
       }
       if (button.dataset.action === 'format') {
         selectedFormat = button.dataset.format;
@@ -2542,7 +2572,10 @@
         return;
       }
       if (event.target.matches('[data-battle-chapter]')) selectedTopic = event.target.value;
-      if (event.target.matches('[data-stalin-subject]')) selectedSubject = event.target.value;
+      if (event.target.matches('[data-stalin-subject]')) {
+        selectedSubject = event.target.value;
+        refresh();
+      }
       if (event.target.matches('[data-guide-subject]')) {
         const subject = state.subjects.find((item) => item.id === event.target.value);
         if (subject) studyGuide = { subject: subject.id, topic: (subject.practiceTopics || subject.topics)[0], explanation: null, loading: false };
@@ -2858,7 +2891,7 @@
       const playerId = localStorage.getItem(playerKey);
       if (playerId) {
         try {
-          state = await request(`/api/state?playerId=${encodeURIComponent(playerId)}`);
+          state = await request(`/api/state?playerId=${encodeURIComponent(playerId)}&subject=${encodeURIComponent(selectedSubject)}`);
           studyChatClearedAt = Number(localStorage.getItem(`ict-quattle-chat-clear:${state.you.id}`) || 0);
           joinScreen.hidden = true;
           render();
