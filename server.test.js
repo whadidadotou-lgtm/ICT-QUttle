@@ -36,6 +36,9 @@ const {
 	getStudyGuide,
 	levelGapBetweenTeams,
 	parryDamageFor,
+	getLeaderboard,
+	normalizeCharacterIcon,
+	recordSoloStudySeconds,
 } = require('./server');
 
 test('online players stay visible while showing whether they can be challenged', () => {
@@ -91,8 +94,8 @@ test('subject progression caps at level 100 and bots beyond the 10-level gap are
 	assert.deepEqual(getAvailableNpcs(15, 'chemistry').map((npc) => npc.level).slice(0, 1), [6]);
 	assert.equal(getAvailableNpcs(15, 'chemistry').some((npc) => npc.level <= 5), false);
 	assert.equal(getAvailableNpcs(15, 'chemistry').at(-1).level, 25);
-	assert.equal(getAvailableNpcs(15, 'chemistry').some((npc) => npc.name === 'Prannoy'), true);
-	assert.equal(getAvailableNpcs(15, 'physics').some((npc) => npc.name === 'Stalin'), true);
+	assert.equal(getAvailableNpcs(15, 'chemistry').some((npc) => npc.name === 'Danny'), true);
+	assert.equal(getAvailableNpcs(15, 'physics').some((npc) => npc.name === 'Danny'), true);
 	assert.equal(getAvailableNpcs(15, 'chemistry').some((npc) => npc.id === getAvailableNpcs(15, 'physics')[0].id), false);
 	assert.equal(getAvailableNpcs(MAX_LEVEL, 'computers').at(-1).level, 110);
 });
@@ -160,7 +163,30 @@ test('study chat flags obvious off-topic messages without blocking them', () => 
 test('study chat censors profanity without changing ordinary words', () => {
 	assert.equal(censorProfanity('That is shit!'), 'That is ****!');
 	assert.equal(censorProfanity('F.u.c.k this!'), '**** this!');
+	assert.equal(censorProfanity('sh!t happens'), '*** happens');
+	assert.equal(censorProfanity('n!gg3r'), '*****');
+	assert.equal(censorProfanity('n i g g e r'), '******');
+	assert.equal(censorProfanity('fuuuuck'), '*******');
 	assert.equal(censorProfanity('The classic is helpful.'), 'The classic is helpful.');
+});
+
+test('player icon and solo-focus totals are validated, saved, and ranked', () => {
+	assert.equal(normalizeCharacterIcon('owl'), 'owl');
+	assert.throws(() => normalizeCharacterIcon('custom-html'), /valid character icon/i);
+	const first = { id: 'one', name: 'One', totalXp: 45, characterIcon: 'owl', soloStudySeconds: 0 };
+	const second = { id: 'two', name: 'Two', totalXp: 90, characterIcon: 'bolt', soloStudySeconds: 0 };
+	assert.equal(recordSoloStudySeconds(first, 60), 60);
+	assert.equal(recordSoloStudySeconds(first, 15), 75);
+	assert.throws(() => recordSoloStudySeconds(first, 61), /between 1 and 60/i);
+
+	assert.deepEqual(getLeaderboard('exp', new Map([['one', first], ['two', second]])), [
+		{ name: 'Two', characterIcon: 'bolt', value: 90 },
+		{ name: 'One', characterIcon: 'owl', value: 45 },
+	]);
+	assert.deepEqual(getLeaderboard('study', new Map([['one', first], ['two', second]])), [
+		{ name: 'One', characterIcon: 'owl', value: 75 },
+	]);
+	assert.throws(() => getLeaderboard('matches', new Map()), /valid leaderboard/i);
 });
 
 test('all Grade 9 syllabus subjects have at least 200 solo practice questions', () => {
@@ -239,6 +265,8 @@ test('player levels, XP, and match records survive saving and loading', (context
 		wins: 5,
 		losses: 3,
 		draws: 1,
+		characterIcon: 'owl',
+		soloStudySeconds: 135,
 		homeworkRewardDate: '2026-10-28',
 		hp: 24,
 		attack: 12,
@@ -268,6 +296,8 @@ test('player levels, XP, and match records survive saving and loading', (context
 	assert.equal(restoredPlayers.get('player-one').subjectProgress.english.level, 1);
 	assert.equal(restoredPlayers.get('player-one').hp, 100);
 	assert.equal(restoredPlayers.get('player-one').homeworkRewardDate, '2026-10-28');
+	assert.equal(restoredPlayers.get('player-one').characterIcon, 'owl');
+	assert.equal(restoredPlayers.get('player-one').soloStudySeconds, 135);
 	assert.equal(restoredPlayers.get('player-one').battleId, null);
 	assert.deepEqual(loadSavedPlayers(path.join(directory, 'not-created.json')), new Map());
 });
@@ -300,6 +330,8 @@ test('browser save imports validate progress and merge without replacing server 
 		wins: 7,
 		losses: 4,
 		draws: 1,
+		characterIcon: 'fox',
+		soloStudySeconds: 180,
 		homeworkRewardDate: '2026-10-30',
 		subjectProgress: {
 			...createSubjectProgress(),
@@ -342,6 +374,8 @@ test('browser save imports validate progress and merge without replacing server 
 	assert.equal(serverPlayer.xpSpent, 40);
 	assert.equal(serverPlayer.matches, 12);
 	assert.equal(serverPlayer.wins, 7);
+	assert.equal(serverPlayer.characterIcon, 'fox');
+	assert.equal(serverPlayer.soloStudySeconds, 180);
 	assert.equal(serverPlayer.homeworkRewardDate, '2026-10-31');
 	assert.equal(verifyPassword('server account password', serverPlayer), true);
 });

@@ -128,12 +128,35 @@ test('local account edits require the current password and remain available afte
 	assert.equal(signedIn.you.name, 'RenamedHero');
 });
 
+test('local character icons, focus time, and leaderboard scores persist after reload', async () => {
+	const storage = createStorage();
+	const api = createLocalGame(storage, webcrypto, grade9Practice);
+	const registered = await post(api, '/api/register', { username: 'FocusRunner', password: 'strong password' });
+	await post(api, '/api/profile', { playerId: registered.you.id, characterIcon: 'rocket' });
+	await post(api, '/api/study-time', { playerId: registered.you.id, seconds: 60 });
+	await assert.rejects(
+		post(api, '/api/study-time', { playerId: registered.you.id, seconds: 61 }),
+		/between 1 and 60/i,
+	);
+	await post(api, '/api/homework-check', { playerId: registered.you.id, completed: true });
+
+	const studyBoard = await api.handle('/api/leaderboard?metric=study');
+	const xpBoard = await api.handle('/api/leaderboard?metric=exp');
+	assert.deepEqual(studyBoard.leaderboard, [{ name: 'FocusRunner', characterIcon: 'rocket', value: 60 }]);
+	assert.deepEqual(xpBoard.leaderboard, [{ name: 'FocusRunner', characterIcon: 'rocket', value: 2 }]);
+
+	const reloaded = createLocalGame(storage, webcrypto, grade9Practice);
+	const signedIn = await post(reloaded, '/api/login', { username: 'FocusRunner', password: 'strong password' });
+	assert.equal(signedIn.you.characterIcon, 'rocket');
+	assert.equal(signedIn.you.soloStudySeconds, 60);
+});
+
 test('local browser mode can start an NPC battle and advance to the NPC turn', async () => {
 	const storage = createStorage();
 	const api = createLocalGame(storage, webcrypto, grade9Practice);
 	const registered = await post(api, '/api/register', { username: 'BotFighter', password: 'strong password' });
 	const initialState = await api.handle(`/api/state?playerId=${encodeURIComponent(registered.you.id)}`);
-	assert.equal(initialState.npcs.some((npc) => ['Prannoy', 'Stalin'].includes(npc.name)), false);
+	assert.equal(initialState.npcs.some((npc) => npc.name === 'Danny'), true);
 	const started = await post(api, '/api/battle', {
 		playerId: registered.you.id,
 		opponentId: 'npc-computers-1',
@@ -168,7 +191,7 @@ test('Prannoy explains a topic and each subject uses its own level-up rival', as
 	storage.values.set('ict-quattle-local-players', JSON.stringify(records));
 	await assert.rejects(
 		post(api, '/api/battle', { playerId: registered.you.id, opponentId: 'npc-computers-1', subject: 'computers' }),
-		/Beat Solomon/i,
+		/Beat Danny/i,
 	);
 	const challenge = await post(api, '/api/stalin-challenge', {
 		playerId: registered.you.id,
@@ -176,7 +199,7 @@ test('Prannoy explains a topic and each subject uses its own level-up rival', as
 	});
 	const stalin = challenge.battle.players.find((player) => player.id === 'npc-computers-1');
 	assert.equal(challenge.battle.levelUpChallenge, true);
-	assert.equal(stalin.name, 'Solomon');
+	assert.equal(stalin.name, 'Danny');
 	assert.equal(stalin.level, challenge.you.level);
 });
 
@@ -194,9 +217,9 @@ test('local subject levels and bot rosters remain independent and hide rivals 10
 	assert.deepEqual(chemistry.npcs.map((npc) => npc.level).slice(0, 1), [6]);
 	assert.equal(chemistry.npcs.some((npc) => npc.level <= 5), false);
 	assert.equal(chemistry.npcs.at(-1).level, 25);
-	assert.equal(chemistry.npcs.some((npc) => npc.name === 'Prannoy'), true);
+	assert.equal(chemistry.npcs.some((npc) => npc.name === 'Danny'), true);
 	assert.equal(physics.you.level, 1);
-	assert.equal(physics.npcs.some((npc) => npc.name === 'Stalin'), true);
+	assert.equal(physics.npcs.some((npc) => npc.name === 'Danny'), true);
 	assert.notEqual(chemistry.npcs[0].id, physics.npcs[0].id);
 	assert.equal(chemistry.subjects.some((subject) => subject.id === 'global-perspectives'), false);
 });

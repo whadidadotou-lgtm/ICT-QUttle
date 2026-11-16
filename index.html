@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f1eee4">
-  <title>ICT QUttle | Solo study and multiplayer</title>
+  <title>StudySprint | Solo study and multiplayer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -49,6 +49,7 @@
     .online-dot { width: 8px; height: 8px; border-radius: 50%; background: #75a86c; box-shadow: 0 0 0 3px #75a86c22; }
     .profile-button { cursor: pointer; font-size: 13px; font-weight: 600; }
     .profile-badge { width: 29px; height: 29px; display: grid; place-items: center; color: var(--ink); background: var(--lime); border-radius: 50%; font: 12px var(--mono); }
+    .profile-badge[data-icon]:not([data-icon=""]) { font-size: 17px; }
     .personalize-button { padding: 8px 10px; border: 1px solid var(--line); background: transparent; cursor: pointer; font: 10px var(--mono); }
     #settings-button { width: 42px; height: 42px; display: grid; place-items: center; padding: 0; border-radius: 8px; font: 28px/1 var(--sans); }
     .personalize-dialog { width: min(520px, calc(100vw - 28px)); max-height: min(720px, calc(100vh - 32px)); overflow: auto; padding: 0; border: 1px solid var(--line); color: var(--ink); background: var(--paper-bright); box-shadow: 0 20px 70px #172b2440; }
@@ -108,6 +109,20 @@
     .theme-option[data-theme-option="solid-mint"] { background: #e1f1ed; }
     .theme-option[data-theme-option="solid-coral"] { background: #f9e6e5; }
     .theme-option[data-theme-option="solid-gold"] { background: #f3edda; }
+    .character-icon-picker { margin-top: 20px; }
+    .character-icon-options { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .character-icon-option { width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 50%; background: var(--paper); cursor: pointer; font-size: 20px; }
+    .character-icon-option[aria-pressed="true"] { border: 2px solid var(--forest); background: var(--lime); }
+    .character-icon-picker p { margin: 6px 0 0; color: var(--muted); font-size: 11px; }
+    .leaderboard-tabs { display: flex; gap: 8px; margin: 18px 0 10px; }
+    .leaderboard-tabs button { min-height: 36px; padding: 0 12px; border: 1px solid var(--line); background: transparent; cursor: pointer; font: 10px var(--mono); }
+    .leaderboard-tabs button[aria-pressed="true"] { border-color: var(--forest); color: white; background: var(--forest); }
+    .leaderboard-rows { display: grid; gap: 7px; }
+    .leaderboard-row { display: grid; grid-template-columns: 30px 32px minmax(0, 1fr) auto; align-items: center; gap: 9px; padding: 10px; border: 1px solid var(--line); background: var(--paper); }
+    .leaderboard-rank { color: var(--muted); font: 11px var(--mono); }
+    .leaderboard-icon { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--lime); }
+    .leaderboard-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 600; }
+    .leaderboard-value { font: 11px var(--mono); }
     .custom-solid-option { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 10px; padding: 12px; border: 1px solid var(--line); font-size: 12px; }
     .custom-solid-option span { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; }
     .custom-solid-option input { width: 44px; height: 36px; padding: 2px; border: 1px solid var(--line); background: transparent; cursor: pointer; }
@@ -370,6 +385,7 @@
     .study-main h1 { margin: 8px 0; font-size: 34px; letter-spacing: -.05em; }
     .study-main > p { max-width: 520px; color: var(--muted); font-size: 13px; line-height: 1.6; }
     .study-clock { margin: 23px 0 17px; color: var(--forest); font: 56px var(--mono); letter-spacing: -.07em; }
+    .study-total-time { margin: -8px 0 14px; color: var(--muted); font: 10px var(--mono); }
     .study-controls { display: flex; flex-wrap: wrap; gap: 8px; }
     .study-controls button, .study-subjects button { min-height: 38px; padding: 0 13px; border: 1px solid var(--forest); color: var(--forest); background: transparent; cursor: pointer; font: 10px var(--mono); text-transform: uppercase; }
     .study-controls .primary-button { color: white; background: var(--forest); }
@@ -481,6 +497,7 @@
       .online-indicator { display: none; }
       .profile-button { font-size: 0; }
       .personalize-button { padding: 7px; font-size: 9px; }
+      .study-total-time { font-size: 9px; }
       #settings-button { width: 40px; height: 40px; font-size: 27px; }
       .personalize-content { padding: 18px; }
       .subject-picker { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -516,14 +533,23 @@
       .rail-note { margin-top: 17px; }
       .quiz-state { min-height: 180px; }
     }
+    @media (max-width: 380px) {
+      .topbar { padding: 0 10px; }
+      .brand { gap: 7px; }
+      .brand-mark { width: 29px; height: 29px; }
+      .brand-name { font-size: 11px; }
+      .topbar-right { gap: 4px; }
+      #updates-button { width: 32px; height: 32px; padding: 0; font-size: 0; }
+      #updates-button::before { content: 'Log'; font: 9px var(--mono); }
+    }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
   </style>
 </head>
 <body>
   <div class="shell">
     <header class="topbar">
-      <a class="brand" href="#" aria-label="ICT QUttle home"><span class="brand-mark">Q</span><span class="brand-name">ICT <span>QU</span>TTLE</span></a>
-      <div class="topbar-right"><div class="online-indicator"><i class="online-dot"></i><span id="online-count">ARENA OPEN</span></div><button class="personalize-button" id="updates-button" type="button">Update log</button><button class="personalize-button" id="settings-button" type="button" aria-label="Settings" title="Settings">&#9881;</button><button class="profile-button" id="profile-button" type="button"><span class="profile-badge" id="profile-badge">?</span><span id="profile-name">Choose name</span></button></div>
+      <a class="brand" href="#" aria-label="StudySprint home"><span class="brand-mark">S</span><span class="brand-name">STUDY<span>SPRINT</span></span></a>
+      <div class="topbar-right"><div class="online-indicator"><i class="online-dot"></i><span id="online-count">ARENA OPEN</span></div><button class="personalize-button" id="leaderboard-button" type="button" aria-label="Player leaderboards">Ranks</button><button class="personalize-button" id="updates-button" type="button" aria-label="Update log">Update log</button><button class="personalize-button" id="settings-button" type="button" aria-label="Settings" title="Settings">&#9881;</button><button class="profile-button" id="profile-button" type="button"><span class="profile-badge" id="profile-badge">?</span><span id="profile-name">Choose name</span></button></div>
     </header>
     <div id="app"></div>
   </div>
@@ -532,6 +558,16 @@
     <p class="eyebrow">Release notes</p>
     <h2 id="updates-title">Update log</h2>
     <div class="updates-list">
+      <article class="update-entry">
+        <time datetime="2026-11-16">16 November 2026</time>
+        <h3>StudySprint: progress, rivals, and chat</h3>
+        <ul>
+          <li>Added XP and solo-focus leaderboards, and saved focus time with each player profile.</li>
+          <li>Added persistent character icons and renamed every subject rival Danny, with competitive but respectful dialogue tailored to each rival's established style.</li>
+          <li>Improved chat filtering to catch punctuation, spacing, number, and lookalike-character evasions of abusive language.</li>
+          <li>Documented how to keep account files on a persistent server volume so redeploys do not reset them.</li>
+        </ul>
+      </article>
       <article class="update-entry">
         <time datetime="2026-11-11">11 November 2026</time>
         <h3>THE GREAT SUBJECTS UPRISING</h3>
@@ -619,6 +655,16 @@
       </article>
     </div>
   </dialog>
+  <dialog class="updates-dialog" id="leaderboard-dialog" aria-labelledby="leaderboard-title">
+    <button class="updates-close" id="leaderboard-close" type="button">Close</button>
+    <p class="eyebrow">Player rankings</p>
+    <h2 id="leaderboard-title">Leaderboard</h2>
+    <div class="leaderboard-tabs" role="group" aria-label="Leaderboard category">
+      <button type="button" data-leaderboard="exp" aria-pressed="true">Highest XP</button>
+      <button type="button" data-leaderboard="study" aria-pressed="false">Solo study time</button>
+    </div>
+    <div class="leaderboard-rows" id="leaderboard-rows" aria-live="polite"></div>
+  </dialog>
   <dialog class="homework-dialog" id="homework-dialog" aria-labelledby="homework-title">
     <p class="eyebrow">Quick check-in</p>
     <h2 id="homework-title">Have you finished your homework?</h2>
@@ -665,7 +711,7 @@
     </div>
     <section class="settings-about" aria-labelledby="about-title">
       <p class="eyebrow">About</p>
-      <h3 id="about-title">ICT QUttle</h3>
+      <h3 id="about-title">StudySprint</h3>
       <p>Founded by Bentin Nehemiah and Daniel Nelson.</p>
       <p>Prannoy is the Solo Studies guide: ask him to explain a topic or learn from his supportive feedback after a wrong answer. Each subject has its own level-matched boss who challenges you before its level-ups.</p>
     </section>
@@ -712,6 +758,22 @@
         <button class="theme-option" type="button" data-theme-option="solid-coral"><strong>Coral</strong><span>Soft rose and berry colours</span></button>
         <button class="theme-option" type="button" data-theme-option="solid-gold"><strong>Golden hour</strong><span>Calm golden earth tones</span></button>
       </div>
+      <section class="character-icon-picker" aria-labelledby="character-icon-title">
+        <p class="eyebrow" id="character-icon-title">Character icon</p>
+        <p>Choose your profile icon. More character artwork can be added when the PNGs are ready.</p>
+        <div class="character-icon-options" role="group" aria-label="Choose a character icon">
+          <button class="character-icon-option" type="button" data-character-icon="star" aria-label="Star" title="Star">★</button>
+          <button class="character-icon-option" type="button" data-character-icon="bolt" aria-label="Bolt" title="Bolt">ϟ</button>
+          <button class="character-icon-option" type="button" data-character-icon="fox" aria-label="Fox" title="Fox">🦊</button>
+          <button class="character-icon-option" type="button" data-character-icon="owl" aria-label="Owl" title="Owl">🦉</button>
+          <button class="character-icon-option" type="button" data-character-icon="book" aria-label="Book" title="Book">▤</button>
+          <button class="character-icon-option" type="button" data-character-icon="rocket" aria-label="Rocket" title="Rocket">🚀</button>
+          <button class="character-icon-option" type="button" data-character-icon="leaf" aria-label="Leaf" title="Leaf">❧</button>
+          <button class="character-icon-option" type="button" data-character-icon="moon" aria-label="Moon" title="Moon">☾</button>
+          <button class="character-icon-option" type="button" data-character-icon="sun" aria-label="Sun" title="Sun">☼</button>
+          <button class="character-icon-option" type="button" data-character-icon="crown" aria-label="Crown" title="Crown">♛</button>
+        </div>
+      </section>
       <label class="custom-solid-option" for="custom-solid-color"><span><strong>Custom solid colour</strong><span>Choose any solid background colour.</span></span><input id="custom-solid-color" type="color" value="#dce8f4" aria-label="Choose a custom solid background colour"></label>
       <label class="appearance-toggle"><input id="confetti-enabled" type="checkbox"><span><strong>Correct-answer confetti</strong><span>Celebrate correct answers with a brief burst.</span></span></label>
       <label class="appearance-toggle"><input id="lobby-music-enabled" type="checkbox"><span><strong>Lobby music</strong><span>Play an epic guitar-led adventure theme outside battles and Pomodoro.</span></span></label>
@@ -733,6 +795,12 @@
     const accountDialog = document.querySelector('#account-dialog');
     const homeworkDialog = document.querySelector('#homework-dialog');
     const verseDialog = document.querySelector('#verse-dialog');
+    const leaderboardDialog = document.querySelector('#leaderboard-dialog');
+    const leaderboardRows = document.querySelector('#leaderboard-rows');
+    const characterGlyphs = {
+      star: '★', bolt: 'ϟ', fox: '🦊', owl: '🦉', book: '▤',
+      rocket: '🚀', leaf: '❧', moon: '☾', sun: '☼', crown: '♛',
+    };
     const dailyVerses = [
       { text: 'Thy word is a lamp unto my feet, and a light unto my path.', reference: 'Psalm 119:105' },
       { text: 'I can do all things through Christ which strengtheneth me.', reference: 'Philippians 4:13' },
@@ -790,6 +858,12 @@
     let studyRemaining = 25 * 60;
     let studyDeadline = null;
     let studyTimerRunning = false;
+    let studyLastTickAt = null;
+    let studyTrackedMilliseconds = 0;
+    let pendingStudySeconds = 0;
+    let studyTimeUploadInFlight = false;
+    let studyTimeRetryAt = 0;
+    let leaderboardMetric = 'exp';
     let studyPhase = 'focus';
     let lofiContext = null;
     let lofiInterval = null;
@@ -848,7 +922,7 @@
       const downloadUrl = URL.createObjectURL(file);
       const link = document.createElement('a');
       link.href = downloadUrl;
-      link.download = `${save.account.username}-ict-quattle-save.json`;
+      link.download = `${save.account.username}-studysprint-save.json`;
       link.hidden = true;
       document.body.append(link);
       link.click();
@@ -892,6 +966,8 @@
         format: 'ict-quattle-local-account-v1',
         account: {
           username: player.username,
+          characterIcon: player.characterIcon || 'star',
+          soloStudySeconds: player.soloStudySeconds || 0,
           xp: player.xp,
           totalXp: player.totalXp,
           xpBalance: player.xpBalance,
@@ -902,6 +978,8 @@
           wins: player.wins,
           losses: player.losses,
           draws: player.draws,
+          characterIcon: player.characterIcon || 'star',
+          soloStudySeconds: player.soloStudySeconds || 0,
           homeworkRewardDate: player.homeworkRewardDate || '',
         },
       });
@@ -976,6 +1054,10 @@
       updateAudioVolumes();
       document.querySelector('#first-person-battles-enabled').checked = firstPersonBattlesEnabled;
       document.querySelector('#custom-solid-color').value = customColor;
+      const selectedIcon = state?.you.characterIcon || 'star';
+      personalizeDialog.querySelectorAll('[data-character-icon]').forEach((option) => {
+        option.setAttribute('aria-pressed', String(option.dataset.characterIcon === selectedIcon));
+      });
     }
 
     function updateAudioVolumes() {
@@ -1017,7 +1099,7 @@
     }
 
     function renderModePicker() {
-      return `<main class="mode-screen"><p class="eyebrow">ICT QUttle · pick your path</p><h1>How do you want to play?</h1><p class="mode-intro">Study on your own with a Pomodoro, or meet other learners online.</p>${localOnly ? '<p class="practice-feedback">Local browser mode: accounts, progress, practice, and bot battles are saved in this browser. Online multiplayer needs a game server.</p>' : ''}<div class="mode-cards"><button class="mode-card" data-action="section" data-section="solo"><span class="mode-icon">◷</span><h2>Solo Studies</h2><p>Choose a bot battle or focus with a Pomodoro and mellow background audio.</p><strong>Choose solo activity →</strong></button>${localOnly ? '<button class="mode-card" disabled><span class="mode-icon">◎</span><h2>Online Multiplayer</h2><p>Online challenges and shared study chat need a game server.</p><strong>Unavailable in static mode</strong></button>' : '<button class="mode-card" data-action="section" data-section="online"><span class="mode-icon">◎</span><h2>Online Multiplayer</h2><p>Challenge other players, team up, and share study-focused chat.</p><strong>Find your people →</strong></button>'}</div></main>`;
+      return `<main class="mode-screen"><p class="eyebrow">StudySprint · pick your path</p><h1>How do you want to play?</h1><p class="mode-intro">Study on your own with a Pomodoro, or meet other learners online.</p>${localOnly ? '<p class="practice-feedback">Local browser mode: accounts, progress, practice, and bot battles are saved in this browser. Online multiplayer needs a game server.</p>' : ''}<div class="mode-cards"><button class="mode-card" data-action="section" data-section="solo"><span class="mode-icon">◷</span><h2>Solo Studies</h2><p>Choose a bot battle or focus with a Pomodoro and mellow background audio.</p><strong>Choose solo activity →</strong></button>${localOnly ? '<button class="mode-card" disabled><span class="mode-icon">◎</span><h2>Online Multiplayer</h2><p>Online challenges and shared study chat need a game server.</p><strong>Unavailable in static mode</strong></button>' : '<button class="mode-card" data-action="section" data-section="online"><span class="mode-icon">◎</span><h2>Online Multiplayer</h2><p>Challenge other players, team up, and share study-focused chat.</p><strong>Find your people →</strong></button>'}</div></main>`;
     }
 
     function renderSoloPicker() {
@@ -1129,7 +1211,7 @@
 
     function renderStudyRoomPeople() {
       if (!studyRoom.studying.length) return `<p class="empty-rivals">${localOnly ? 'Your Pomodoro runs locally. Online study presence needs a game server.' : 'You are the first one studying solo. Others will appear here while they are active.'}</p>`;
-      return studyRoom.studying.map((person) => `<div class="study-person"><span>${esc(person.name)}</span><span>${esc((state.subjects.find((subject) => subject.id === person.subject) || {}).name || 'Studying')}</span></div>`).join('');
+      return studyRoom.studying.map((person) => `<div class="study-person"><span>${characterGlyphs[person.characterIcon] || '★'} ${esc(person.name)}</span><span>${esc((state.subjects.find((subject) => subject.id === person.subject) || {}).name || 'Studying')}</span></div>`).join('');
     }
 
     function renderStudyMessages() {
@@ -1630,9 +1712,14 @@
       }
       if (activeSection === 'solo' && soloView === 'study') {
         updateStudyStatus(false);
-        if (studyTimerRunning) studyRemaining = Math.max(0, Math.ceil((studyDeadline - Date.now()) / 1000));
+        if (studyTimerRunning) {
+          updateStudyClock();
+          studyRemaining = Math.max(0, Math.ceil((studyDeadline - Date.now()) / 1000));
+          flushStudyTime(true);
+        }
         studyTimerRunning = false;
         studyDeadline = null;
+        studyLastTickAt = null;
       }
       stopAmbientAudio();
       activeSection = section;
@@ -1644,16 +1731,108 @@
 
     function updateStudyClock() {
       if (!studyTimerRunning || !studyDeadline) return;
+      const now = Date.now();
+      if (studyLastTickAt === null) studyLastTickAt = now;
+      const elapsed = Math.min(5000, Math.max(0, now - studyLastTickAt));
+      studyLastTickAt = now;
+      if (studyPhase === 'focus') {
+        studyTrackedMilliseconds += elapsed;
+        const wholeSeconds = Math.floor(studyTrackedMilliseconds / 1000);
+        if (wholeSeconds) {
+          pendingStudySeconds += wholeSeconds;
+          studyTrackedMilliseconds -= wholeSeconds * 1000;
+        }
+        if (pendingStudySeconds >= 15) flushStudyTime();
+      }
       studyRemaining = Math.max(0, Math.ceil((studyDeadline - Date.now()) / 1000));
       const clock = app.querySelector('.study-clock');
       if (clock) clock.textContent = `${String(Math.floor(studyRemaining / 60)).padStart(2, '0')}:${String(studyRemaining % 60).padStart(2, '0')}`;
       if (studyRemaining > 0) return;
+      if (studyPhase === 'focus') {
+        studyTrackedMilliseconds = 0;
+        flushStudyTime(true);
+      }
       studyPhase = studyPhase === 'focus' ? 'break' : 'focus';
       studyRemaining = studyPhase === 'focus' ? 25 * 60 : 5 * 60;
       studyDeadline = Date.now() + studyRemaining * 1000;
+      studyLastTickAt = Date.now();
       const phaseLabel = app.querySelector('.study-phase');
       if (phaseLabel) phaseLabel.textContent = `${studyPhase === 'focus' ? 'FOCUS SESSION' : 'SHORT BREAK'} · ${(state.subjects.find((subject) => subject.id === studySubject) || state.subjects[0]).name}`;
       notify(studyPhase === 'break' ? 'Focus session complete. Take a five-minute break.' : 'Break complete. Starting your next focus session.');
+    }
+
+    async function flushStudyTime(force = false) {
+      if (!state || studyTimeUploadInFlight || pendingStudySeconds < 1 || (!force && Date.now() < studyTimeRetryAt)) return;
+      const seconds = Math.min(60, pendingStudySeconds);
+      studyTimeUploadInFlight = true;
+      let saved = false;
+      try {
+        const result = await request('/api/study-time', {
+          method: 'POST',
+          keepalive: true,
+          body: JSON.stringify({ playerId: state.you.id, seconds }),
+        });
+        pendingStudySeconds -= seconds;
+        saved = true;
+        studyTimeRetryAt = 0;
+        state.you.soloStudySeconds = result.soloStudySeconds;
+        const totalTime = app.querySelector('.study-total-time');
+        if (totalTime) totalTime.textContent = `Lifetime solo focus: ${formatStudyTime(result.soloStudySeconds)}`;
+      } catch (error) {
+        studyTimeRetryAt = Date.now() + 15_000;
+        notify(`Could not save solo study time: ${error.message}`);
+      } finally {
+        studyTimeUploadInFlight = false;
+        if (saved && pendingStudySeconds > 0) flushStudyTime();
+      }
+    }
+
+    function formatStudyTime(seconds = 0) {
+      if (seconds < 60) return `${seconds}s`;
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      return hours ? `${hours}h ${minutes}m` : `${minutes}m`;
+    }
+
+    async function loadLeaderboard(metric = leaderboardMetric) {
+      leaderboardMetric = metric;
+      document.querySelectorAll('[data-leaderboard]').forEach((button) => {
+        button.setAttribute('aria-pressed', String(button.dataset.leaderboard === metric));
+      });
+      leaderboardRows.textContent = 'Loading rankings…';
+      try {
+        const result = await request(`/api/leaderboard?metric=${encodeURIComponent(metric)}`);
+        leaderboardRows.innerHTML = result.leaderboard.length
+          ? result.leaderboard.map((entry, index) => `<div class="leaderboard-row"><span class="leaderboard-rank">#${index + 1}</span><span class="leaderboard-icon">${characterGlyphs[entry.characterIcon] || '★'}</span><span class="leaderboard-name">${esc(entry.name)}</span><strong class="leaderboard-value">${metric === 'exp' ? `${entry.value.toLocaleString()} XP` : formatStudyTime(entry.value)}</strong></div>`).join('')
+          : '<p class="empty-rivals">No players are ranked yet. Start earning XP or studying to appear here.</p>';
+      } catch (error) {
+        leaderboardRows.textContent = `Could not load the leaderboard: ${error.message}`;
+      }
+    }
+
+    async function saveCharacterIcon(icon) {
+      if (!state) {
+        notify('Sign in to save a character icon to your profile.');
+        return;
+      }
+      const previousIcon = state.you.characterIcon || 'star';
+      personalizeDialog.querySelectorAll('[data-character-icon]').forEach((button) => {
+        button.setAttribute('aria-pressed', String(button.dataset.characterIcon === icon));
+      });
+      try {
+        state = await request('/api/profile', {
+          method: 'POST',
+          body: JSON.stringify({ playerId: state.you.id, characterIcon: icon }),
+        });
+        lastRenderedState = '';
+        render();
+        notify('Character icon saved to your player profile.');
+      } catch (error) {
+        personalizeDialog.querySelectorAll('[data-character-icon]').forEach((button) => {
+          button.setAttribute('aria-pressed', String(button.dataset.characterIcon === previousIcon));
+        });
+        notify(error.message);
+      }
     }
 
     async function sendStudyMessage(form) {
@@ -1878,7 +2057,7 @@
         const actionLabel = isPlayer
           ? available ? selected ? 'Selected' : 'Select' : rival.status === 'in-match' ? 'In match' : 'Invited'
           : 'Challenge';
-        return `<div class="rival-row"><div class="rival-icon ${isPlayer ? 'player' : ''}">${isPlayer ? esc(rival.name.slice(0, 1).toUpperCase()) : '✳'}</div><div><div class="rival-name">${esc(rival.name)}</div><div class="rival-meta">${rival.detail}</div></div><button class="challenge-button" data-action="${isPlayer ? 'select-player' : 'battle'}" data-id="${esc(rival.id)}" data-level="${rival.level}" ${isPlayer ? `aria-pressed="${selected}"` : ''} ${available ? '' : 'disabled'}>${actionLabel}</button></div>`;
+        return `<div class="rival-row"><div class="rival-icon ${isPlayer ? 'player' : ''}">${isPlayer ? characterGlyphs[rival.characterIcon] || esc(rival.name.slice(0, 1).toUpperCase()) : '✳'}</div><div><div class="rival-name">${esc(rival.name)}</div><div class="rival-meta">${rival.detail}</div></div><button class="challenge-button" data-action="${isPlayer ? 'select-player' : 'battle'}" data-id="${esc(rival.id)}" data-level="${rival.level}" ${isPlayer ? `aria-pressed="${selected}"` : ''} ${available ? '' : 'disabled'}>${actionLabel}</button></div>`;
       }).join('');
     }
 
@@ -1938,7 +2117,7 @@
       lastChallengeId = incoming?.id || null;
 
       if (activeSection === 'online') {
-        rivalList.insertAdjacentHTML('afterend', `<section class="study-chat"><h2>Study lounge</h2><p class="eyebrow">Study discussion · curse words are filtered</p><div class="call-note">Study chat is live. Audio/video calls need a deployed WebRTC signaling and TURN service, which this server does not currently provide.</div><div class="chat-actions"><button type="button" data-action="clear-my-chat">Clear my view</button><button type="button" data-action="clear-shared-chat">Clear for everyone</button></div><div class="chat-transcript">${renderStudyMessages()}</div><form class="chat-form" data-study-chat><input name="message" maxlength="240" autocomplete="off" placeholder="Ask a study question or share a tip" required><button type="submit">Send</button></form></section><aside class="study-people-panel" style="margin-top:16px"><h2>Studying solo</h2><div class="study-people">${renderStudyRoomPeople()}</div></aside>`);
+        rivalList.insertAdjacentHTML('afterend', `<section class="study-chat"><h2>Study lounge</h2><p class="eyebrow">Study discussion · abusive language is filtered</p><div class="call-note">Study chat is live. Audio/video calls need a deployed WebRTC signaling and TURN service, which this server does not currently provide.</div><div class="chat-actions"><button type="button" data-action="clear-my-chat">Clear my view</button><button type="button" data-action="clear-shared-chat">Clear for everyone</button></div><div class="chat-transcript">${renderStudyMessages()}</div><form class="chat-form" data-study-chat><input name="message" maxlength="240" autocomplete="off" placeholder="Ask a study question or share a tip" required><button type="submit">Send</button></form></section><aside class="study-people-panel" style="margin-top:16px"><h2>Studying solo</h2><div class="study-people">${renderStudyRoomPeople()}</div></aside>`);
       }
     }
 
@@ -1947,7 +2126,7 @@
       const homeworkPrompt = homeworkPending
         ? `<section class="homework-warning" role="status"><h2>Finish it quick!</h2><p>Stay here and get your homework done. When you are finished, press the button below to earn 2 XP.</p><button class="primary-button" data-action="homework-finished" ${homeworkRewardInFlight ? 'disabled' : ''}>Finished</button></section>`
         : '';
-      app.innerHTML = `<main class="study-layout"><section class="study-main"><button class="mode-back" data-action="solo-picker">← Solo options</button><p class="eyebrow">Solo focus session</p><h1>One thing at a time.</h1>${homeworkPrompt}<p>A 25-minute focus block followed by a five-minute break. The mellow ambient loop is generated in your browser with a steady drum beat and contains no streamed music.</p><div class="study-clock">${String(Math.floor(studyRemaining / 60)).padStart(2, '0')}:${String(studyRemaining % 60).padStart(2, '0')}</div><p class="eyebrow">${studyPhase === 'focus' ? 'FOCUS SESSION' : 'SHORT BREAK'} · ${esc(currentSubject.name)}</p><div class="study-controls"><button class="primary-button" data-action="study-timer">${studyTimerRunning ? 'Pause timer' : 'Start timer'}</button><button data-action="study-reset">Reset</button><button data-action="music">${lofiContext ? 'Stop lofi' : 'Play lofi'}</button><button data-action="sound" aria-pressed="${soundEnabled}">Sound ${soundEnabled ? 'on' : 'off'}</button></div><div class="study-subjects" role="group" aria-label="Study subject">${state.subjects.map((subject) => `<button type="button" data-action="study-subject" data-subject="${esc(subject.id)}" aria-pressed="${studySubject === subject.id}">${esc(subject.name)}</button>`).join('')}</div></section><aside class="study-people-panel"><h2>Studying solo · ${studyRoom.studying.length + 1}</h2><div class="study-person"><span>${esc(state.you.name)} (you)</span><span>${esc(currentSubject.name)}</span></div>${renderStudyRoomPeople()}</aside></main>`;
+      app.innerHTML = `<main class="study-layout"><section class="study-main"><button class="mode-back" data-action="solo-picker">← Solo options</button><p class="eyebrow">Solo focus session</p><h1>One thing at a time.</h1>${homeworkPrompt}<p>A 25-minute focus block followed by a five-minute break. The mellow ambient loop is generated in your browser with a steady drum beat and contains no streamed music.</p><div class="study-clock">${String(Math.floor(studyRemaining / 60)).padStart(2, '0')}:${String(studyRemaining % 60).padStart(2, '0')}</div><p class="eyebrow study-phase">${studyPhase === 'focus' ? 'FOCUS SESSION' : 'SHORT BREAK'} · ${esc(currentSubject.name)}</p><p class="study-total-time">Lifetime solo focus: ${formatStudyTime(state.you.soloStudySeconds)}</p><div class="study-controls"><button class="primary-button" data-action="study-timer">${studyTimerRunning ? 'Pause timer' : 'Start timer'}</button><button data-action="study-reset">Reset</button><button data-action="music">${lofiContext ? 'Stop lofi' : 'Play lofi'}</button><button data-action="sound" aria-pressed="${soundEnabled}">Sound ${soundEnabled ? 'on' : 'off'}</button></div><div class="study-subjects" role="group" aria-label="Study subject">${state.subjects.map((subject) => `<button type="button" data-action="study-subject" data-subject="${esc(subject.id)}" aria-pressed="${studySubject === subject.id}">${esc(subject.name)}</button>`).join('')}</div></section><aside class="study-people-panel"><h2>Studying solo · ${studyRoom.studying.length + 1}</h2><div class="study-person"><span>${characterGlyphs[state.you.characterIcon] || '★'} ${esc(state.you.name)} (you)</span><span>${esc(currentSubject.name)}</span></div>${renderStudyRoomPeople()}</aside></main>`;
       app.querySelector('.study-clock')?.nextElementSibling?.classList.add('study-phase');
     }
 
@@ -1989,7 +2168,7 @@
           const showExplosion = isDefeated && defeat?.battleId === battle.id && Date.now() - defeat.startedAt < 1_250;
           const elapsed = showExplosion ? Date.now() - defeat.startedAt : 0;
           const hp = Math.max(0, Math.min(100, player.hp));
-          return `<div class="pov-opponent ${isDefeated ? 'pov-defeated' : ''} ${showExplosion ? 'pov-exploding' : ''}" data-pov-player="${esc(player.id)}" ${showExplosion ? `style="--pov-elapsed:-${elapsed}ms"` : ''}><div class="pov-block"><div class="pov-head">${esc(player.name.slice(0, 1).toUpperCase())}</div><div class="pov-body"></div><i class="pov-limb left"></i><i class="pov-limb right"></i><i class="pov-leg left"></i><i class="pov-leg right"></i></div><span>${esc(player.name)}</span><div class="pov-mini-health" role="progressbar" aria-label="${esc(player.name)} health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${hp}"><div class="pov-mini-health-track"><div class="pov-mini-health-fill" style="width:${hp}%"></div></div></div></div>`;
+          return `<div class="pov-opponent ${isDefeated ? 'pov-defeated' : ''} ${showExplosion ? 'pov-exploding' : ''}" data-pov-player="${esc(player.id)}" ${showExplosion ? `style="--pov-elapsed:-${elapsed}ms"` : ''}><div class="pov-block"><div class="pov-head">${characterGlyphs[player.characterIcon] || esc(player.name.slice(0, 1).toUpperCase())}</div><div class="pov-body"></div><i class="pov-limb left"></i><i class="pov-limb right"></i><i class="pov-leg left"></i><i class="pov-leg right"></i></div><span>${esc(player.name)}</span><div class="pov-mini-health" role="progressbar" aria-label="${esc(player.name)} health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${hp}"><div class="pov-mini-health-track"><div class="pov-mini-health-fill" style="width:${hp}%"></div></div></div></div>`;
         }).join('')}</div><div class="pov-projectile" aria-hidden="true"></div><div class="pov-hand" aria-hidden="true"><div class="pov-arm"></div><div class="pov-orb"></div></div><div class="pov-health"><div class="pov-health-label"><span>YOUR HEALTH</span><span class="pov-health-value">${Math.max(0, state.you.hp)} / 100</span></div><div class="pov-health-track" role="progressbar" aria-label="Your health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.max(0, state.you.hp)}"><div class="pov-health-fill" style="width:${Math.max(0, state.you.hp)}%"></div></div></div><span class="pov-caption">FIRST-PERSON · ENERGY ORB</span></div>`
         : '';
       return `<main class="main-panel battle-main"><section class="arena ${firstPersonBattlesEnabled ? 'first-person-arena' : ''}" aria-label="Battle arena"><div class="arena-top"><span class="live-label"><i></i>${finished ? 'MATCH ENDED' : 'LIVE MATCH'}</span><span>${battle.mode === 'online' ? 'PLAYER DUEL' : 'PRACTICE DUEL'} · ${esc(subject.name)}</span></div>${firstPersonScene}<div class="combatants">${fighter(you, false)}<div class="versus"><strong>VS</strong>${finished ? 'FINAL' : 'ROUND'}</div>${fighter(rival, true)}</div><div class="arena-bottom"><span>${esc(subject.name.toUpperCase())} <strong>·</strong> KNOWLEDGE DUEL</span><span>${finished ? 'FINAL HP' : yourTurn ? 'YOUR MOVE' : 'RIVAL MOVE'}</span></div></section><div class="below-arena"><div><h3 class="feed-title">Battle feed</h3><div class="feed-list">${battle.log.map((entry) => `<div class="feed-item ${esc(entry.kind)}"><i class="feed-mark"></i><span>${esc(entry.text)}</span></div>`).join('')}</div></div><div class="round-stat"><p class="eyebrow">Turn clock</p><div class="round-number">${finished ? 'END' : `${remaining}<small style="font:10px var(--mono)"> SEC</small>`}</div><div class="round-caption">${finished ? 'match concluded' : `current turn · ${esc(activeName || '')}`}</div></div></div></main><aside class="quiz-panel">${prompt}${answerFeedbackMarkup}</aside>`;
@@ -2002,7 +2181,7 @@
 
     function fighterCard(player, enemy) {
       const hp = Math.max(0, player.hp);
-      return `<div class="fighter ${enemy ? 'enemy' : ''}" data-player-id="${esc(player.id)}"><div class="fighter-avatar">${esc(player.name.slice(0, 1).toUpperCase())}</div><div class="fighter-name">${esc(player.name)}</div><div class="fighter-role">${player.npc ? 'ARENA NPC' : enemy ? 'RIVAL' : 'YOU · PLAYER'}</div><div class="combat-stats">LVL ${player.level} · ATK ${player.attack} · DEF ${player.defence}</div><div class="hp-wrap"><div class="hp-label"><span>HP</span><span>${hp} / 100</span></div><div class="hp-track"><div class="hp-fill" style="width:${hp}%"></div></div></div></div>`;
+      return `<div class="fighter ${enemy ? 'enemy' : ''}" data-player-id="${esc(player.id)}"><div class="fighter-avatar">${player.npc ? esc(player.name.slice(0, 1).toUpperCase()) : characterGlyphs[player.characterIcon] || esc(player.name.slice(0, 1).toUpperCase())}</div><div class="fighter-name">${esc(player.name)}</div><div class="fighter-role">${player.npc ? 'ARENA NPC' : enemy ? 'RIVAL' : 'YOU · PLAYER'}</div><div class="combat-stats">LVL ${player.level} · ATK ${player.attack} · DEF ${player.defence}</div><div class="hp-wrap"><div class="hp-label"><span>HP</span><span>${hp} / 100</span></div><div class="hp-track"><div class="hp-fill" style="width:${hp}%"></div></div></div></div>`;
     }
 
     function renderStalinChallenge() {
@@ -2022,7 +2201,8 @@
       if (signature === lastRenderedState) return;
       lastRenderedState = signature;
       document.querySelector('#profile-name').textContent = state.you.name;
-      document.querySelector('#profile-badge').textContent = state.you.name.slice(0, 1).toUpperCase();
+      document.querySelector('#profile-badge').textContent = characterGlyphs[state.you.characterIcon] || state.you.name.slice(0, 1).toUpperCase();
+      document.querySelector('#profile-badge').dataset.icon = state.you.characterIcon || '';
       document.querySelector('#online-count').textContent = localOnly ? 'LOCAL PLAYER' : `${state.onlinePlayers.length + 1} IN ARENA`;
       const battle = state.battle;
       if (!battle && state.you.stalinChallengePending) {
@@ -2421,9 +2601,14 @@
       if (button.dataset.action === 'solo-picker') {
         updateStudyStatus(false);
         stopAmbientAudio();
-        if (studyTimerRunning) studyRemaining = Math.max(0, Math.ceil((studyDeadline - Date.now()) / 1000));
+        if (studyTimerRunning) {
+          updateStudyClock();
+          studyRemaining = Math.max(0, Math.ceil((studyDeadline - Date.now()) / 1000));
+          flushStudyTime(true);
+        }
         studyTimerRunning = false;
         studyDeadline = null;
+        studyLastTickAt = null;
         soloView = 'choose';
         lastRenderedState = '';
         render();
@@ -2431,22 +2616,30 @@
       }
       if (button.dataset.action === 'study-timer') {
         if (studyTimerRunning) {
+          updateStudyClock();
           studyRemaining = Math.max(0, Math.ceil((studyDeadline - Date.now()) / 1000));
           studyTimerRunning = false;
           studyDeadline = null;
+          studyLastTickAt = null;
+          flushStudyTime(true);
         } else {
           studyDeadline = Date.now() + studyRemaining * 1000;
           studyTimerRunning = true;
+          studyLastTickAt = Date.now();
         }
         lastRenderedState = '';
         render();
         return;
       }
       if (button.dataset.action === 'study-reset') {
+        if (studyTimerRunning) updateStudyClock();
         studyPhase = 'focus';
         studyRemaining = 25 * 60;
         studyTimerRunning = false;
         studyDeadline = null;
+        studyLastTickAt = null;
+        studyTrackedMilliseconds = 0;
+        flushStudyTime(true);
         lastRenderedState = '';
         render();
         return;
@@ -2803,6 +2996,7 @@
       soloView = 'study';
       studyTimerRunning = true;
       studyDeadline = Date.now() + studyRemaining * 1000;
+      studyLastTickAt = Date.now();
       updateStudyStatus(true);
       startAmbientAudio();
       refreshStudyRoom();
@@ -2839,7 +3033,21 @@
     const updatesDialog = document.querySelector('#updates-dialog');
     document.querySelector('#updates-button').addEventListener('click', () => updatesDialog.showModal());
     document.querySelector('#updates-close').addEventListener('click', () => updatesDialog.close());
+    document.querySelector('#leaderboard-button').addEventListener('click', () => {
+      leaderboardDialog.showModal();
+      loadLeaderboard('exp');
+    });
+    document.querySelector('#leaderboard-close').addEventListener('click', () => leaderboardDialog.close());
+    leaderboardDialog.addEventListener('click', (event) => {
+      const tab = event.target.closest('[data-leaderboard]');
+      if (tab) loadLeaderboard(tab.dataset.leaderboard);
+    });
     personalizeDialog.addEventListener('click', (event) => {
+      const icon = event.target.closest('[data-character-icon]');
+      if (icon) {
+        saveCharacterIcon(icon.dataset.characterIcon);
+        return;
+      }
       const option = event.target.closest('[data-theme-option]');
       if (!option) return;
       appearance = option.dataset.themeOption;
@@ -2886,6 +3094,12 @@
       lobbyMusicNeedsGesture = false;
       syncLobbyMusic();
     }, { capture: true });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'hidden' || !studyTimerRunning) return;
+      updateStudyClock();
+      flushStudyTime(true);
+    });
 
     async function boot() {
       const playerId = localStorage.getItem(playerKey);

@@ -32,19 +32,21 @@ const HIT_HEAL = 3;
 const FAST_ANSWER_WINDOW_MS = 2_000;
 const PLAYER_PROGRESS_FIELDS = [
 	'name', 'xp', 'totalXp', 'xpBalance', 'xpSpent', 'level', 'matches', 'wins', 'losses', 'draws',
+	'soloStudySeconds',
 ];
 const ACCOUNT_FIELDS = ['username', 'usernameKey', 'passwordSalt', 'passwordHash'];
+const CHARACTER_ICONS = ['star', 'bolt', 'fox', 'owl', 'book', 'rocket', 'leaf', 'moon', 'sun', 'crown'];
 const SUBJECT_RIVALS = {
-	chemistry: 'Prannoy',
-	english: 'Prannoy',
-	french: 'Prannoy',
-	biology: 'Stalin',
-	physics: 'Stalin',
-	hindi: 'Joshua',
-	computers: 'Solomon',
-	mathematics: 'Mira',
-	business: 'Avery',
-	scripture: 'Noah',
+	chemistry: 'Danny',
+	english: 'Danny',
+	french: 'Danny',
+	biology: 'Danny',
+	physics: 'Danny',
+	hindi: 'Danny',
+	computers: 'Danny',
+	mathematics: 'Danny',
+	business: 'Danny',
+	scripture: 'Danny',
 };
 const SUBJECT_BOT_NAMES = {
 	chemistry: ['Copper', 'Molecule', 'Beaker', 'Catalyst', 'Helium', 'Isotope'],
@@ -147,36 +149,47 @@ function completeSubjectChallenge(player, subjectId) {
 	return true;
 }
 
-function bossDialogue(rivalName, won) {
-	const lines = {
-		Prannoy: won
-			? 'All right, you earned that one. Keep going; I know you can get even sharper.'
-			: 'You were close, but close is not correct. Take another look; I know you can do better.',
-		Stalin: won
-			? 'Do not celebrate. One win does not make you clever.'
-			: 'That was pathetic. Go study before you waste my time again.',
-		Joshua: won
-			? 'Impressive, but I am still the greatest mind in this arena.'
-			: 'Naturally, I won. Nobody here can match my brilliance.',
-		Solomon: won
-			? 'You found the rhythm this time. I will be ready for the next round.'
-			: 'You missed the beat, and I danced away with the win.',
-		Avery: won
-			? 'You got lucky. I will be ready next time.'
-			: 'That was an easy question. Come back when you are ready.',
+function bossDialogue(subjectId, won) {
+	const personas = {
+		chemistry: ['Prannoy', 'You earned that round. I know you can come back even sharper.'],
+		english: ['Prannoy', 'Good reading under pressure. Let us see what you bring next time.'],
+		french: ['Prannoy', 'Bien joué. You kept your focus; I will be ready for another round.'],
+		biology: ['Stalin', 'Strong work. You took the point, but I am already preparing for a rematch.'],
+		physics: ['Stalin', 'That was a close contest. I will bring a tougher challenge next time.'],
+		hindi: ['Joshua', 'A clever answer. Enjoy the win; I am aiming to take the next one.'],
+		computers: ['Solomon', 'You kept the rhythm and won the round. The rematch is already on my schedule.'],
+		mathematics: ['Mira', 'Your reasoning held up. I have a new strategy ready for our next match.'],
+		business: ['Avery', 'Nice move. I will study the result and come back with a better plan.'],
+		scripture: ['Noah', 'Well played. Take the lesson from this round; I will be ready when we meet again.'],
 	};
-	return lines[rivalName] || lines.Avery;
+	const [persona, respectfulChallenge] = personas[subjectId] || personas.computers;
+	if (won) return respectfulChallenge;
+	const challenges = {
+		Prannoy: 'Good effort. Review the tricky parts, then challenge me again when you are ready.',
+		Stalin: 'I took this round, Danny. Study the questions and come back for a rematch.',
+		Joshua: 'This round goes to me. I am looking forward to seeing your next strategy.',
+		Solomon: 'I found the beat this time. Practice the tricky parts and we will run it back.',
+		Mira: 'My strategy worked this time. Adjust yours and let us test it again.',
+		Avery: 'I had the better plan this round. Bring a new one and challenge me again.',
+		Noah: 'This round is mine. Reflect on the questions, and I will meet you here again.',
+	};
+	return challenges[persona] || challenges.Solomon;
 }
 
-function bossOpening(rivalName) {
+function bossOpening(subjectId) {
 	const openings = {
-		Prannoy: 'I am rooting for you, but I will not make this easy. Show me what you know.',
-		Stalin: 'You think you are ready? Prove it. I expect you to fail.',
-		Joshua: 'Welcome to my arena. Try to keep up with the smartest person here: me.',
-		Solomon: 'The stage is set. Keep the rhythm if you want to keep up.',
-		Avery: 'Let us see if you can handle this challenge.',
+		chemistry: 'I am rooting for you, but I will make you earn every answer. Ready, Danny?',
+		english: 'Let us see how you read the clues under pressure. I am ready when you are.',
+		french: 'Bonjour, Danny. Let us see how well you can think on your feet.',
+		biology: 'I have studied for this one, Danny. Bring your best and let the questions decide.',
+		physics: 'Every move has a reason. Let us see whose reasoning holds up today.',
+		hindi: 'Welcome to the arena, Danny. I have a strong streak to defend.',
+		computers: 'The stage is set, Danny. Keep the rhythm and show me what you know.',
+		mathematics: 'I have checked the numbers twice. Let us see how your strategy compares.',
+		business: 'I have a plan for this match. Show me what you have prepared.',
+		scripture: 'Let us take this one question at a time and see where our knowledge leads.',
 	};
-	return openings[rivalName] || openings.Avery;
+	return openings[subjectId] || openings.computers;
 }
 
 function questionHistoryKey(playerId, subject) {
@@ -264,6 +277,8 @@ function validateImportedAccount(value) {
 	const integerFields = ['totalXp', 'xpBalance', 'xpSpent', 'matches', 'wins', 'losses', 'draws'];
 	if (!Number.isInteger(value.level) || value.level < 1 || value.level > MAX_LEVEL
 		|| !Number.isInteger(value.xp) || value.xp < 0
+		|| (value.soloStudySeconds !== undefined && (!Number.isSafeInteger(value.soloStudySeconds) || value.soloStudySeconds < 0))
+		|| (value.characterIcon !== undefined && !CHARACTER_ICONS.includes(value.characterIcon))
 		|| (value.stalinChallengePending !== undefined && typeof value.stalinChallengePending !== 'boolean')
 		|| (value.xp >= value.level * 100 && value.stalinChallengePending !== true)
 		|| integerFields.some((field) => !Number.isSafeInteger(value[field]) || value[field] < 0)
@@ -279,6 +294,8 @@ function validateImportedAccount(value) {
 		...Object.fromEntries(['xp', ...integerFields, 'level', 'homeworkRewardDate']
 			.map((field) => [field, value[field] ?? ''])),
 		stalinChallengePending: value.stalinChallengePending === true,
+		soloStudySeconds: value.soloStudySeconds || 0,
+		characterIcon: value.characterIcon || 'star',
 		subjectProgress,
 	};
 }
@@ -297,6 +314,8 @@ function exportAccountProgress(player) {
 			wins: player.wins,
 			losses: player.losses,
 			draws: player.draws,
+			soloStudySeconds: player.soloStudySeconds || 0,
+			characterIcon: player.characterIcon || 'star',
 			homeworkRewardDate: player.homeworkRewardDate || '',
 			stalinChallengePending: Boolean(player.stalinChallengePending),
 			subjectProgress: createSubjectProgress(player.subjectProgress),
@@ -321,6 +340,8 @@ function mergeImportedProgress(player, imported) {
 		player[field] = Math.max(player[field], imported[field]);
 	}
 	player.matches = Math.max(player.matches, player.wins + player.losses + player.draws);
+	player.soloStudySeconds = Math.max(player.soloStudySeconds || 0, imported.soloStudySeconds || 0);
+	player.characterIcon = imported.characterIcon || player.characterIcon || 'star';
 	player.homeworkRewardDate = [player.homeworkRewardDate || '', imported.homeworkRewardDate || ''].sort().at(-1);
 	Object.assign(player, combatStats(player.level));
 }
@@ -341,7 +362,11 @@ function loadSavedPlayers(filePath) {
 			|| !Number.isInteger(record.level) || record.level < 1 || record.level > MAX_LEVEL
 			|| (record.stalinChallengePending !== undefined && typeof record.stalinChallengePending !== 'boolean')
 			|| (record.homeworkRewardDate !== undefined && typeof record.homeworkRewardDate !== 'string')
-			|| PLAYER_PROGRESS_FIELDS.some((field) => field !== 'name' && !Number.isFinite(record[field]))
+			|| PLAYER_PROGRESS_FIELDS.some((field) => {
+				if (field === 'soloStudySeconds') return record[field] !== undefined
+					&& (!Number.isSafeInteger(record[field]) || record[field] < 0);
+				return field !== 'name' && !Number.isFinite(record[field]);
+			})
 			|| ACCOUNT_FIELDS.some((field) => record[field] !== undefined && typeof record[field] !== 'string')) {
 			throw new Error('Player save file contains an invalid record');
 		}
@@ -357,6 +382,8 @@ function loadSavedPlayers(filePath) {
 		const player = {
 			...record,
 			...account,
+			characterIcon: record.characterIcon === undefined ? 'star' : normalizeCharacterIcon(record.characterIcon),
+			soloStudySeconds: record.soloStudySeconds || 0,
 			subjectProgress: createSubjectProgress(record.subjectProgress),
 			homeworkRewardDate: record.homeworkRewardDate || '',
 			hp: MAX_HP,
@@ -378,6 +405,7 @@ function savePlayers(filePath, playerMap) {
 		id: player.id,
 		...Object.fromEntries(PLAYER_PROGRESS_FIELDS.map((field) => [field, player[field]])),
 		...Object.fromEntries(ACCOUNT_FIELDS.map((field) => [field, player[field] || ''])),
+		characterIcon: player.characterIcon || 'star',
 		homeworkRewardDate: player.homeworkRewardDate || '',
 		stalinChallengePending: Boolean(player.stalinChallengePending),
 		subjectProgress: createSubjectProgress(player.subjectProgress),
@@ -778,8 +806,92 @@ function isStudyRelatedMessage(message) {
 }
 
 function censorProfanity(message) {
-	const profanity = /(?<![a-z0-9])(?:f[\W_]*u[\W_]*c[\W_]*k(?:[\W_]*(?:i[\W_]*n[\W_]*g|e[\W_]*d|e[\W_]*r[\W_]*s?|s))?|s[\W_]*h[\W_]*i[\W_]*t(?:[\W_]*t[\W_]*y|[\W_]*s)?|b[\W_]*i[\W_]*t[\W_]*c[\W_]*h(?:[\W_]*e[\W_]*s)?|d[\W_]*a[\W_]*m[\W_]*n|h[\W_]*e[\W_]*l[\W_]*l|c[\W_]*r[\W_]*a[\W_]*p|a[\W_]*s[\W_]*s[\W_]*h[\W_]*o[\W_]*l[\W_]*e|b[\W_]*a[\W_]*s[\W_]*t[\W_]*a[\W_]*r[\W_]*d|d[\W_]*i[\W_]*c[\W_]*k|p[\W_]*i[\W_]*s[\W_]*s(?:[\W_]*e[\W_]*d|[\W_]*i[\W_]*n[\W_]*g)?)(?![a-z0-9])/gi;
-	return message.replace(profanity, (word) => '*'.repeat(Math.max(3, word.replace(/[^a-z]/gi, '').length)));
+	const characters = Array.from(message);
+	const normalized = [];
+	const sourceStarts = [];
+	const sourceEnds = [];
+	let lastMappedCharacter = '';
+	let repeatedCharacterCount = 0;
+	const lookalikes = {
+		'а': 'a', 'е': 'e', 'і': 'i', 'о': 'o', 'р': 'p', 'с': 'c', 'х': 'x', 'у': 'y',
+		'ѕ': 's', 'ӏ': 'l', 'к': 'k', 'м': 'm', 'т': 't',
+		'0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't',
+	};
+	const embeddedPunctuation = { '!': 'i', '|': 'i', '@': 'a', '$': 's' };
+	characters.forEach((character, sourceIndex) => {
+		const folded = character.normalize('NFKD').toLowerCase().replace(/[\u0300-\u036f]/g, '');
+		for (const foldedCharacter of folded) {
+			const surroundedByLetters = /[\p{L}\p{N}]/u.test(characters[sourceIndex - 1] || '')
+				&& /[\p{L}\p{N}]/u.test(characters[sourceIndex + 1] || '');
+			const mapped = (surroundedByLetters && embeddedPunctuation[foldedCharacter])
+				|| lookalikes[foldedCharacter] || foldedCharacter;
+			if (/[a-z0-9]/.test(mapped) && mapped === lastMappedCharacter) {
+				repeatedCharacterCount += 1;
+				if (repeatedCharacterCount > 2) {
+					sourceEnds[sourceEnds.length - 1] = sourceIndex;
+					continue;
+				}
+			} else {
+				lastMappedCharacter = /[a-z0-9]/.test(mapped) ? mapped : '';
+				repeatedCharacterCount = lastMappedCharacter ? 1 : 0;
+			}
+			normalized.push(mapped);
+			sourceStarts.push(sourceIndex);
+			sourceEnds.push(sourceIndex);
+		}
+	});
+
+	const separator = '[\\W_]{0,3}';
+	const term = (word) => word.split('').map((character) => `${character}+`).join(separator);
+	const terms = [
+		'fucking', 'fucked', 'fuckers', 'fucker', 'fuck', 'fucks', 'shitty', 'shits', 'shit',
+		'bitches', 'bitch', 'damn', 'hell', 'crap', 'asshole', 'bastard', 'dick', 'pissed', 'pissing', 'piss',
+		'nigger', 'niggers', 'nigga', 'niggas',
+	];
+	const pattern = new RegExp(`(?<![a-z0-9])(?:${terms.map(term).join('|')})(?![a-z0-9])`, 'gi');
+	const matches = [];
+	const normalizedText = normalized.join('');
+	for (const match of normalizedText.matchAll(pattern)) {
+		const start = sourceStarts[match.index];
+		const end = sourceEnds[match.index + match[0].length - 1];
+		const count = characters.slice(start, end + 1).filter((character) => /[\p{L}\p{N}]/u.test(character)).length;
+		matches.push({ start, end, replacement: '*'.repeat(Math.max(3, count)) });
+	}
+	const output = [];
+	let sourceIndex = 0;
+	for (const match of matches) {
+		output.push(...characters.slice(sourceIndex, match.start), match.replacement);
+		sourceIndex = match.end + 1;
+	}
+	output.push(...characters.slice(sourceIndex));
+	return output.join('');
+}
+
+function normalizeCharacterIcon(value) {
+	if (!CHARACTER_ICONS.includes(value)) throw new Error('Choose a valid character icon');
+	return value;
+}
+
+function recordSoloStudySeconds(player, seconds) {
+	if (!Number.isSafeInteger(seconds) || seconds < 1 || seconds > 60) {
+		throw new Error('Study time must be between 1 and 60 seconds');
+	}
+	player.soloStudySeconds = (player.soloStudySeconds || 0) + seconds;
+	return player.soloStudySeconds;
+}
+
+function getLeaderboard(metric, playerMap = players) {
+	if (!['exp', 'study'].includes(metric)) throw new Error('Choose a valid leaderboard');
+	const field = metric === 'exp' ? 'totalXp' : 'soloStudySeconds';
+	return [...playerMap.values()]
+		.filter((player) => (player[field] || 0) > 0)
+		.map((player) => ({
+			name: player.name,
+			characterIcon: player.characterIcon || 'star',
+			value: player[field] || 0,
+		}))
+		.sort((first, second) => second.value - first.value || first.name.localeCompare(second.name))
+		.slice(0, 10);
 }
 
 function getStudyRoomState(playerId) {
@@ -792,7 +904,12 @@ function getStudyRoomState(playerId) {
 	}
 	const studying = [...studyStatuses.entries()]
 		.filter(([id, status]) => id !== playerId && status.studying && now - (players.get(id)?.lastSeen || 0) < 45_000)
-		.map(([id, status]) => ({ id, name: players.get(id)?.name || 'Player', subject: status.subject }));
+		.map(([id, status]) => ({
+			id,
+			name: players.get(id)?.name || 'Player',
+			characterIcon: players.get(id)?.characterIcon || 'star',
+			subject: status.subject,
+		}));
 	return { studying, messages: studyMessages.slice(-MAX_STUDY_MESSAGES) };
 }
 
@@ -838,7 +955,7 @@ function finishBattle(battle, winnerTeamIndex, resignedPlayerId = null) {
 	battle.log.unshift({ text: winner ? `${winner} wins the match and earns XP.` : 'The match ends in a draw. XP awarded.', kind: 'info' });
 	if (battle.mode === 'npc' && battle.bossFight) {
 		const playerWon = winnerTeamIndex === 0;
-		battle.log.unshift({ text: `${battle.npc.name}: "${bossDialogue(battle.npc.name, playerWon)}"`, kind: 'dialogue' });
+		battle.log.unshift({ text: `${battle.npc.name}: "${bossDialogue(battle.subject, playerWon)}"`, kind: 'dialogue' });
 	}
 	battle.log = battle.log.slice(0, 8);
 	savePlayers(PLAYER_DATA_FILE, players);
@@ -1011,7 +1128,7 @@ function publicBattle(battle, viewerId) {
 			&& battle.parryOpportunities.has(viewerId),
 		players: battle.playerIds.map((id) => {
 			const player = participant(battle, id);
-			return { id, name: player?.name || 'Disconnected player', hp: player?.hp ?? 0, npc: id.startsWith('npc-'), level: player?.level ?? 1, attack: player?.attack ?? 10, defence: player?.defence ?? 2, team: battle.teams.findIndex((team) => team.includes(id)) };
+			return { id, name: player?.name || 'Disconnected player', characterIcon: player?.characterIcon || 'star', hp: player?.hp ?? 0, npc: id.startsWith('npc-'), level: player?.level ?? 1, attack: player?.attack ?? 10, defence: player?.defence ?? 2, team: battle.teams.findIndex((team) => team.includes(id)) };
 		}),
 		teams: battle.teams.map((team) => team.map((id) => ({ id, name: participant(battle, id)?.name || 'Disconnected player' }))),
 		turnPlayerId: battle.turnPlayerId,
@@ -1064,7 +1181,7 @@ function createBattle(mode, teams, npc = null, challengerId = null, subject = 'c
 		winnerId: null,
 		winnerTeamIndex: null,
 		log: mode === 'npc'
-			? [{ text: npc.bossFight ? `${npc.name}: "${bossOpening(npc.name)}"` : `${npc.name} steps into the arena.`, kind: 'info' }]
+			? [{ text: npc.bossFight ? `${npc.name}: "${bossOpening(subject)}"` : `${npc.name} steps into the arena.`, kind: 'info' }]
 			: [{ text: 'A player duel begins.', kind: 'info' }],
 		npcTimer: null,
 		parryOpportunities: new Map(),
@@ -1111,6 +1228,7 @@ function getOnlinePlayers(playerId, now = Date.now(), playerMap = players, subje
 			return {
 				id: player.id,
 				name: player.name,
+				characterIcon: player.characterIcon || 'star',
 				level,
 				...combatStats(level),
 				status: player.battleId ? 'in-match' : player.challengeId ? 'invited' : 'available',
@@ -1138,6 +1256,7 @@ function getPlayerState(playerId, selectedSubject = 'computers') {
 		you: {
 			id: player.id,
 			name: player.name,
+			characterIcon: player.characterIcon || 'star',
 			username: player.username || '',
 			hasPassword: Boolean(player.passwordHash),
 			hp: combat?.hp ?? player.hp,
@@ -1155,6 +1274,7 @@ function getPlayerState(playerId, selectedSubject = 'computers') {
 			wins: player.wins,
 			losses: player.losses,
 			draws: player.draws,
+			soloStudySeconds: player.soloStudySeconds || 0,
 		},
 		onlinePlayers: getOnlinePlayers(playerId, Date.now(), players, subjectId),
 		opponents: [...players.values()]
@@ -1210,6 +1330,8 @@ function handleApi(request, response, url) {
 				wins: imported.wins,
 				losses: imported.losses,
 				draws: imported.draws,
+				soloStudySeconds: imported.soloStudySeconds || 0,
+				characterIcon: imported.characterIcon || 'star',
 				homeworkRewardDate: imported.homeworkRewardDate,
 				stalinChallengePending: false,
 				hp: MAX_HP,
@@ -1235,6 +1357,7 @@ function handleApi(request, response, url) {
 				name: account.username,
 				...account,
 				...credentials,
+				characterIcon: 'star',
 				hp: MAX_HP,
 				xp: 0,
 				totalXp: 0,
@@ -1248,6 +1371,7 @@ function handleApi(request, response, url) {
 				wins: 0,
 				losses: 0,
 				draws: 0,
+				soloStudySeconds: 0,
 				battleId: null,
 				lastSeen: Date.now(),
 			};
@@ -1316,6 +1440,15 @@ function handleApi(request, response, url) {
 		}).catch((error) => json(response, 400, { error: error.message }));
 	}
 
+	if (request.method === 'GET' && url.pathname === '/api/leaderboard') {
+		try {
+			const metric = url.searchParams.get('metric') || 'exp';
+			return json(response, 200, { metric, leaderboard: getLeaderboard(metric) });
+		} catch (error) {
+			return json(response, 400, { error: error.message });
+		}
+	}
+
 	if (request.method === 'POST' && url.pathname === '/api/homework-check') {
 		return readBody(request).then(({ playerId, completed }) => {
 			const player = players.get(String(playerId || ''));
@@ -1355,12 +1488,22 @@ function handleApi(request, response, url) {
 		return guide ? json(response, 200, guide) : json(response, 400, { error: 'Choose a subject and topic available in Solo Practice' });
 	}
 
-	if (request.method === 'POST' && ['/api/study-status', '/api/study-chat', '/api/study-chat/clear', '/api/practice-question', '/api/practice-answer', '/api/battle', '/api/stalin-challenge', '/api/challenge', '/api/respond', '/api/answer', '/api/hint', '/api/resign', '/api/leave'].includes(url.pathname)) {
-		return readBody(request).then(({ playerId, opponentId, opponentIds, answer, questionId, mode, format, challengeId, accepted, subject, topic, studying, message }) => {
+	if (request.method === 'POST' && ['/api/profile', '/api/study-time', '/api/study-status', '/api/study-chat', '/api/study-chat/clear', '/api/practice-question', '/api/practice-answer', '/api/battle', '/api/stalin-challenge', '/api/challenge', '/api/respond', '/api/answer', '/api/hint', '/api/resign', '/api/leave'].includes(url.pathname)) {
+		return readBody(request).then(({ playerId, opponentId, opponentIds, answer, questionId, mode, format, challengeId, accepted, subject, topic, studying, message, characterIcon, seconds }) => {
 			const player = players.get(String(playerId || ''));
 			if (!player) return json(response, 404, { error: 'Player session not found' });
 
-			if (url.pathname === '/api/study-chat/clear') {
+			if (url.pathname === '/api/profile') {
+				player.characterIcon = normalizeCharacterIcon(characterIcon);
+				const activeBattle = player.battleId && battles.get(player.battleId);
+				const combatant = activeBattle?.playerOverrides.get(player.id);
+				if (combatant) combatant.characterIcon = player.characterIcon;
+				savePlayers(PLAYER_DATA_FILE, players);
+			} else if (url.pathname === '/api/study-time') {
+				const soloStudySeconds = recordSoloStudySeconds(player, seconds);
+				savePlayers(PLAYER_DATA_FILE, players);
+				return json(response, 200, { soloStudySeconds });
+			} else if (url.pathname === '/api/study-chat/clear') {
 				studyMessages.length = 0;
 			} else if (url.pathname === '/api/study-status') {
 				const selectedSubject = SUBJECTS.find((item) => item.id === subject)?.id;
@@ -1581,7 +1724,8 @@ const server = http.createServer((request, response) => {
 
 if (require.main === module) {
 	server.listen(PORT, '0.0.0.0', () => {
-		console.log(`ICT QUttle is live at http://localhost:${PORT}`);
+		console.log(`StudySprint is live at http://localhost:${PORT}`);
+		console.log(`Player data is stored at ${PLAYER_DATA_FILE}; configure PLAYER_DATA_FILE to use persistent host storage.`);
 	});
 }
 
@@ -1597,6 +1741,7 @@ module.exports = {
 	answerSoloPracticeQuestion,
 	buildTurnOrder,
 	censorProfanity,
+	getLeaderboard,
 	combatStats,
 	damageFor,
 	getQuestion,
@@ -1612,6 +1757,8 @@ module.exports = {
 	mergeImportedProgress,
 	exportAccountProgress,
 	normalizeUsername,
+	normalizeCharacterIcon,
+	recordSoloStudySeconds,
 	validateImportedAccount,
 	isFastAnswer,
 	npcWinXp,
