@@ -9,18 +9,20 @@
 	const MAX_NPC_LEVEL = 110;
 	const SOLO_PRACTICE_XP = 1;
 	const STORAGE_ERROR = 'Could not save local game data. Check that browser storage is enabled and has space.';
-	const CHARACTER_ICONS = ['star', 'bolt', 'fox', 'owl', 'book', 'rocket', 'leaf', 'moon', 'sun', 'crown'];
+	const PRACTICE_ONLY_SUBJECTS = ['english', 'mathematics', 'business'];
+	const CHARACTER_ICONS = ['star', 'bolt', 'fox', 'owl', 'book', 'rocket', 'leaf', 'moon', 'sun', 'crown', 'operator-dan', 'operator-red'];
+	const OPERATOR_ICONS = { 'operator-dan': 'danthecanman', 'operator-red': 'redsto_1' };
 	const subjectRivals = {
-		chemistry: 'Danny',
-		english: 'Danny',
-		french: 'Danny',
-		biology: 'Danny',
-		physics: 'Danny',
-		hindi: 'Danny',
-		computers: 'Danny',
-		mathematics: 'Danny',
-		business: 'Danny',
-		scripture: 'Danny',
+		chemistry: 'Danthecanman',
+		english: 'Danthecanman',
+		french: 'Danthecanman',
+		biology: 'Danthecanman',
+		physics: 'Danthecanman',
+		hindi: 'Danthecanman',
+		computers: 'Danthecanman',
+		mathematics: 'Danthecanman',
+		business: 'Danthecanman',
+		scripture: 'Danthecanman',
 	};
 	const subjectBotNames = {
 		chemistry: ['Copper', 'Molecule', 'Beaker', 'Catalyst', 'Helium', 'Isotope'],
@@ -60,6 +62,7 @@
 				|| typeof player.usernameKey !== 'string' || typeof player.passwordSalt !== 'string'
 				|| typeof player.passwordHash !== 'string' || !Number.isInteger(player.level)
 				|| (player.characterIcon !== undefined && !CHARACTER_ICONS.includes(player.characterIcon))
+				|| (OPERATOR_ICONS[player.characterIcon] && OPERATOR_ICONS[player.characterIcon] !== player.usernameKey)
 				|| (player.soloStudySeconds !== undefined && (!Number.isSafeInteger(player.soloStudySeconds) || player.soloStudySeconds < 0)))) {
 				throw new Error('Saved local player data is invalid. Clear this site’s saved data to start again.');
 			}
@@ -133,10 +136,12 @@
 					|| (value.challengePending !== undefined && typeof value.challengePending !== 'boolean')) {
 					throw new Error('Saved local subject progress is invalid. Clear this site’s saved data to start again.');
 				}
+				const practiceOnly = PRACTICE_ONLY_SUBJECTS.includes(subjectId);
+				const normalizedXp = practiceOnly && xp >= level * 100 ? 0 : xp;
 				return [subjectId, {
 					level,
-					xp,
-					challengePending: value.challengePending === true || (level < MAX_LEVEL && xp >= level * 100),
+					xp: normalizedXp,
+					challengePending: !practiceOnly && (value.challengePending === true || (level < MAX_LEVEL && xp >= level * 100)),
 				}];
 			}));
 		}
@@ -156,58 +161,78 @@
 		}
 
 		function getSubjectRival(subjectId) {
-			return subjectRivals[subjectId] || 'Avery';
+			return subjectRivals[subjectId] || 'Danthecanman';
 		}
 
-		function bossOpening(subjectId) {
+		function getSubjectBoss(subjectId) {
+			const bosses = {
+				chemistry: 'Prannoy',
+				english: 'Prannoy',
+				french: 'Prannoy',
+				biology: 'Stalin',
+				physics: 'Stalin',
+				business: 'Stalin',
+				hindi: 'Joshua',
+				mathematics: 'Joshua',
+				computers: 'Solomon',
+				scripture: 'Noah',
+			};
+			return bosses[subjectId] || 'Stalin';
+		}
+
+		function bossOpening(subjectId, bossName = getSubjectBoss(subjectId)) {
+			if (bossName === 'Danthecanman') return 'Ready for the level-up challenge? Bring your best; I will bring mine.';
 			const lines = {
-				chemistry: 'I am rooting for you, but I will make you earn every answer. Ready, Danny?',
-				english: 'Let us see how you read the clues under pressure. I am ready when you are.',
-				french: 'Bonjour, Danny. Let us see how well you can think on your feet.',
-				biology: 'I have studied for this one, Danny. Bring your best and let the questions decide.',
-				physics: 'Every move has a reason. Let us see whose reasoning holds up today.',
-				hindi: 'Welcome to the arena, Danny. I have a strong streak to defend.',
-				computers: 'The stage is set, Danny. Keep the rhythm and show me what you know.',
-				mathematics: 'I have checked the numbers twice. Let us see how your strategy compares.',
-				business: 'I have a plan for this match. Show me what you have prepared.',
+				chemistry: 'I am rooting for you, and I can still teach you a tougher answer.',
+				english: 'Let us see how you read the clues. I expect an answer worthy of my standards.',
+				french: 'Bienvenue. I will encourage you, but do not expect me to make it easy.',
+				biology: 'You came to the wrong lab. One weak answer and I am taking over.',
+				physics: 'Every move has a reason; let us see if you have one when the pressure starts.',
+				hindi: 'Obviously, I am the standard here. Impress me and try to keep up.',
+				computers: 'PING-PONG! Solomon enters the arena. Beep boop—show me that energy!',
+				mathematics: 'I already solved it. Let us see whether you can reach my level.',
+				business: 'Bring a real plan. I have no patience for half-prepared answers.',
 				scripture: 'Let us take this one question at a time and see where our knowledge leads.',
 			};
 			return lines[subjectId] || lines.computers;
 		}
 
-		function bossDialogue(subjectId, won) {
-			const personas = {
-				chemistry: ['Prannoy', 'You earned that round. I know you can come back even sharper.'],
-				english: ['Prannoy', 'Good reading under pressure. Let us see what you bring next time.'],
-				french: ['Prannoy', 'Bien joué. You kept your focus; I will be ready for another round.'],
-				biology: ['Stalin', 'Strong work. You took the point, but I am already preparing for a rematch.'],
-				physics: ['Stalin', 'That was a close contest. I will bring a tougher challenge next time.'],
-				hindi: ['Joshua', 'A clever answer. Enjoy the win; I am aiming to take the next one.'],
-				computers: ['Solomon', 'You kept the rhythm and won the round. The rematch is already on my schedule.'],
-				mathematics: ['Mira', 'Your reasoning held up. I have a new strategy ready for our next match.'],
-				business: ['Avery', 'Nice move. I will study the result and come back with a better plan.'],
-				scripture: ['Noah', 'Well played. Take the lesson from this round; I will be ready when we meet again.'],
+		function bossDialogue(subjectId, won, bossName = getSubjectBoss(subjectId)) {
+			const dialogue = {
+				Danthecanman: [
+					'Good match. You earned this round, but I am already getting ready for the rematch.',
+					'That one is mine. Review the tough questions and come back ready to challenge me.',
+				],
+				Prannoy: [
+					'A strong answer. I knew you could learn from that one too.',
+					'Good effort. Review the tricky parts; I will help you come back sharper.',
+				],
+				Stalin: [
+					'Fine, you got me this time. Do not get comfortable; the next round starts now.',
+					'That answer was weaker than your defense. Back to training; I will be waiting.',
+				],
+				Joshua: [
+					'Impressive, though I clearly set an excellent example for you.',
+					'Of course I won. Greatness was always going to take this round.',
+				],
+				Solomon: [
+					'ZOOM-SCHWING! What a round. You kept the rhythm and earned that win!',
+					'BEEP-BOP! The beat stayed on my side this time. Run it back.',
+				],
+				Noah: [
+					'Well played. Take the lesson from this round; I will be ready when we meet again.',
+					'This round is mine. Reflect on the questions, and I will meet you here again.',
+				],
 			};
-			const [persona, respectfulChallenge] = personas[subjectId] || personas.computers;
-			if (won) return respectfulChallenge;
-			const challenges = {
-				Prannoy: 'Good effort. Review the tricky parts, then challenge me again when you are ready.',
-				Stalin: 'I took this round, Danny. Study the questions and come back for a rematch.',
-				Joshua: 'This round goes to me. I am looking forward to seeing your next strategy.',
-				Solomon: 'I found the beat this time. Practice the tricky parts and we will run it back.',
-				Mira: 'My strategy worked this time. Adjust yours and let us test it again.',
-				Avery: 'I had the better plan this round. Bring a new one and challenge me again.',
-				Noah: 'This round is mine. Reflect on the questions, and I will meet you here again.',
-			};
-			return challenges[persona] || challenges.Solomon;
+			return (dialogue[bossName] || dialogue[getSubjectBoss(subjectId)] || dialogue.Solomon)[won ? 0 : 1];
 		}
 
 		function makeNpc(subjectId, level, playerLevel) {
 			const names = subjectBotNames[subjectId] || subjectBotNames.scripture;
-			const bossFight = level >= 50 || level % 10 === 0 || level - playerLevel >= 5;
+			const bossFight = level % 5 === 0;
 			return {
 				id: `npc-${subjectId}-${level}`,
-				name: bossFight ? getSubjectRival(subjectId) : `${names[(level - 1) % names.length]} ${level}`,
+				name: bossFight ? getSubjectBoss(subjectId) : `${names[(level - 1) % names.length]} ${level}`,
 				level,
 				bossFight,
 				...playerStats(level),
@@ -270,7 +295,7 @@
 					...(computerScienceQuestions || []),
 				];
 				const practiceTopics = subject.practiceTopics || subject.topics || [];
-				const battleAvailable = true;
+				const battleAvailable = !PRACTICE_ONLY_SUBJECTS.includes(subject.id);
 				return {
 					...details,
 					practiceTopics,
@@ -297,7 +322,7 @@
 			const question = choices[Math.floor(Math.random() * choices.length)];
 			for (const history of histories) {
 				history.push(question.prompt);
-				if (history.length > 40) history.shift();
+				if (history.length > 50) history.shift();
 			}
 			return question;
 		}
@@ -469,7 +494,7 @@
 				kind: 'info',
 			});
 			if (battle.bossFight) battle.log.unshift({
-				text: `${battle.npc.name}: "${bossDialogue(battle.subject, won)}"`,
+				text: `${battle.npc.name}: "${bossDialogue(battle.subject, won, battle.npc.name)}"`,
 				kind: 'dialogue',
 			});
 			battle.log = battle.log.slice(0, 8);
@@ -491,6 +516,9 @@
 				battle.player.hp = Math.max(0, battle.player.hp - damage);
 				battle.npc.hp = Math.min(MAX_HP, battle.npc.hp + 3);
 				battle.log.unshift({ text: `${battle.npc.name} landed a correct answer: ${damage} damage${battle.question.difficulty === 3 ? ' (hard question +50%)' : ''}, +3 HP.`, kind: 'hit', playerId: battle.npc.id, targetId: battle.playerId });
+				if (battle.subject === 'computers' && damage >= 25) {
+					battle.log.unshift({ text: 'Solomon: "BWOOOP-KA-ZING! That hit had sound effects!"', kind: 'dialogue', playerId: battle.npc.id });
+				}
 				if (battle.player.hp > 0) battle.parryOpportunity = { damage, attackerId: battle.npc.id };
 			} else {
 				battle.npc.hp = Math.max(0, battle.npc.hp - 14);
@@ -641,6 +669,9 @@
 					passwordHash: player.passwordHash,
 				};
 				Object.assign(player, account, credentials, { name: account.username });
+				if (OPERATOR_ICONS[player.characterIcon] && OPERATOR_ICONS[player.characterIcon] !== player.usernameKey) {
+					player.characterIcon = 'star';
+				}
 				savePlayer(players, player);
 				if (battle?.playerId === id) battle.player.name = player.name;
 				return makeState(id, body.subject || 'computers');
@@ -649,6 +680,9 @@
 			if (parsedUrl.pathname === '/api/profile' && method === 'POST') {
 				const { players, player } = getPlayersAndPlayer(id);
 				if (!CHARACTER_ICONS.includes(body.characterIcon)) throw new Error('Choose a valid character icon');
+				if (OPERATOR_ICONS[body.characterIcon] && OPERATOR_ICONS[body.characterIcon] !== player.usernameKey) {
+					throw new Error('That character icon is reserved for its operator');
+				}
 				player.characterIcon = body.characterIcon;
 				savePlayer(players, player);
 				if (battle?.playerId === id) battle.player.characterIcon = player.characterIcon;
@@ -681,9 +715,23 @@
 			if (parsedUrl.pathname === '/api/practice-question' && method === 'POST') {
 				getPlayersAndPlayer(id);
 				const question = makeQuestion(String(body.subject || ''), body.topic || null, false, [id]);
-				practiceSession = { playerId: id, question, score: practiceSession?.playerId === id && practiceSession.subject === body.subject ? practiceSession.score : 0, attempts: practiceSession?.playerId === id && practiceSession.subject === body.subject ? practiceSession.attempts : 0, subject: body.subject, answered: false };
+				practiceSession = {
+					playerId: id,
+					question,
+					score: practiceSession?.playerId === id && practiceSession.subject === body.subject ? practiceSession.score : 0,
+					attempts: practiceSession?.playerId === id && practiceSession.subject === body.subject ? practiceSession.attempts : 0,
+					subject: body.subject,
+					topic: body.topic || null,
+					answered: false,
+				};
 				const { correct, hint, ...publicQuestion } = question;
-				return { question: publicQuestion, score: practiceSession.score, attempts: practiceSession.attempts };
+				return {
+					question: publicQuestion,
+					subject: practiceSession.subject,
+					topic: practiceSession.topic,
+					score: practiceSession.score,
+					attempts: practiceSession.attempts,
+				};
 			}
 
 			if (parsedUrl.pathname === '/api/practice-answer' && method === 'POST') {
@@ -698,7 +746,8 @@
 				practiceSession.attempts += 1;
 				if (correct) {
 					practiceSession.score += 1;
-					addExperience(player, SOLO_PRACTICE_XP, practiceSession.subject);
+					addExperience(player, SOLO_PRACTICE_XP,
+						PRACTICE_ONLY_SUBJECTS.includes(practiceSession.subject) ? null : practiceSession.subject);
 					savePlayer(players, player);
 				}
 				const progress = progressFor(player, practiceSession.subject);
@@ -758,7 +807,7 @@
 					hint: null,
 					parryOpportunity: null,
 					log: [npc.bossFight
-						? { text: `${npc.name}: "${bossOpening(subject)}"`, kind: 'info' }
+						? { text: `${npc.name}: "${bossOpening(subject, npc.name)}"`, kind: 'info' }
 						: { text: `${npc.name} steps into the arena.`, kind: 'info' }],
 				};
 				return makeState(id, subject);
@@ -803,7 +852,7 @@
 					xpEarned: null,
 					hint: null,
 					parryOpportunity: null,
-					log: [{ text: `${npcPlayer.name}: "${bossOpening(subject)}"`, kind: 'info' }],
+					log: [{ text: `${npcPlayer.name}: "${bossOpening(subject, npcPlayer.name)}"`, kind: 'info' }],
 				};
 				return makeState(id, subject);
 			}

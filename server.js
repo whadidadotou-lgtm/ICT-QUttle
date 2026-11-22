@@ -10,7 +10,13 @@ const STATIC_ASSETS = new Map([
 	['/grade9-practice.js', path.join(__dirname, 'grade9-practice.js')],
 	['/local-game.js', path.join(__dirname, 'local-game.js')],
 ]);
-const PLAYER_DATA_FILE = process.env.PLAYER_DATA_FILE || path.join(__dirname, 'data', 'players.json');
+function getPlayerDataFile(environment = process.env) {
+	if (environment.PLAYER_DATA_FILE) return environment.PLAYER_DATA_FILE;
+	if (environment.RENDER === 'true') return '/var/data/players.json';
+	return path.join(__dirname, 'data', 'players.json');
+}
+
+const PLAYER_DATA_FILE = getPlayerDataFile();
 const TURN_MS = 20_000;
 const MAX_HP = 100;
 const MAX_LEVEL = 100;
@@ -35,18 +41,23 @@ const PLAYER_PROGRESS_FIELDS = [
 	'soloStudySeconds',
 ];
 const ACCOUNT_FIELDS = ['username', 'usernameKey', 'passwordSalt', 'passwordHash'];
-const CHARACTER_ICONS = ['star', 'bolt', 'fox', 'owl', 'book', 'rocket', 'leaf', 'moon', 'sun', 'crown'];
+const CHARACTER_ICONS = ['star', 'bolt', 'fox', 'owl', 'book', 'rocket', 'leaf', 'moon', 'sun', 'crown', 'operator-dan', 'operator-red'];
+const PRACTICE_ONLY_SUBJECTS = ['english', 'mathematics', 'business'];
+const OPERATOR_ICONS = {
+	'operator-dan': 'danthecanman',
+	'operator-red': 'redsto_1',
+};
 const SUBJECT_RIVALS = {
-	chemistry: 'Danny',
-	english: 'Danny',
-	french: 'Danny',
-	biology: 'Danny',
-	physics: 'Danny',
-	hindi: 'Danny',
-	computers: 'Danny',
-	mathematics: 'Danny',
-	business: 'Danny',
-	scripture: 'Danny',
+	chemistry: 'Danthecanman',
+	english: 'Danthecanman',
+	french: 'Danthecanman',
+	biology: 'Danthecanman',
+	physics: 'Danthecanman',
+	hindi: 'Danthecanman',
+	computers: 'Danthecanman',
+	mathematics: 'Danthecanman',
+	business: 'Danthecanman',
+	scripture: 'Danthecanman',
 };
 const SUBJECT_BOT_NAMES = {
 	chemistry: ['Copper', 'Molecule', 'Beaker', 'Catalyst', 'Helium', 'Isotope'],
@@ -85,10 +96,12 @@ function createSubjectProgress(source = {}) {
 			|| (progress.challengePending !== undefined && typeof progress.challengePending !== 'boolean')) {
 			throw new Error('Player save file contains invalid subject progress');
 		}
+		const practiceOnly = PRACTICE_ONLY_SUBJECTS.includes(id);
+		const normalizedXp = practiceOnly && xp >= level * 100 ? 0 : xp;
 		return [id, {
 			level,
-			xp,
-			challengePending: progress.challengePending === true || (level < MAX_LEVEL && xp >= level * 100),
+			xp: normalizedXp,
+			challengePending: !practiceOnly && (progress.challengePending === true || (level < MAX_LEVEL && xp >= level * 100)),
 		}];
 	}));
 }
@@ -108,14 +121,30 @@ function syncAggregateLevel(player) {
 }
 
 function getSubjectRival(subjectId) {
-	return SUBJECT_RIVALS[subjectId] || 'Avery';
+	return SUBJECT_RIVALS[subjectId] || 'Danthecanman';
+}
+
+function getSubjectBoss(subjectId) {
+	const bosses = {
+		chemistry: 'Prannoy',
+		english: 'Prannoy',
+		french: 'Prannoy',
+		biology: 'Stalin',
+		physics: 'Stalin',
+		business: 'Stalin',
+		hindi: 'Joshua',
+		mathematics: 'Joshua',
+		computers: 'Solomon',
+		scripture: 'Noah',
+	};
+	return bosses[subjectId] || 'Stalin';
 }
 
 function makeNpc(subjectId, level, playerLevel) {
 	const names = SUBJECT_BOT_NAMES[subjectId] || SUBJECT_BOT_NAMES.scripture;
-	const bossFight = level >= 50 || level % 10 === 0 || level - playerLevel >= BOSS_FIGHT_LEVEL_GAP;
+	const bossFight = level % 5 === 0;
 	const name = bossFight
-		? getSubjectRival(subjectId)
+		? getSubjectBoss(subjectId)
 		: `${names[(level - 1) % names.length]} ${level}`;
 	return {
 		id: `npc-${subjectId}-${level}`,
@@ -149,44 +178,48 @@ function completeSubjectChallenge(player, subjectId) {
 	return true;
 }
 
-function bossDialogue(subjectId, won) {
-	const personas = {
-		chemistry: ['Prannoy', 'You earned that round. I know you can come back even sharper.'],
-		english: ['Prannoy', 'Good reading under pressure. Let us see what you bring next time.'],
-		french: ['Prannoy', 'Bien joué. You kept your focus; I will be ready for another round.'],
-		biology: ['Stalin', 'Strong work. You took the point, but I am already preparing for a rematch.'],
-		physics: ['Stalin', 'That was a close contest. I will bring a tougher challenge next time.'],
-		hindi: ['Joshua', 'A clever answer. Enjoy the win; I am aiming to take the next one.'],
-		computers: ['Solomon', 'You kept the rhythm and won the round. The rematch is already on my schedule.'],
-		mathematics: ['Mira', 'Your reasoning held up. I have a new strategy ready for our next match.'],
-		business: ['Avery', 'Nice move. I will study the result and come back with a better plan.'],
-		scripture: ['Noah', 'Well played. Take the lesson from this round; I will be ready when we meet again.'],
+function bossDialogue(subjectId, won, bossName = getSubjectBoss(subjectId)) {
+	const dialogue = {
+		Danthecanman: [
+			'Good match. You earned this round, but I am already getting ready for the rematch.',
+			'That one is mine. Review the tough questions and come back ready to challenge me.',
+		],
+		Prannoy: [
+			'A strong answer. I knew you could learn from that one too.',
+			'Good effort. Review the tricky parts; I will help you come back sharper.',
+		],
+		Stalin: [
+			'Fine, you got me this time. Do not get comfortable; the next round starts now.',
+			'That answer was weaker than your defense. Back to training; I will be waiting.',
+		],
+		Joshua: [
+			'Impressive, though I clearly set an excellent example for you.',
+			'Of course I won. Greatness was always going to take this round.',
+		],
+		Solomon: [
+			'ZOOM-SCHWING! What a round. You kept the rhythm and earned that win!',
+			'BEEP-BOP! The beat stayed on my side this time. Run it back.',
+		],
+		Noah: [
+			'Well played. Take the lesson from this round; I will be ready when we meet again.',
+			'This round is mine. Reflect on the questions, and I will meet you here again.',
+		],
 	};
-	const [persona, respectfulChallenge] = personas[subjectId] || personas.computers;
-	if (won) return respectfulChallenge;
-	const challenges = {
-		Prannoy: 'Good effort. Review the tricky parts, then challenge me again when you are ready.',
-		Stalin: 'I took this round, Danny. Study the questions and come back for a rematch.',
-		Joshua: 'This round goes to me. I am looking forward to seeing your next strategy.',
-		Solomon: 'I found the beat this time. Practice the tricky parts and we will run it back.',
-		Mira: 'My strategy worked this time. Adjust yours and let us test it again.',
-		Avery: 'I had the better plan this round. Bring a new one and challenge me again.',
-		Noah: 'This round is mine. Reflect on the questions, and I will meet you here again.',
-	};
-	return challenges[persona] || challenges.Solomon;
+	return (dialogue[bossName] || dialogue[getSubjectBoss(subjectId)] || dialogue.Solomon)[won ? 0 : 1];
 }
 
-function bossOpening(subjectId) {
+function bossOpening(subjectId, bossName = getSubjectBoss(subjectId)) {
+	if (bossName === 'Danthecanman') return 'Ready for the level-up challenge? Bring your best; I will bring mine.';
 	const openings = {
-		chemistry: 'I am rooting for you, but I will make you earn every answer. Ready, Danny?',
-		english: 'Let us see how you read the clues under pressure. I am ready when you are.',
-		french: 'Bonjour, Danny. Let us see how well you can think on your feet.',
-		biology: 'I have studied for this one, Danny. Bring your best and let the questions decide.',
-		physics: 'Every move has a reason. Let us see whose reasoning holds up today.',
-		hindi: 'Welcome to the arena, Danny. I have a strong streak to defend.',
-		computers: 'The stage is set, Danny. Keep the rhythm and show me what you know.',
-		mathematics: 'I have checked the numbers twice. Let us see how your strategy compares.',
-		business: 'I have a plan for this match. Show me what you have prepared.',
+		chemistry: 'I am rooting for you, and I can still teach you a tougher answer.',
+		english: 'Let us see how you read the clues. I expect an answer worthy of my standards.',
+		french: 'Bienvenue. I will encourage you, but do not expect me to make it easy.',
+		biology: 'You came to the wrong lab. One weak answer and I am taking over.',
+		physics: 'Every move has a reason; let us see if you have one when the pressure starts.',
+		hindi: 'Obviously, I am the standard here. Impress me and try to keep up.',
+		computers: 'PING-PONG! Solomon enters the arena. Beep boop—show me that energy!',
+		mathematics: 'I already solved it. Let us see whether you can reach my level.',
+		business: 'Bring a real plan. I have no patience for half-prepared answers.',
 		scripture: 'Let us take this one question at a time and see where our knowledge leads.',
 	};
 	return openings[subjectId] || openings.computers;
@@ -212,7 +245,7 @@ function chooseQuestion(questionList, playerIds, subject) {
 	const question = choices[Math.floor(Math.random() * choices.length)];
 	for (const { history } of histories) {
 		history.push(question.prompt);
-		if (history.length > 40) history.shift();
+		if (history.length > 50) history.shift();
 	}
 	return question;
 }
@@ -274,11 +307,11 @@ function validateImportedAccount(value) {
 		throw new Error('The browser save file is invalid');
 	}
 	const account = normalizeUsername(value.username);
+	if (value.characterIcon !== undefined) normalizeCharacterIcon(value.characterIcon, account.username);
 	const integerFields = ['totalXp', 'xpBalance', 'xpSpent', 'matches', 'wins', 'losses', 'draws'];
 	if (!Number.isInteger(value.level) || value.level < 1 || value.level > MAX_LEVEL
 		|| !Number.isInteger(value.xp) || value.xp < 0
 		|| (value.soloStudySeconds !== undefined && (!Number.isSafeInteger(value.soloStudySeconds) || value.soloStudySeconds < 0))
-		|| (value.characterIcon !== undefined && !CHARACTER_ICONS.includes(value.characterIcon))
 		|| (value.stalinChallengePending !== undefined && typeof value.stalinChallengePending !== 'boolean')
 		|| (value.xp >= value.level * 100 && value.stalinChallengePending !== true)
 		|| integerFields.some((field) => !Number.isSafeInteger(value[field]) || value[field] < 0)
@@ -382,7 +415,7 @@ function loadSavedPlayers(filePath) {
 		const player = {
 			...record,
 			...account,
-			characterIcon: record.characterIcon === undefined ? 'star' : normalizeCharacterIcon(record.characterIcon),
+			characterIcon: record.characterIcon === undefined ? 'star' : normalizeCharacterIcon(record.characterIcon, record.username),
 			soloStudySeconds: record.soloStudySeconds || 0,
 			subjectProgress: createSubjectProgress(record.subjectProgress),
 			homeworkRewardDate: record.homeworkRewardDate || '',
@@ -442,7 +475,6 @@ if (practiceSubject) Object.assign(subject, {
 SUBJECTS.push(...Object.values(grade9Practice)
 .filter((subject) => !SUBJECTS.some((existing) => existing.id === subject.id))
 .map(({ questions, computerScienceQuestions, ...subject }) => ({ ...subject, battleAvailable: true })));
-
 const questions = [
 	{ chapter: '1.2', prompt: 'Which unit represents one binary digit?', options: ['Bit', 'Byte', 'Pixel', 'Hertz'], correct: 0, hint: 'It is the smallest unit of digital data.' },
 	{ chapter: '1.2', prompt: 'How many bits make up one byte?', options: ['4', '8', '16', '32'], correct: 1, hint: 'A byte groups together eight binary digits.' },
@@ -605,7 +637,7 @@ const questionPools = {
 };
 
 for (const subject of SUBJECTS) {
-	subject.battleAvailable = true;
+	subject.battleAvailable = !PRACTICE_ONLY_SUBJECTS.includes(subject.id);
 	if (!questionPools[subject.id]) {
 		const difficultyByVariant = [1, 2, 3, 3];
 		questionPools[subject.id] = grade9Practice[subject.id].questions.map((question, index) => ({
@@ -668,6 +700,7 @@ function getQuestion(subject, topic = null, playerIds = []) {
 }
 
 function getSoloPracticeQuestion(playerId, subjectId, topic = null) {
+	const previous = soloPracticeSessions.get(playerId);
 	const subject = grade9Practice[subjectId];
 	if (!subject || (topic && !subject.practiceTopics.includes(topic))) return null;
 	const availableQuestions = [
@@ -688,7 +721,6 @@ function getSoloPracticeQuestion(playerId, subjectId, topic = null) {
 		correct: correctPosition,
 		hint: source.hint,
 	};
-	const previous = soloPracticeSessions.get(playerId);
 	soloPracticeSessions.set(playerId, {
 		subject: subjectId,
 		topic,
@@ -698,7 +730,13 @@ function getSoloPracticeQuestion(playerId, subjectId, topic = null) {
 		attempts: previous?.subject === subjectId ? previous.attempts : 0,
 	});
 	const { correct, hint, ...publicQuestion } = question;
-	return { question: publicQuestion, score: soloPracticeSessions.get(playerId).score, attempts: soloPracticeSessions.get(playerId).attempts };
+	return {
+		question: publicQuestion,
+		subject: subjectId,
+		topic,
+		score: soloPracticeSessions.get(playerId).score,
+		attempts: soloPracticeSessions.get(playerId).attempts,
+	};
 }
 
 function getStudyGuide(subjectId, topic) {
@@ -721,7 +759,8 @@ function getStudyGuide(subjectId, topic) {
 function answerSoloPracticeQuestion(playerId, questionId, answer) {
 	const session = soloPracticeSessions.get(playerId);
 	if (!session || session.question.id !== questionId || session.answered) return null;
-	const correct = Number(answer) === session.question.correct;
+	const selectedIndex = Number(answer);
+	const correct = selectedIndex === session.question.correct;
 	session.answered = true;
 	session.attempts += 1;
 	if (correct) session.score += 1;
@@ -729,7 +768,7 @@ function answerSoloPracticeQuestion(playerId, questionId, answer) {
 		correct,
 		correctAnswer: session.question.options[session.question.correct],
 		correctIndex: session.question.correct,
-		selectedIndex: Number(answer),
+		selectedIndex,
 		explanation: session.question.hint,
 		score: session.score,
 		attempts: session.attempts,
@@ -867,9 +906,17 @@ function censorProfanity(message) {
 	return output.join('');
 }
 
-function normalizeCharacterIcon(value) {
+function normalizeCharacterIcon(value, username = '') {
 	if (!CHARACTER_ICONS.includes(value)) throw new Error('Choose a valid character icon');
+	if (OPERATOR_ICONS[value] && OPERATOR_ICONS[value] !== String(username || '').toLowerCase()) {
+		throw new Error('That character icon is reserved for its operator');
+	}
 	return value;
+}
+
+function characterIconForUsername(value, username) {
+	if (OPERATOR_ICONS[value] && OPERATOR_ICONS[value] !== String(username || '').toLowerCase()) return 'star';
+	return normalizeCharacterIcon(value, username);
 }
 
 function recordSoloStudySeconds(player, seconds) {
@@ -955,7 +1002,7 @@ function finishBattle(battle, winnerTeamIndex, resignedPlayerId = null) {
 	battle.log.unshift({ text: winner ? `${winner} wins the match and earns XP.` : 'The match ends in a draw. XP awarded.', kind: 'info' });
 	if (battle.mode === 'npc' && battle.bossFight) {
 		const playerWon = winnerTeamIndex === 0;
-		battle.log.unshift({ text: `${battle.npc.name}: "${bossDialogue(battle.subject, playerWon)}"`, kind: 'dialogue' });
+		battle.log.unshift({ text: `${battle.npc.name}: "${bossDialogue(battle.subject, playerWon, battle.npc.name)}"`, kind: 'dialogue' });
 	}
 	battle.log = battle.log.slice(0, 8);
 	savePlayers(PLAYER_DATA_FILE, players);
@@ -1046,6 +1093,9 @@ function resolveCorrectAnswer(battle, playerId, attacker, defender, fastAnswer) 
 		targetId: reflectedAttacker?.id || defender.id,
 		reflectedDamage,
 	});
+	if (battle.subject === 'computers' && isNpc && damage >= 25) {
+		battle.log.unshift({ text: 'Solomon: "BWOOOP-KA-ZING! That hit had sound effects!"', kind: 'dialogue', playerId });
+	}
 }
 
 function resolveSimultaneousTurn(battle, playerId, answer, timedOut) {
@@ -1181,7 +1231,7 @@ function createBattle(mode, teams, npc = null, challengerId = null, subject = 'c
 		winnerId: null,
 		winnerTeamIndex: null,
 		log: mode === 'npc'
-			? [{ text: npc.bossFight ? `${npc.name}: "${bossOpening(subject)}"` : `${npc.name} steps into the arena.`, kind: 'info' }]
+			? [{ text: npc.bossFight ? `${npc.name}: "${bossOpening(subject, levelUpChallenge ? getSubjectRival(subject) : npc.name)}"` : `${npc.name} steps into the arena.`, kind: 'info' }]
 			: [{ text: 'A player duel begins.', kind: 'info' }],
 		npcTimer: null,
 		parryOpportunities: new Map(),
@@ -1407,6 +1457,7 @@ function handleApi(request, response, url) {
 				return json(response, 409, { error: 'That username is already taken' });
 			}
 			Object.assign(player, account, hashPassword(password), { name: account.username });
+			player.characterIcon = characterIconForUsername(player.characterIcon, account.username);
 			savePlayers(PLAYER_DATA_FILE, players);
 			return json(response, 200, getPlayerState(player.id));
 		}).catch((error) => json(response, 400, { error: error.message }));
@@ -1426,6 +1477,7 @@ function handleApi(request, response, url) {
 				passwordHash: player.passwordHash,
 			};
 			Object.assign(player, account, credentials, { name: account.username });
+			player.characterIcon = characterIconForUsername(player.characterIcon, account.username);
 			savePlayers(PLAYER_DATA_FILE, players);
 			return json(response, 200, getPlayerState(player.id));
 		}).catch((error) => json(response, 400, { error: error.message }));
@@ -1494,7 +1546,7 @@ function handleApi(request, response, url) {
 			if (!player) return json(response, 404, { error: 'Player session not found' });
 
 			if (url.pathname === '/api/profile') {
-				player.characterIcon = normalizeCharacterIcon(characterIcon);
+				player.characterIcon = normalizeCharacterIcon(characterIcon, player.username);
 				const activeBattle = player.battleId && battles.get(player.battleId);
 				const combatant = activeBattle?.playerOverrides.get(player.id);
 				if (combatant) combatant.characterIcon = player.characterIcon;
@@ -1539,7 +1591,7 @@ function handleApi(request, response, url) {
 				if (!result) return json(response, 409, { error: 'That practice question has ended. Load the next question.' });
 				const xpAwarded = result.correct ? SOLO_PRACTICE_XP : 0;
 				if (xpAwarded) {
-					addExperience(player, xpAwarded, selectedSubject);
+					addExperience(player, xpAwarded, PRACTICE_ONLY_SUBJECTS.includes(selectedSubject) ? null : selectedSubject);
 					savePlayers(PLAYER_DATA_FILE, players);
 				}
 				const progress = progressFor(player, selectedSubject);
@@ -1725,7 +1777,10 @@ const server = http.createServer((request, response) => {
 if (require.main === module) {
 	server.listen(PORT, '0.0.0.0', () => {
 		console.log(`StudySprint is live at http://localhost:${PORT}`);
-		console.log(`Player data is stored at ${PLAYER_DATA_FILE}; configure PLAYER_DATA_FILE to use persistent host storage.`);
+		console.log(`Player data is stored at ${PLAYER_DATA_FILE}.`);
+		if (process.env.RENDER === 'true') {
+			console.warn('Render detected: attach a persistent disk mounted at /var/data or set PLAYER_DATA_FILE to a path on your persistent disk. Without it, player data will be lost on restart.');
+		}
 	});
 }
 
@@ -1758,10 +1813,14 @@ module.exports = {
 	exportAccountProgress,
 	normalizeUsername,
 	normalizeCharacterIcon,
+	characterIconForUsername,
+	getSubjectRival,
+	getSubjectBoss,
 	recordSoloStudySeconds,
 	validateImportedAccount,
 	isFastAnswer,
 	npcWinXp,
+	getPlayerDataFile,
 	questionDamageMultiplier,
 	savePlayers,
 	verifyPassword,

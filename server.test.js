@@ -38,7 +38,10 @@ const {
 	parryDamageFor,
 	getLeaderboard,
 	normalizeCharacterIcon,
+	getSubjectBoss,
+	getSubjectRival,
 	recordSoloStudySeconds,
+	getPlayerDataFile,
 } = require('./server');
 
 test('online players stay visible while showing whether they can be challenged', () => {
@@ -78,6 +81,14 @@ test('XP and level-up challenges are independent for each subject', () => {
 	assert.equal(player.xpBalance, 200);
 });
 
+test('practice-only subjects award lifetime XP without advancing battle-level progression', () => {
+	const player = { totalXp: 0, xpBalance: 0, subjectProgress: createSubjectProgress() };
+	addExperience(player, 1, null);
+	assert.equal(player.totalXp, 1);
+	assert.equal(player.xpBalance, 1);
+	assert.deepEqual(player.subjectProgress.english, { level: 1, xp: 0, challengePending: false });
+});
+
 test('subject progression caps at level 100 and bots beyond the 10-level gap are hidden', () => {
 	assert.equal(MAX_LEVEL, 100);
 	const player = { totalXp: 0, xpBalance: 0, subjectProgress: createSubjectProgress() };
@@ -94,10 +105,32 @@ test('subject progression caps at level 100 and bots beyond the 10-level gap are
 	assert.deepEqual(getAvailableNpcs(15, 'chemistry').map((npc) => npc.level).slice(0, 1), [6]);
 	assert.equal(getAvailableNpcs(15, 'chemistry').some((npc) => npc.level <= 5), false);
 	assert.equal(getAvailableNpcs(15, 'chemistry').at(-1).level, 25);
-	assert.equal(getAvailableNpcs(15, 'chemistry').some((npc) => npc.name === 'Danny'), true);
-	assert.equal(getAvailableNpcs(15, 'physics').some((npc) => npc.name === 'Danny'), true);
+	assert.equal(getAvailableNpcs(15, 'chemistry').some((npc) => npc.name === 'Prannoy'), true);
+	assert.equal(getAvailableNpcs(15, 'physics').some((npc) => npc.name === 'Stalin'), true);
 	assert.equal(getAvailableNpcs(15, 'chemistry').some((npc) => npc.id === getAvailableNpcs(15, 'physics')[0].id), false);
 	assert.equal(getAvailableNpcs(MAX_LEVEL, 'computers').at(-1).level, 110);
+});
+
+test('named subject bosses appear every five levels while Danthecanman stays the level-up rival', () => {
+	assert.equal(getSubjectRival('biology'), 'Danthecanman');
+	assert.deepEqual(
+		['chemistry', 'english', 'french', 'biology', 'physics', 'business', 'hindi', 'mathematics', 'computers']
+			.map((subjectId) => [subjectId, getSubjectBoss(subjectId)]),
+		[
+			['chemistry', 'Prannoy'], ['english', 'Prannoy'], ['french', 'Prannoy'],
+			['biology', 'Stalin'], ['physics', 'Stalin'], ['business', 'Stalin'],
+			['hindi', 'Joshua'], ['mathematics', 'Joshua'], ['computers', 'Solomon'],
+		],
+	);
+	const npcs = getAvailableNpcs(1, 'business');
+	assert.deepEqual(npcs.filter((npc) => npc.bossFight).map((npc) => npc.level), [5, 10]);
+	assert.equal(npcs.find((npc) => npc.level === 5).name, 'Stalin');
+	assert.equal(npcs.find((npc) => npc.level === 6).bossFight, false);
+	assert.deepEqual(
+		getAvailableNpcs(15, 'business').filter((npc) => npc.bossFight).map((npc) => npc.level),
+		[10, 15, 20, 25],
+	);
+	assert.equal(npcs.find((npc) => npc.level === 11).bossFight, false);
 });
 
 test('homework check XP is awarded once per date', () => {
@@ -173,6 +206,9 @@ test('study chat censors profanity without changing ordinary words', () => {
 test('player icon and solo-focus totals are validated, saved, and ranked', () => {
 	assert.equal(normalizeCharacterIcon('owl'), 'owl');
 	assert.throws(() => normalizeCharacterIcon('custom-html'), /valid character icon/i);
+	assert.equal(normalizeCharacterIcon('operator-dan', 'Danthecanman'), 'operator-dan');
+	assert.throws(() => normalizeCharacterIcon('operator-dan', 'OtherPlayer'), /reserved for its operator/i);
+	assert.equal(normalizeCharacterIcon('operator-red', 'REDSTO_1'), 'operator-red');
 	const first = { id: 'one', name: 'One', totalXp: 45, characterIcon: 'owl', soloStudySeconds: 0 };
 	const second = { id: 'two', name: 'Two', totalXp: 90, characterIcon: 'bolt', soloStudySeconds: 0 };
 	assert.equal(recordSoloStudySeconds(first, 60), 60);
@@ -211,9 +247,29 @@ test('all Grade 9 syllabus subjects have at least 200 solo practice questions', 
 });
 
 test('solo practice avoids repeating questions across 50 prompts in one subject', () => {
-	const prompts = Array.from({ length: 50 }, () =>
-		getSoloPracticeQuestion('question-rotation-player', 'computers').question.prompt);
+	const prompts = [];
+	for (let index = 0; index < 50; index += 1) {
+		const result = getSoloPracticeQuestion('question-rotation-player', 'computers');
+		prompts.push(result.question.prompt);
+		answerSoloPracticeQuestion('question-rotation-player', result.question.id, -1);
+	}
 	assert.equal(new Set(prompts).size, prompts.length);
+});
+
+test('solo practice has no deadline', () => {
+	const playerId = 'timed-practice-player';
+	const first = getSoloPracticeQuestion(playerId, 'computers');
+	assert.equal('deadline' in first, false);
+	const realNow = Date.now;
+	let result;
+	try {
+		Date.now = () => realNow() + 60 * 60 * 1000;
+		result = answerSoloPracticeQuestion(playerId, first.question.id, 0);
+	} finally {
+		Date.now = realNow;
+	}
+	assert.ok(result);
+	assert.equal('timedOut' in result, false);
 });
 
 test('Prannoy can explain topics in every subject that has practice questions', () => {
@@ -300,6 +356,12 @@ test('player levels, XP, and match records survive saving and loading', (context
 	assert.equal(restoredPlayers.get('player-one').soloStudySeconds, 135);
 	assert.equal(restoredPlayers.get('player-one').battleId, null);
 	assert.deepEqual(loadSavedPlayers(path.join(directory, 'not-created.json')), new Map());
+});
+
+test('Render defaults account storage to the persistent disk mount and honors overrides', () => {
+	assert.equal(getPlayerDataFile({ RENDER: 'true' }), '/var/data/players.json');
+	assert.equal(getPlayerDataFile({ RENDER: 'true', PLAYER_DATA_FILE: '/mnt/account-data/players.json' }), '/mnt/account-data/players.json');
+	assert.equal(getPlayerDataFile({}), path.join(__dirname, 'data', 'players.json'));
 });
 
 test('account usernames are normalized uniquely and passwords are stored as verifiable salted hashes', () => {
@@ -510,9 +572,9 @@ test('Computers and Scripture topic filters only return questions from populated
 	for (const subject of [computers, scripture]) {
 		assert.deepEqual(subject.practiceTopics.slice().sort(), subject.topics.slice().sort());
 		for (const topic of subject.practiceTopics) {
-			const practiceQuestion = getSoloPracticeQuestion(`${subject.id}-topic-player`, subject.id, topic);
+			const practiceQuestion = getSoloPracticeQuestion(`${subject.id}-${topic}-topic-player`, subject.id, topic);
 			assert.equal(practiceQuestion.question.chapter, topic);
-			assert.equal(getSoloPracticeQuestion(`${subject.id}-topic-player`, subject.id, 'not-a-topic'), null);
+			assert.equal(getSoloPracticeQuestion(`${subject.id}-invalid-topic-player`, subject.id, 'not-a-topic'), null);
 		}
 		for (const topic of subject.battleTopics) {
 			assert.equal(getQuestion(subject.id, topic).chapter, topic);
@@ -520,8 +582,10 @@ test('Computers and Scripture topic filters only return questions from populated
 	}
 });
 
-test('all remaining subjects support battles by populated chapter', () => {
-	assert.equal(SUBJECTS.every((subject) => subject.battleAvailable), true);
+test('battles remain available except English, Mathematics, and Business Studies', () => {
+	assert.equal(SUBJECTS.find((subject) => subject.id === 'english').battleAvailable, false);
+	assert.equal(SUBJECTS.find((subject) => subject.id === 'mathematics').battleAvailable, false);
+	assert.equal(SUBJECTS.find((subject) => subject.id === 'business').battleAvailable, false);
 	for (const subject of SUBJECTS) {
 		assert.ok(subject.practiceTopics.length, `${subject.id} exposes practice chapters`);
 		for (const topic of subject.practiceTopics) {

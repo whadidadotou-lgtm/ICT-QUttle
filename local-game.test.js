@@ -97,8 +97,46 @@ test('local practice avoids repeating questions across 50 prompts in one subject
 			subject: 'computers',
 		});
 		prompts.push(result.question.prompt);
+		await post(api, '/api/practice-answer', {
+			playerId: registered.you.id,
+			subject: 'computers',
+			questionId: result.question.id,
+			answer: -1,
+		});
 	}
 	assert.equal(new Set(prompts).size, prompts.length);
+});
+
+test('local practice questions have no deadline or tab-switch penalty', async () => {
+	const api = createLocalGame(createStorage(), webcrypto, grade9Practice);
+	const registered = await post(api, '/api/register', { username: 'TimedPractice', password: 'strong password' });
+	const first = await post(api, '/api/practice-question', {
+		playerId: registered.you.id,
+		subject: 'computers',
+	});
+	assert.equal('deadline' in first, false);
+	const switched = await post(api, '/api/practice-question', {
+		playerId: registered.you.id,
+		subject: 'biology',
+	});
+	assert.notEqual(switched.question.id, first.question.id);
+	assert.equal(switched.subject, 'biology');
+
+	const realNow = Date.now;
+	let result;
+	try {
+		Date.now = () => realNow() + 60 * 60 * 1000;
+		result = await post(api, '/api/practice-answer', {
+			playerId: registered.you.id,
+			subject: 'biology',
+			questionId: switched.question.id,
+			answer: 0,
+		});
+	} finally {
+		Date.now = realNow;
+	}
+	assert.ok(result);
+	assert.equal('timedOut' in result, false);
 });
 
 test('local account edits require the current password and remain available after reload', async () => {
@@ -151,12 +189,59 @@ test('local character icons, focus time, and leaderboard scores persist after re
 	assert.equal(signedIn.you.soloStudySeconds, 60);
 });
 
+test('operator icons are account-locked and selected subjects keep practice-only limits', async () => {
+	const api = createLocalGame(createStorage(), webcrypto, grade9Practice);
+	const regular = await post(api, '/api/register', { username: 'RegularPlayer', password: 'strong password' });
+	await assert.rejects(
+		post(api, '/api/profile', { playerId: regular.you.id, characterIcon: 'operator-dan' }),
+		/reserved for its operator/i,
+	);
+	const dan = await post(api, '/api/register', { username: 'Danthecanman', password: 'strong password' });
+	const danProfile = await post(api, '/api/profile', { playerId: dan.you.id, characterIcon: 'operator-dan' });
+	assert.equal(danProfile.you.characterIcon, 'operator-dan');
+	const red = await post(api, '/api/register', { username: 'Redsto_1', password: 'strong password' });
+	const redProfile = await post(api, '/api/profile', { playerId: red.you.id, characterIcon: 'operator-red' });
+	assert.equal(redProfile.you.characterIcon, 'operator-red');
+	assert.equal(regular.subjects.find((subject) => subject.id === 'english').battleAvailable, false);
+	assert.equal(regular.subjects.find((subject) => subject.id === 'mathematics').battleAvailable, false);
+	assert.equal(regular.subjects.find((subject) => subject.id === 'business').battleAvailable, false);
+	await assert.rejects(
+		post(api, '/api/battle', { playerId: regular.you.id, opponentId: 'npc-english-6', subject: 'english' }),
+		/subject available for battles/i,
+	);
+});
+
+test('English practice awards lifetime XP without creating a blocked battle challenge', async () => {
+	const storage = createStorage();
+	const api = createLocalGame(storage, webcrypto, grade9Practice);
+	const registered = await post(api, '/api/register', { username: 'PracticeOnly', password: 'strong password' });
+	const records = JSON.parse(storage.values.get('ict-quattle-local-players'));
+	records[0].subjectProgress.english = { level: 1, xp: 99, challengePending: false };
+	storage.values.set('ict-quattle-local-players', JSON.stringify(records));
+
+	const signedIn = await post(api, '/api/login', { username: 'PracticeOnly', password: 'strong password' });
+	const { question } = await post(api, '/api/practice-question', { playerId: signedIn.you.id, subject: 'english' });
+	const sourceQuestion = grade9Practice.english.questions.find((item) => item.prompt === question.prompt);
+	const result = await post(api, '/api/practice-answer', {
+		playerId: signedIn.you.id,
+		subject: 'english',
+		questionId: question.id,
+		answer: question.options.indexOf(sourceQuestion.options[sourceQuestion.correct]),
+	});
+
+	assert.equal(result.xpAwarded, 1);
+	assert.equal(result.progress.totalXp, 1);
+	assert.equal(result.progress.xp, 99);
+	assert.equal(result.progress.stalinChallengePending, false);
+});
+
 test('local browser mode can start an NPC battle and advance to the NPC turn', async () => {
 	const storage = createStorage();
 	const api = createLocalGame(storage, webcrypto, grade9Practice);
 	const registered = await post(api, '/api/register', { username: 'BotFighter', password: 'strong password' });
 	const initialState = await api.handle(`/api/state?playerId=${encodeURIComponent(registered.you.id)}`);
-	assert.equal(initialState.npcs.some((npc) => npc.name === 'Danny'), true);
+	assert.equal(initialState.npcs.some((npc) => npc.name === 'Solomon'), true);
+	assert.deepEqual(initialState.npcs.filter((npc) => npc.bossFight).map((npc) => npc.level), [5, 10]);
 	const started = await post(api, '/api/battle', {
 		playerId: registered.you.id,
 		opponentId: 'npc-computers-1',
@@ -191,7 +276,7 @@ test('Prannoy explains a topic and each subject uses its own level-up rival', as
 	storage.values.set('ict-quattle-local-players', JSON.stringify(records));
 	await assert.rejects(
 		post(api, '/api/battle', { playerId: registered.you.id, opponentId: 'npc-computers-1', subject: 'computers' }),
-		/Beat Danny/i,
+		/Beat Danthecanman/i,
 	);
 	const challenge = await post(api, '/api/stalin-challenge', {
 		playerId: registered.you.id,
@@ -199,7 +284,7 @@ test('Prannoy explains a topic and each subject uses its own level-up rival', as
 	});
 	const stalin = challenge.battle.players.find((player) => player.id === 'npc-computers-1');
 	assert.equal(challenge.battle.levelUpChallenge, true);
-	assert.equal(stalin.name, 'Danny');
+	assert.equal(stalin.name, 'Danthecanman');
 	assert.equal(stalin.level, challenge.you.level);
 });
 
@@ -217,9 +302,9 @@ test('local subject levels and bot rosters remain independent and hide rivals 10
 	assert.deepEqual(chemistry.npcs.map((npc) => npc.level).slice(0, 1), [6]);
 	assert.equal(chemistry.npcs.some((npc) => npc.level <= 5), false);
 	assert.equal(chemistry.npcs.at(-1).level, 25);
-	assert.equal(chemistry.npcs.some((npc) => npc.name === 'Danny'), true);
+	assert.equal(chemistry.npcs.some((npc) => npc.name === 'Prannoy'), true);
 	assert.equal(physics.you.level, 1);
-	assert.equal(physics.npcs.some((npc) => npc.name === 'Danny'), true);
+	assert.equal(physics.npcs.some((npc) => npc.name === 'Stalin'), true);
 	assert.notEqual(chemistry.npcs[0].id, physics.npcs[0].id);
 	assert.equal(chemistry.subjects.some((subject) => subject.id === 'global-perspectives'), false);
 });

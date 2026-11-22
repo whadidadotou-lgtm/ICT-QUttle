@@ -113,6 +113,8 @@
     .character-icon-options { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
     .character-icon-option { width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 50%; background: var(--paper); cursor: pointer; font-size: 20px; }
     .character-icon-option[aria-pressed="true"] { border: 2px solid var(--forest); background: var(--lime); }
+    .character-icon-option[data-character-icon="operator-dan"], .profile-badge[data-icon="operator-dan"], .fighter-avatar[data-icon="operator-dan"], .leaderboard-icon[data-icon="operator-dan"], .rival-icon[data-icon="operator-dan"], .pov-head[data-icon="operator-dan"] { color: #543c9b; background: radial-gradient(circle at 35% 30%, #fff 0 12%, #ddd2ff 13% 48%, #b39be9 100%); }
+    .character-icon-option[data-character-icon="operator-red"], .profile-badge[data-icon="operator-red"], .fighter-avatar[data-icon="operator-red"], .leaderboard-icon[data-icon="operator-red"], .rival-icon[data-icon="operator-red"], .pov-head[data-icon="operator-red"] { color: #9c2929; background: radial-gradient(circle at 35% 30%, #fff 0 12%, #ffd1c9 13% 48%, #e17a69 100%); }
     .character-icon-picker p { margin: 6px 0 0; color: var(--muted); font-size: 11px; }
     .leaderboard-tabs { display: flex; gap: 8px; margin: 18px 0 10px; }
     .leaderboard-tabs button { min-height: 36px; padding: 0 12px; border: 1px solid var(--line); background: transparent; cursor: pointer; font: 10px var(--mono); }
@@ -176,7 +178,9 @@
     .live-label i { width: 6px; height: 6px; border-radius: 50%; background: var(--lime); }
     .combatants { flex: 1; display: grid; grid-template-columns: 1fr 72px 1fr; align-items: center; gap: 12px; padding: 20px 6px 14px; }
     .team-group { min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
-    .fighter { min-width: 0; padding: 12px 9px 10px; border: 1px solid #ffffff30; background: linear-gradient(145deg, #ffffff13, #102d251f); box-shadow: inset 0 1px #ffffff12, 0 10px 24px #10241d2b; text-align: center; }
+    .fighter { position: relative; min-width: 0; padding: 12px 9px 10px; border: 1px solid #ffffff30; background: linear-gradient(145deg, #ffffff13, #102d251f); box-shadow: inset 0 1px #ffffff12, 0 10px 24px #10241d2b; text-align: center; }
+    .fighter-dialogue { position: absolute; z-index: 4; bottom: calc(100% - 4px); left: 50%; width: min(210px, 150%); max-height: 72px; overflow: hidden; padding: 8px 10px; border: 1px solid var(--lime); border-radius: 8px 8px 8px 2px; color: var(--ink); background: var(--paper-bright); box-shadow: 0 8px 24px #172b244d; font-size: 10px; line-height: 1.35; text-align: left; transform: translateX(-50%); }
+    .fighter.enemy .fighter-dialogue { border-color: #f2a47d; border-radius: 8px 8px 2px 8px; }
     .fighter:last-child { text-align: center; }
     .fighter-avatar { width: 74px; height: 74px; margin: 0 auto 10px; display: grid; place-items: center; border: 1px solid #ffffff75; outline: 4px solid #ffffff0d; color: var(--ink); background: linear-gradient(145deg, #d9ef95, var(--lime)); box-shadow: 0 0 26px #c6df7130; font-size: 31px; font-weight: 700; clip-path: polygon(14% 0, 86% 0, 100% 20%, 100% 80%, 86% 100%, 14% 100%, 0 80%, 0 20%); }
     .team-group .fighter-avatar { width: 56px; height: 56px; margin-bottom: 8px; font-size: 23px; }
@@ -203,6 +207,7 @@
     .pov-scene.parry-break::after { border-color: #ffe6a1; background: linear-gradient(40deg, transparent 47%, #fff8 48% 49%, transparent 50%), radial-gradient(circle, #ffae1a35, transparent 72%); box-shadow: 0 0 28px 10px #ffae1a99; animation: parry-shatter .7s ease-out both; }
     .pov-opponents { position: absolute; z-index: 1; inset: 7% 8% 12%; display: flex; justify-content: center; align-items: flex-end; gap: clamp(18px, 8vw, 75px); }
     .pov-opponent { position: relative; display: grid; justify-items: center; align-content: end; gap: 5px; min-width: 62px; color: #f4f2e9; text-shadow: 0 2px 5px #10241d; font: 9px var(--mono); text-transform: uppercase; }
+    .pov-dialogue { position: absolute; z-index: 5; top: 0; left: 50%; width: min(180px, 42vw); max-height: 62px; overflow: hidden; padding: 7px 9px; border: 1px solid var(--lime); border-radius: 8px 8px 8px 2px; color: var(--ink); background: var(--paper-bright); box-shadow: 0 6px 20px #0007; font: 9px/1.35 var(--sans); text-align: left; text-shadow: none; text-transform: none; transform: translateX(-50%); }
     .pov-block { position: relative; width: 66px; height: 118px; filter: drop-shadow(0 10px 6px #07191480); }
     .pov-head { position: absolute; top: 0; left: 15px; width: 38px; height: 38px; display: grid; place-items: center; border: 2px solid #f3e5b3; color: #263830; background: linear-gradient(135deg, #f3ce91, #d4975d); box-shadow: inset -6px -5px #9a603344; font: 700 15px var(--sans); }
     .pov-body { position: absolute; top: 41px; left: 13px; width: 42px; height: 43px; border: 2px solid #f3e5b3; background: linear-gradient(135deg, #77aeb0, #355e6a); box-shadow: inset -7px -5px #17352d55; }
@@ -270,6 +275,8 @@
     .timer-fill { height: 100%; width: 100%; background: var(--forest); transition: width .2s linear; }
     .timer-fill.urgent { background: var(--orange); }
     .question { min-height: 82px; margin: 24px 0 17px; font-size: 19px; line-height: 1.35; letter-spacing: -.035em; font-weight: 600; }
+    .quiz-panel .question, .quiz-panel .answer-list { -webkit-user-select: none !important; -moz-user-select: none !important; user-select: none !important; }
+    body.online-battle-active #app, body.online-battle-active #app * { -webkit-user-select: none !important; user-select: none !important; }
     .answer-list { display: grid; gap: 8px; }
     .answer { width: 100%; min-height: 44px; display: grid; grid-template-columns: 25px 1fr; gap: 9px; align-items: center; padding: 8px 10px; border: 1px solid #cbcbbf; background: var(--paper-bright); text-align: left; cursor: pointer; transition: background .15s, border-color .15s, transform .15s; }
     .answer:hover:not(:disabled) { border-color: var(--forest); background: #f7f9ea; transform: translateX(2px); }
@@ -559,6 +566,18 @@
     <h2 id="updates-title">Update log</h2>
     <div class="updates-list">
       <article class="update-entry">
+        <time datetime="2026-11-22">22 November 2026</time>
+        <h3>Boss roster and operator icons</h3>
+        <ul>
+          <li>Made Danthecanman the subject level-up rival instead of the boss characters.</li>
+          <li>Set the named boss encounter on every fifth level: Stalin for Biology, Physics, and Business Studies; Joshua for Hindi and Mathematics; Prannoy for Chemistry, English, and French; and Solomon for ICT/Computers.</li>
+          <li>Made English, Mathematics, and Business Studies practice-only subjects.</li>
+          <li>Practice answers in those subjects award lifetime XP without triggering unavailable battle-level challenges.</li>
+          <li>Added dialogue beside battle avatars and replaced the operator text badges with unique symbols for Danthecanman and Redsto_1.</li>
+          <li>Kept Solo Practice untimed; online multiplayer question and answer text is rendered as non-selectable canvas, while copy or tab-switch attempts forfeit the turn.</li>
+        </ul>
+      </article>
+      <article class="update-entry">
         <time datetime="2026-11-16">16 November 2026</time>
         <h3>StudySprint: progress, rivals, and chat</h3>
         <ul>
@@ -772,6 +791,8 @@
           <button class="character-icon-option" type="button" data-character-icon="moon" aria-label="Moon" title="Moon">☾</button>
           <button class="character-icon-option" type="button" data-character-icon="sun" aria-label="Sun" title="Sun">☼</button>
           <button class="character-icon-option" type="button" data-character-icon="crown" aria-label="Crown" title="Crown">♛</button>
+          <button class="character-icon-option" type="button" data-character-icon="operator-dan" data-operator-only="danthecanman" aria-label="Danthecanman operator icon" title="Operator: Danthecanman" hidden>⟁</button>
+          <button class="character-icon-option" type="button" data-character-icon="operator-red" data-operator-only="redsto_1" aria-label="Redsto_1 operator icon" title="Operator: Redsto_1" hidden>⟡</button>
         </div>
       </section>
       <label class="custom-solid-option" for="custom-solid-color"><span><strong>Custom solid colour</strong><span>Choose any solid background colour.</span></span><input id="custom-solid-color" type="color" value="#dce8f4" aria-label="Choose a custom solid background colour"></label>
@@ -800,6 +821,7 @@
     const characterGlyphs = {
       star: '★', bolt: 'ϟ', fox: '🦊', owl: '🦉', book: '▤',
       rocket: '🚀', leaf: '❧', moon: '☾', sun: '☼', crown: '♛',
+      'operator-dan': '⟁', 'operator-red': '⟡',
     };
     const dailyVerses = [
       { text: 'Thy word is a lamp unto my feet, and a light unto my path.', reference: 'Psalm 119:105' },
@@ -812,6 +834,7 @@
     ];
     let state = null;
     let busy = false;
+    let pendingOnlineForfeitQuestionId = null;
     let pollInFlight = false;
     let authMode = 'login';
     let accountSetupRequired = false;
@@ -824,12 +847,12 @@
     let selectedFormat = '1v1';
     let selectedSubject = 'computers';
     const subjectRivals = {
-      chemistry: 'Prannoy', english: 'Prannoy', french: 'Prannoy',
-      biology: 'Stalin', physics: 'Stalin', hindi: 'Joshua', computers: 'Solomon',
-      mathematics: 'Mira', business: 'Avery', scripture: 'Noah',
+      chemistry: 'Danthecanman', english: 'Danthecanman', french: 'Danthecanman',
+      biology: 'Danthecanman', physics: 'Danthecanman', hindi: 'Danthecanman', computers: 'Danthecanman',
+      mathematics: 'Danthecanman', business: 'Danthecanman', scripture: 'Danthecanman',
     };
     function rivalNameFor(subjectId) {
-      return subjectRivals[subjectId] || 'Avery';
+      return subjectRivals[subjectId] || 'Danthecanman';
     }
     let selectedTopic = 'all';
     let selectedOpponentIds = [];
@@ -1058,6 +1081,10 @@
       personalizeDialog.querySelectorAll('[data-character-icon]').forEach((option) => {
         option.setAttribute('aria-pressed', String(option.dataset.characterIcon === selectedIcon));
       });
+      const operatorName = state?.you.username?.toLowerCase();
+      personalizeDialog.querySelectorAll('[data-operator-only]').forEach((option) => {
+        option.hidden = operatorName !== option.dataset.operatorOnly;
+      });
     }
 
     function updateAudioVolumes() {
@@ -1173,7 +1200,15 @@
           method: 'POST',
           body: JSON.stringify({ playerId: state.you.id, subject: subjectId, topic: topic === 'all' ? null : topic }),
         });
-        practice = { ...practice, question: result.question, score: result.score, attempts: result.attempts, loading: false };
+        practice = {
+          ...practice,
+          subject: result.subject,
+          topic: result.topic || 'all',
+          question: result.question,
+          score: result.score,
+          attempts: result.attempts,
+          loading: false,
+        };
       } catch (error) {
         practice = { ...practice, loading: false };
         notify(error.message);
@@ -1181,15 +1216,15 @@
       renderPracticeSession();
     }
 
-    async function submitPracticeAnswer(button) {
+    async function submitPracticeAnswer(answer, questionId) {
       if (!practice.question || practice.feedback || practice.loading) return;
       practice.loading = true;
       renderPracticeSession();
       try {
-        await wakeBattleAudio();
+        if (answer >= 0) await wakeBattleAudio();
         const result = await request('/api/practice-answer', {
           method: 'POST',
-          body: JSON.stringify({ playerId: state.you.id, subject: practice.subject, questionId: button.dataset.questionId, answer: Number(button.dataset.answer) }),
+          body: JSON.stringify({ playerId: state.you.id, subject: practice.subject, questionId, answer }),
         });
         practice = { ...practice, ...result, loading: false, feedback: result };
         const subjectQuestionCount = (soloQuestionCounts.get(practice.subject) || 0) + 1;
@@ -1803,7 +1838,7 @@
       try {
         const result = await request(`/api/leaderboard?metric=${encodeURIComponent(metric)}`);
         leaderboardRows.innerHTML = result.leaderboard.length
-          ? result.leaderboard.map((entry, index) => `<div class="leaderboard-row"><span class="leaderboard-rank">#${index + 1}</span><span class="leaderboard-icon">${characterGlyphs[entry.characterIcon] || '★'}</span><span class="leaderboard-name">${esc(entry.name)}</span><strong class="leaderboard-value">${metric === 'exp' ? `${entry.value.toLocaleString()} XP` : formatStudyTime(entry.value)}</strong></div>`).join('')
+          ? result.leaderboard.map((entry, index) => `<div class="leaderboard-row"><span class="leaderboard-rank">#${index + 1}</span><span class="leaderboard-icon" data-icon="${esc(entry.characterIcon || '')}">${characterGlyphs[entry.characterIcon] || '★'}</span><span class="leaderboard-name">${esc(entry.name)}</span><strong class="leaderboard-value">${metric === 'exp' ? `${entry.value.toLocaleString()} XP` : formatStudyTime(entry.value)}</strong></div>`).join('')
           : '<p class="empty-rivals">No players are ranked yet. Start earning XP or studying to appear here.</p>';
       } catch (error) {
         leaderboardRows.textContent = `Could not load the leaderboard: ${error.message}`;
@@ -2027,9 +2062,86 @@
         notify(error.message);
         await refresh();
       } finally {
+        const pendingForfeitQuestionId = pendingOnlineForfeitQuestionId;
+        pendingOnlineForfeitQuestionId = null;
         busy = false;
         render();
+        if (pendingForfeitQuestionId && state?.battle?.questionId === pendingForfeitQuestionId) {
+          forfeitActiveOnlineQuestion();
+        }
       }
+    }
+
+    function isActiveMultiplayerBattle() {
+      return state?.battle?.status === 'active' && ['online', 'simultaneous'].includes(state.battle.mode);
+    }
+
+    function forfeitActiveOnlineQuestion() {
+      const battle = state?.battle;
+      if (!isActiveMultiplayerBattle() || !battle.canAnswer || !battle.question) return false;
+      if (busy) {
+        pendingOnlineForfeitQuestionId = battle.questionId;
+        return true;
+      }
+      act('/api/answer', { answer: -1, questionId: battle.questionId });
+      return true;
+    }
+
+    function renderMultiplayerQuestionText() {
+      const question = app.querySelector('.quiz-panel .question');
+      if (question) {
+        const text = question.textContent;
+        question.setAttribute('role', 'img');
+        question.setAttribute('aria-label', text);
+        drawUnselectableText(question, text);
+      }
+      app.querySelectorAll('.quiz-panel .answer-text').forEach((answerText) => {
+        const answer = answerText.closest('button');
+        const text = answerText.textContent;
+        const key = answer?.querySelector('.answer-key')?.textContent || '';
+        answer?.setAttribute('aria-label', `${key}: ${text}`);
+        answerText.setAttribute('aria-hidden', 'true');
+        drawUnselectableText(answerText, text);
+      });
+    }
+
+    function drawUnselectableText(container, text) {
+      const width = container.clientWidth;
+      if (!width || !text) return;
+      const style = getComputedStyle(container);
+      const fontSize = Number.parseFloat(style.fontSize) || 16;
+      const lineHeight = Number.parseFloat(style.lineHeight) || fontSize * 1.35;
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      if (!context) throw new Error('Canvas text rendering is unavailable.');
+      context.font = style.font;
+      const lines = [];
+      let line = '';
+      for (const word of text.split(/\s+/)) {
+        const candidate = line ? `${line} ${word}` : word;
+        if (line && context.measureText(candidate).width > width) {
+          lines.push(line);
+          line = word;
+        } else {
+          line = candidate;
+        }
+      }
+      if (line) lines.push(line);
+      const ratio = window.devicePixelRatio || 1;
+      const height = Math.ceil(lines.length * lineHeight);
+      canvas.width = Math.ceil(width * ratio);
+      canvas.height = Math.ceil(height * ratio);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      canvas.style.display = 'block';
+      canvas.draggable = false;
+      canvas.setAttribute('aria-hidden', 'true');
+      context.scale(ratio, ratio);
+      context.font = style.font;
+      context.fillStyle = style.color;
+      context.textBaseline = 'top';
+      lines.forEach((value, index) => context.fillText(value, 0, index * lineHeight, width));
+      container.replaceChildren(canvas);
     }
 
     function renderRivals() {
@@ -2057,7 +2169,7 @@
         const actionLabel = isPlayer
           ? available ? selected ? 'Selected' : 'Select' : rival.status === 'in-match' ? 'In match' : 'Invited'
           : 'Challenge';
-        return `<div class="rival-row"><div class="rival-icon ${isPlayer ? 'player' : ''}">${isPlayer ? characterGlyphs[rival.characterIcon] || esc(rival.name.slice(0, 1).toUpperCase()) : '✳'}</div><div><div class="rival-name">${esc(rival.name)}</div><div class="rival-meta">${rival.detail}</div></div><button class="challenge-button" data-action="${isPlayer ? 'select-player' : 'battle'}" data-id="${esc(rival.id)}" data-level="${rival.level}" ${isPlayer ? `aria-pressed="${selected}"` : ''} ${available ? '' : 'disabled'}>${actionLabel}</button></div>`;
+        return `<div class="rival-row"><div class="rival-icon ${isPlayer ? 'player' : ''}" data-icon="${isPlayer ? esc(rival.characterIcon || '') : ''}">${isPlayer ? characterGlyphs[rival.characterIcon] || esc(rival.name.slice(0, 1).toUpperCase()) : '✳'}</div><div><div class="rival-name">${esc(rival.name)}</div><div class="rival-meta">${rival.detail}</div></div><button class="challenge-button" data-action="${isPlayer ? 'select-player' : 'battle'}" data-id="${esc(rival.id)}" data-level="${rival.level}" ${isPlayer ? `aria-pressed="${selected}"` : ''} ${available ? '' : 'disabled'}>${actionLabel}</button></div>`;
       }).join('');
     }
 
@@ -2155,11 +2267,14 @@
         id: battle.teams[battle.winnerTeamIndex].some((member) => member.id === state.you.id) ? state.you.id : battle.teams[battle.winnerTeamIndex][0].id,
         name: battle.winnerName,
       };
-      const prompt = finished
+      let prompt = finished
         ? `<div class="quiz-state"><div class="state-symbol">${winner?.id === state.you.id ? '✦' : '×'}</div><p class="eyebrow">Duel complete</p><h2>${winner?.id === state.you.id ? 'Victory.' : 'Defeat.'}</h2><p>${battle.levelUpChallenge ? winner?.id === state.you.id ? `You defeated ${esc(rival.name)} and reached Level ${state.you.level}.` : `You did not beat ${esc(rival.name)} this time. Your XP is safe; return and challenge them again.` : winner?.id === state.you.id ? 'Your knowledge held the line.' : 'The next round is yours to take.'}</p><div class="result-mark ${winner?.id === state.you.id ? '' : 'lost'}">${esc(winner?.name || 'No winner')} wins</div><button class="primary-button" data-action="leave">Return to rivals</button></div>`
         : yourTurn && question
           ? `<div class="quiz-header"><h2>Your turn</h2><span class="chapter-pill">${esc(question.chapter)}${hardQuestion ? ' · HARD +50% DAMAGE' : ''}</span></div><div class="timer-row"><span class="timer-caption">Answer before the bell</span><span class="timer-value" data-timer>${String(remaining).padStart(2, '0')}s</span></div><div class="timer-track"><div class="timer-fill ${remaining <= 5 ? 'urgent' : ''}" data-timer-bar style="width:${Math.min(100, remaining / 20 * 100)}%"></div></div><p class="question">${esc(question.prompt)}</p><div class="answer-list">${question.options.map((option, index) => `<button class="answer" data-action="answer" data-answer="${index}" data-question-id="${esc(battle.questionId)}" ${busy ? 'disabled' : ''}><span class="answer-key">${String.fromCharCode(65 + index)}</span><span class="answer-text">${esc(option)}</span></button>`).join('')}</div><div class="quiz-feedback">A correct answer deals <strong><span data-hit-damage>${hitDamage}</span> damage</strong> and <strong>+3 HP</strong><span data-fast-bonus>${fastWindowOpen ? ' · 2× FAST ANSWER BONUS ACTIVE' : ' · answer within 2 seconds for double damage'}</span>${hardQuestion ? ' · hard questions deal 50% extra damage' : ''}${battle.parryReady ? ' · PARRY READY: answer correctly within 2 seconds to reflect the last hit' : ''}</div><div class="quiz-footer">A wrong answer or timeout costs 14 HP. The duel ends at 0 HP.${state.you.level >= 50 ? ' A fast, correct answer can parry; hard questions shatter the barrier.' : ''}</div>`
           : `<div class="quiz-state"><div class="state-symbol waiting">…</div><p class="eyebrow">${battle.mode === 'online' ? 'Player duel' : 'NPC duel'}</p><h2>${battle.mode === 'online' ? 'Their turn.' : `${esc(rival.name)} is thinking.`}</h2><p>${battle.mode === 'online' ? `${esc(activeName || 'Your rival')} is answering. Your next question starts as soon as their turn resolves.` : 'Your rival is working through a question.'}</p></div>`;
+      if (!finished && yourTurn && question && battle.mode !== 'npc') {
+        prompt = prompt.replace('Answer before the bell', 'Answer before the bell · copy/select/tab switch forfeits');
+      }
 
       const firstPersonScene = firstPersonBattlesEnabled
         ? `<div class="pov-scene ${hardQuestion ? 'orb-hard' : ''} ${yourTurn && fastWindowOpen ? 'orb-fast' : ''}" role="group" aria-label="First-person battle view"><div class="pov-opponents">${rivalTeam.map((player) => {
@@ -2168,7 +2283,7 @@
           const showExplosion = isDefeated && defeat?.battleId === battle.id && Date.now() - defeat.startedAt < 1_250;
           const elapsed = showExplosion ? Date.now() - defeat.startedAt : 0;
           const hp = Math.max(0, Math.min(100, player.hp));
-          return `<div class="pov-opponent ${isDefeated ? 'pov-defeated' : ''} ${showExplosion ? 'pov-exploding' : ''}" data-pov-player="${esc(player.id)}" ${showExplosion ? `style="--pov-elapsed:-${elapsed}ms"` : ''}><div class="pov-block"><div class="pov-head">${characterGlyphs[player.characterIcon] || esc(player.name.slice(0, 1).toUpperCase())}</div><div class="pov-body"></div><i class="pov-limb left"></i><i class="pov-limb right"></i><i class="pov-leg left"></i><i class="pov-leg right"></i></div><span>${esc(player.name)}</span><div class="pov-mini-health" role="progressbar" aria-label="${esc(player.name)} health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${hp}"><div class="pov-mini-health-track"><div class="pov-mini-health-fill" style="width:${hp}%"></div></div></div></div>`;
+          return `<div class="pov-opponent ${isDefeated ? 'pov-defeated' : ''} ${showExplosion ? 'pov-exploding' : ''}" data-pov-player="${esc(player.id)}" ${showExplosion ? `style="--pov-elapsed:-${elapsed}ms"` : ''}>${dialogueBubble(player, 'pov-dialogue')}<div class="pov-block"><div class="pov-head" data-icon="${esc(player.characterIcon || '')}">${characterGlyphs[player.characterIcon] || esc(player.name.slice(0, 1).toUpperCase())}</div><div class="pov-body"></div><i class="pov-limb left"></i><i class="pov-limb right"></i><i class="pov-leg left"></i><i class="pov-leg right"></i></div><span>${esc(player.name)}</span><div class="pov-mini-health" role="progressbar" aria-label="${esc(player.name)} health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${hp}"><div class="pov-mini-health-track"><div class="pov-mini-health-fill" style="width:${hp}%"></div></div></div></div>`;
         }).join('')}</div><div class="pov-projectile" aria-hidden="true"></div><div class="pov-hand" aria-hidden="true"><div class="pov-arm"></div><div class="pov-orb"></div></div><div class="pov-health"><div class="pov-health-label"><span>YOUR HEALTH</span><span class="pov-health-value">${Math.max(0, state.you.hp)} / 100</span></div><div class="pov-health-track" role="progressbar" aria-label="Your health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.max(0, state.you.hp)}"><div class="pov-health-fill" style="width:${Math.max(0, state.you.hp)}%"></div></div></div><span class="pov-caption">FIRST-PERSON · ENERGY ORB</span></div>`
         : '';
       return `<main class="main-panel battle-main"><section class="arena ${firstPersonBattlesEnabled ? 'first-person-arena' : ''}" aria-label="Battle arena"><div class="arena-top"><span class="live-label"><i></i>${finished ? 'MATCH ENDED' : 'LIVE MATCH'}</span><span>${battle.mode === 'online' ? 'PLAYER DUEL' : 'PRACTICE DUEL'} · ${esc(subject.name)}</span></div>${firstPersonScene}<div class="combatants">${fighter(you, false)}<div class="versus"><strong>VS</strong>${finished ? 'FINAL' : 'ROUND'}</div>${fighter(rival, true)}</div><div class="arena-bottom"><span>${esc(subject.name.toUpperCase())} <strong>·</strong> KNOWLEDGE DUEL</span><span>${finished ? 'FINAL HP' : yourTurn ? 'YOUR MOVE' : 'RIVAL MOVE'}</span></div></section><div class="below-arena"><div><h3 class="feed-title">Battle feed</h3><div class="feed-list">${battle.log.map((entry) => `<div class="feed-item ${esc(entry.kind)}"><i class="feed-mark"></i><span>${esc(entry.text)}</span></div>`).join('')}</div></div><div class="round-stat"><p class="eyebrow">Turn clock</p><div class="round-number">${finished ? 'END' : `${remaining}<small style="font:10px var(--mono)"> SEC</small>`}</div><div class="round-caption">${finished ? 'match concluded' : `current turn · ${esc(activeName || '')}`}</div></div></div></main><aside class="quiz-panel">${prompt}${answerFeedbackMarkup}</aside>`;
@@ -2181,7 +2296,17 @@
 
     function fighterCard(player, enemy) {
       const hp = Math.max(0, player.hp);
-      return `<div class="fighter ${enemy ? 'enemy' : ''}" data-player-id="${esc(player.id)}"><div class="fighter-avatar">${player.npc ? esc(player.name.slice(0, 1).toUpperCase()) : characterGlyphs[player.characterIcon] || esc(player.name.slice(0, 1).toUpperCase())}</div><div class="fighter-name">${esc(player.name)}</div><div class="fighter-role">${player.npc ? 'ARENA NPC' : enemy ? 'RIVAL' : 'YOU · PLAYER'}</div><div class="combat-stats">LVL ${player.level} · ATK ${player.attack} · DEF ${player.defence}</div><div class="hp-wrap"><div class="hp-label"><span>HP</span><span>${hp} / 100</span></div><div class="hp-track"><div class="hp-fill" style="width:${hp}%"></div></div></div></div>`;
+      const dialogue = enemy ? dialogueBubble(player, 'fighter-dialogue') : '';
+      return `<div class="fighter ${enemy ? 'enemy' : ''}" data-player-id="${esc(player.id)}">${dialogue}<div class="fighter-avatar" data-icon="${esc(player.characterIcon || '')}">${player.npc ? esc(player.name.slice(0, 1).toUpperCase()) : characterGlyphs[player.characterIcon] || esc(player.name.slice(0, 1).toUpperCase())}</div><div class="fighter-name">${esc(player.name)}</div><div class="fighter-role">${player.npc ? 'ARENA NPC' : enemy ? 'RIVAL' : 'YOU · PLAYER'}</div><div class="combat-stats">LVL ${player.level} · ATK ${player.attack} · DEF ${player.defence}</div><div class="hp-wrap"><div class="hp-label"><span>HP</span><span>${hp} / 100</span></div><div class="hp-track"><div class="hp-fill" style="width:${hp}%"></div></div></div></div>`;
+    }
+
+    function dialogueBubble(player, className = 'fighter-dialogue') {
+      const prefix = `${player.name}:`;
+      const entry = state.battle.log.find((item) => item.kind === 'dialogue' && item.text.startsWith(prefix))
+        || state.battle.log.find((item) => item.text.startsWith(prefix));
+      if (!entry) return '';
+      const text = entry.text.slice(prefix.length).replace(/^["“]\s*/, '').replace(/["”]\s*$/, '').trim();
+      return `<div class="${className}" role="status">${esc(text)}</div>`;
     }
 
     function renderStalinChallenge() {
@@ -2197,6 +2322,8 @@
       if (!state) return;
       applyAppearance();
       syncLobbyMusic();
+      document.body.classList.toggle('online-battle-active',
+        activeSection === 'online' && state.battle?.status === 'active');
       const signature = `${JSON.stringify(state)}:${busy}:${activeSection}:${soloView}:${appearance}`;
       if (signature === lastRenderedState) return;
       lastRenderedState = signature;
@@ -2262,6 +2389,8 @@
         ? renderBattle()
         : `<section class="rail"><p class="eyebrow">Player file</p><h2 class="rail-title">Your record</h2><div class="rank-block"><div class="rank-line"><span class="rank-name">${esc(state.you.name)}</span><span class="rank-level">LVL ${String(state.you.level).padStart(2, '0')}</span></div><div class="rank-caption">Arena challenger · unranked</div></div><div class="section-heading"><span>Field stats</span><span>SEASON 01</span></div><div class="stat-row"><span>Health</span><strong>100 / 100</strong></div><div class="stat-row"><span>Win streak</span><strong>0</strong></div><div class="stat-row"><span>Knowledge XP</span><strong>000</strong></div><div class="section-heading"><span>Question set</span><span>TOPICS</span></div><div class="chapter-list"></div><div class="rail-note">Choose a subject to see its question topics.</div></section><main class="main-panel"><div class="page-heading"><div><p class="eyebrow">Knowledge is your weapon</p><h1>Choose your rival.</h1></div><span class="season">ARENA · 01</span></div><section class="arena" aria-label="Battle arena"><div class="arena-top"><span class="live-label"><i class="online-dot"></i>ARENA OPEN</span><span>WAITING FOR MATCH</span></div><div class="combatants"><div class="fighter"><div class="fighter-avatar">${esc(state.you.name.slice(0, 1).toUpperCase())}</div><div class="fighter-name">${esc(state.you.name)}</div><div class="fighter-role">READY · 100 HP</div></div><div class="versus"><strong>VS</strong>SELECT</div><div class="fighter enemy"><div class="fighter-avatar">?</div><div class="fighter-name">Your rival</div><div class="fighter-role">NPC OR PLAYER</div></div></div><div class="arena-bottom"><span>TURN-BASED KNOWLEDGE DUEL</span><span>20 <strong>SEC</strong> PER TURN</span></div></section><div class="lobby-heading"><h2>Available rivals</h2><span>${activeSection === 'solo' ? `${state.npcs.length} NPC · ` : ''}${state.onlinePlayers.length} ONLINE</span></div><div class="rival-list">${renderRivals()}</div></main><aside class="quiz-panel"><div class="quiz-state"><div class="state-symbol">✳</div><p class="eyebrow">Ready when you are</p><h2>Enter the duel.</h2><p>Choose an arena rival. Answer each Grade 9 question before the 20-second timer runs out.</p><div class="quiz-footer">A correct answer strikes for 15 HP and restores 3 HP. Wrong or late answers cost 14 HP.</div></div></aside>`;
       app.innerHTML = `<div class="app-grid-inner">${content}</div>`;
+      app.querySelector('.quiz-panel')?.classList.toggle('online-question',
+        Boolean(battle?.status === 'active' && ['online', 'simultaneous'].includes(battle.mode)));
       const inner = app.firstElementChild;
       const lobbyTitle = inner.querySelector('.lobby-heading h2');
       if (lobbyTitle) lobbyTitle.textContent = activeSection === 'solo' ? 'Available rivals' : 'Online players';
@@ -2375,6 +2504,7 @@
           resultLabel?.insertAdjacentElement('afterend', resultXp);
         }
       }
+      if (isActiveMultiplayerBattle()) renderMultiplayerQuestionText();
       if (battle) animateBattleEffects(battle, battleLog);
       else {
         lastBattleAnimationKey = '';
@@ -2591,7 +2721,7 @@
         return;
       }
       if (button.dataset.action === 'practice-answer') {
-        submitPracticeAnswer(button);
+        submitPracticeAnswer(Number(button.dataset.answer), button.dataset.questionId);
         return;
       }
       if (button.dataset.action === 'practice-next') {
@@ -3095,10 +3225,45 @@
       syncLobbyMusic();
     }, { capture: true });
 
+    document.addEventListener('copy', (event) => {
+      if (!isActiveMultiplayerBattle()) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      forfeitActiveOnlineQuestion();
+    }, true);
+    document.addEventListener('keydown', (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'c' && isActiveMultiplayerBattle()) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        forfeitActiveOnlineQuestion();
+      }
+    }, true);
+    document.addEventListener('selectstart', (event) => {
+      if (event.target instanceof Element
+        && event.target.closest('.quiz-panel .question, .quiz-panel .answer-list')
+        && isActiveMultiplayerBattle()) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        forfeitActiveOnlineQuestion();
+      }
+    }, true);
+    document.addEventListener('contextmenu', (event) => {
+      if (event.target instanceof Element
+        && event.target.closest('.quiz-panel .question, .quiz-panel .answer-list')
+        && isActiveMultiplayerBattle()) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        forfeitActiveOnlineQuestion();
+      }
+    }, true);
+
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState !== 'hidden' || !studyTimerRunning) return;
-      updateStudyClock();
-      flushStudyTime(true);
+      if (document.visibilityState !== 'hidden') return;
+      forfeitActiveOnlineQuestion();
+      if (studyTimerRunning) {
+        updateStudyClock();
+        flushStudyTime(true);
+      }
     });
 
     async function boot() {
