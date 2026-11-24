@@ -26,6 +26,7 @@
     }
     * { box-sizing: border-box; }
     body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); min-width: 320px; }
+    body[data-theme="dark"] { color-scheme: dark; --paper: #111916; --paper-bright: #1b2520; --ink: #edf3e9; --muted: #a9b5aa; --line: #39483e; --forest: #9bc9a0; --lime: #c7df83; --orange: #f29a70; --blue: #8ebfd0; --danger: #ed8177; background: var(--paper); }
     body[data-theme="solid-blue"] { --paper: #e7eef9; --paper-bright: #f8faff; --ink: #263248; --muted: #657187; --line: #c9d4e4; --forest: #355a83; --lime: #a9c8ee; --orange: #bc704f; --blue: #79a8d1; background: var(--paper); }
     body[data-theme="solid-sage"] { --paper: #e8f0e5; --paper-bright: #f8fbf6; --ink: #27372d; --muted: #68796d; --line: #cbd9c8; --forest: #40614c; --lime: #bed88a; --orange: #c5774f; --blue: #83b3a3; background: var(--paper); }
     body[data-theme="solid-lilac"] { --paper: #f0eafa; --paper-bright: #fcfaff; --ink: #352b43; --muted: #766b84; --line: #d9cfe5; --forest: #5c4777; --lime: #d3b8eb; --orange: #c77769; --blue: #95a7d8; background: var(--paper); }
@@ -130,6 +131,8 @@
     .custom-solid-option input { width: 44px; height: 36px; padding: 2px; border: 1px solid var(--line); background: transparent; cursor: pointer; }
     .theme-option[data-theme-option="retro"] { color: #f3e5b3; background-color: #203b33; background-image: linear-gradient(#ffffff12 1px, transparent 1px), linear-gradient(90deg, #ffffff12 1px, transparent 1px); background-size: 9px 9px; }
     .theme-option[data-theme-option="retro"] span { color: #d4dfd4; }
+    .theme-option[data-theme-option="dark"] { color: #edf3e9; background: #111916; }
+    .theme-option[data-theme-option="dark"] span { color: #a9b5aa; }
     .appearance-toggle { display: flex; align-items: flex-start; gap: 10px; margin-top: 10px; padding: 12px; border: 1px solid var(--line); cursor: pointer; }
     .appearance-toggle input { margin-top: 2px; accent-color: var(--forest); }
     .appearance-toggle strong, .appearance-toggle span { display: block; }
@@ -549,6 +552,26 @@
       #updates-button { width: 32px; height: 32px; padding: 0; font-size: 0; }
       #updates-button::before { content: 'Log'; font: 9px var(--mono); }
     }
+    body[data-theme="dark"] .topbar { background: rgba(27,37,32,.92); }
+    body[data-theme="dark"] .quiz-panel { background: #18221e; }
+    body[data-theme="dark"] .quiz-header, body[data-theme="dark"] .quiz-footer { border-color: var(--line); }
+    body[data-theme="dark"] .quiz-footer { color: var(--muted); }
+    body[data-theme="dark"] .chapter-tag, body[data-theme="dark"] .feed-item { color: var(--muted); }
+    body[data-theme="dark"] .rail-note, body[data-theme="dark"] .call-note, body[data-theme="dark"] .hint-copy { color: var(--ink); background: #26312a; }
+    body[data-theme="dark"] .timer-track, body[data-theme="dark"] .team-format { background: #2b362f; }
+    body[data-theme="dark"] .answer { border-color: var(--line); }
+    body[data-theme="dark"] .answer:hover:not(:disabled) { background: #26352b; }
+    body[data-theme="dark"] .answer-key, body[data-theme="dark"] .rival-icon { color: var(--ink); background: #34443a; }
+    body[data-theme="dark"] .rival-icon.player, body[data-theme="dark"] .state-symbol.waiting { color: #d1e8ed; background: #304951; }
+    body[data-theme="dark"] .primary-button:hover { background: #3c674c; }
+    body[data-theme="dark"] .challenge-button:disabled, body[data-theme="dark"] .hint-button:disabled, body[data-theme="dark"] .resign-button:disabled { color: var(--muted); }
+    body[data-theme="dark"] .hint-button, body[data-theme="dark"] .team-setup { background: var(--paper-bright); }
+    body[data-theme="dark"] .chat-line { background: #26312a; }
+    body[data-theme="dark"] .join-box input, body[data-theme="dark"] .account-form input { color: var(--ink); background: var(--paper); }
+    body[data-theme="dark"] .answer.answer-correct, body[data-theme="dark"] .answer-result.correct { border-color: #6ca77b; color: #d6f0dc; background: #243d2b; }
+    body[data-theme="dark"] .answer.answer-wrong, body[data-theme="dark"] .answer-result.incorrect { border-color: #d8796c; color: #ffd9d3; background: #452a29; }
+    body[data-theme="dark"] .practice-feedback.correct { color: #a4d5ae; }
+    body[data-theme="dark"] .practice-feedback.incorrect { color: #f0a197; }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
   </style>
 </head>
@@ -565,6 +588,14 @@
     <p class="eyebrow">Release notes</p>
     <h2 id="updates-title">Update log</h2>
     <div class="updates-list">
+      <article class="update-entry">
+        <time datetime="2026-11-24">24 November 2026</time>
+        <h3>Dark mode and reconnect protection</h3>
+        <ul>
+          <li>Added a persistent dark mode option to Personalisation.</li>
+          <li>Prevented temporary server or proxy errors from switching all players into local mode or clearing their saved server profile ID.</li>
+        </ul>
+      </article>
       <article class="update-entry">
         <time datetime="2026-11-22">22 November 2026</time>
         <h3>Boss roster and operator icons</h3>
@@ -769,6 +800,7 @@
       <div class="theme-options" role="group" aria-label="Background style">
         <button class="theme-option" type="button" data-theme-option="retro"><strong>Retro grid</strong><span>Pixel-inspired arena look</span></button>
         <button class="theme-option" type="button" data-theme-option="classic"><strong>Classic</strong><span>Original cream and forest palette</span></button>
+        <button class="theme-option" type="button" data-theme-option="dark"><strong>Dark mode</strong><span>Deep slate surfaces and soft text</span></button>
         <button class="theme-option" type="button" data-theme-option="solid-blue"><strong>Solid blue</strong><span>Cool blue study background</span></button>
         <button class="theme-option" type="button" data-theme-option="solid-sage"><strong>Solid sage</strong><span>Soft green study background</span></button>
         <button class="theme-option" type="button" data-theme-option="solid-lilac"><strong>Solid lilac</strong><span>Gentle purple study background</span></button>
@@ -836,6 +868,7 @@
     let busy = false;
     let pendingOnlineForfeitQuestionId = null;
     let pollInFlight = false;
+    let lastRefreshErrorAt = 0;
     let authMode = 'login';
     let accountSetupRequired = false;
     let toastTimer;
@@ -860,7 +893,7 @@
     let soloView = 'choose';
     let studyRoom = { studying: [], messages: [] };
     let studyChatClearedAt = Number(localStorage.getItem('ict-quattle-chat-clear') || 0);
-    let appearance = ['retro', 'classic', 'solid-blue', 'solid-sage', 'solid-lilac', 'solid-sunset', 'solid-mint', 'solid-coral', 'solid-gold', 'custom'].includes(localStorage.getItem('ict-quattle-appearance'))
+    let appearance = ['retro', 'classic', 'dark', 'solid-blue', 'solid-sage', 'solid-lilac', 'solid-sunset', 'solid-mint', 'solid-coral', 'solid-gold', 'custom'].includes(localStorage.getItem('ict-quattle-appearance'))
       ? localStorage.getItem('ict-quattle-appearance')
       : 'retro';
     let customColor = /^#[\da-f]{6}$/i.test(localStorage.getItem('ict-quattle-custom-color') || '')
@@ -931,13 +964,24 @@
         throw new Error('Could not reach the game server. Check your connection and try again.');
       }
       if (!response.headers.get('content-type')?.includes('application/json')) {
-        localOnly = true;
-        setAuthMode(authMode);
-        return localGame.handle(url, options);
+        throw new Error('The game server returned an unexpected response. Your saved profile is still available; please try again.');
       }
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Request failed');
       return data;
+    }
+
+    async function detectLocalMode() {
+      let response;
+      try {
+        response = await fetch('/api/health', { headers: { Accept: 'application/json' } });
+      } catch {
+        return;
+      }
+      if (response.status === 404 && !response.headers.get('content-type')?.includes('application/json')) {
+        localOnly = true;
+        setAuthMode(authMode);
+      }
     }
 
     function downloadSave(save) {
@@ -1059,6 +1103,7 @@
     function applyAppearance() {
       document.body.dataset.theme = appearance;
       document.body.style.setProperty('--custom-background', customColor);
+      document.querySelector('meta[name="theme-color"]').content = getComputedStyle(document.body).backgroundColor;
       const channels = [1, 3, 5].map((offset) => Number.parseInt(customColor.slice(offset, offset + 2), 16) / 255);
       const luminance = channels.reduce((total, channel, index) => {
         const linearChannel = channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
@@ -1943,11 +1988,12 @@
 
     async function refresh() {
       const playerId = localStorage.getItem(playerKey);
-      if (!playerId || pollInFlight) return;
+      if (!playerId || pollInFlight || (localOnly && !state)) return;
       pollInFlight = true;
       try {
         const previous = state;
         state = await request(`/api/state?playerId=${encodeURIComponent(playerId)}&subject=${encodeURIComponent(selectedSubject)}`);
+        lastRefreshErrorAt = 0;
         recordCompletedMultiplayerBattle(previous, state);
         celebrateBattleHit(previous, state);
         announceNewBots(previous, state);
@@ -1955,8 +2001,11 @@
         if (!state.you.hasPassword && !accountDialog.open) openAccountDialog(true);
       } catch (error) {
         if (error.message === 'Player session not found') {
-          localStorage.removeItem(playerKey);
+          if (!localOnly) localStorage.removeItem(playerKey);
           joinScreen.hidden = false;
+        } else if (Date.now() - lastRefreshErrorAt >= 15_000) {
+          lastRefreshErrorAt = Date.now();
+          notify(`${error.message} Your saved profile was kept.`);
         }
       } finally {
         pollInFlight = false;
@@ -3267,6 +3316,7 @@
     });
 
     async function boot() {
+      await detectLocalMode();
       const playerId = localStorage.getItem(playerKey);
       if (playerId) {
         try {
@@ -3279,7 +3329,7 @@
         } catch (error) {
           joinScreen.hidden = false;
           if (error.message === 'Player session not found') {
-            localStorage.removeItem(playerKey);
+            if (!localOnly) localStorage.removeItem(playerKey);
             notify(localOnly
               ? 'No saved profile was found in this browser. Create a local account to start; server profiles do not transfer automatically.'
               : 'Your saved profile could not be found on this server. Join again to start a new profile.');

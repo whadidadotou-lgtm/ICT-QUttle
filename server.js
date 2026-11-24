@@ -1345,6 +1345,10 @@ function getPlayerState(playerId, selectedSubject = 'computers') {
 }
 
 function handleApi(request, response, url) {
+	if (request.method === 'GET' && url.pathname === '/api/health') {
+		return json(response, 200, { status: 'ok' });
+	}
+
 	if (request.method === 'POST' && url.pathname === '/api/import-local-account') {
 		return readBody(request).then(({ format, account: value, password }) => {
 			if (format !== 'ict-quattle-local-account-v1') {
