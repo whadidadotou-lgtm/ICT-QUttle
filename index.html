@@ -589,6 +589,15 @@
     <h2 id="updates-title">Update log</h2>
     <div class="updates-list">
       <article class="update-entry">
+        <time datetime="2026-11-25">25 November 2026</time>
+        <h3>Grade 9 Term 2 syllabus practice</h3>
+        <ul>
+          <li>Added the Term 2 topics from the supplied 2026–2027 plan for English, Mathematics, Physics, Chemistry, Biology, French, Hindi, Business Studies, and Computer Science.</li>
+          <li>Added Global Perspectives with practice grouped by the three listed Assessment Objectives.</li>
+          <li>Added topic-filtered original practice questions and made Computer Science and Global Perspectives separately selectable; existing Computers practice remains available.</li>
+        </ul>
+      </article>
+      <article class="update-entry">
         <time datetime="2026-11-24">24 November 2026</time>
         <h3>Dark mode and reconnect protection</h3>
         <ul>
@@ -1175,7 +1184,7 @@
     }
 
     function renderSoloPicker() {
-      return `<main class="submode-screen"><button class="mode-back" data-action="home">← All modes</button><p class="eyebrow">Solo studies</p><h1>Pick a way to focus.</h1><div class="submode-options"><button class="submode-card" data-action="solo-view" data-view="battle"><strong>Battle bots</strong><span>Choose a named rival in any subject, with chapter choices for each.</span></button><button class="submode-card" data-action="solo-view" data-view="practice-select"><strong>Solo practice questions</strong><span>Practice any of the 10 subjects from your Grade 9 syllabus with chapter choices and source references.</span></button><button class="submode-card" data-action="solo-view" data-view="guide"><strong>Ask Prannoy · study guide</strong><span>Choose a subject and chapter for a clear topic explanation, or learn from his feedback after a wrong answer.</span></button><button class="submode-card" data-action="solo-view" data-view="study"><strong>Pomodoro study room</strong><span>Start a 25/5 Pomodoro, play an original ambient lo-fi loop, and see who else is studying.</span></button></div></main>`;
+      return `<main class="submode-screen"><button class="mode-back" data-action="home">← All modes</button><p class="eyebrow">Solo studies</p><h1>Pick a way to focus.</h1><div class="submode-options"><button class="submode-card" data-action="solo-view" data-view="battle"><strong>Battle bots</strong><span>Choose a named rival in any subject, with chapter choices for each.</span></button><button class="submode-card" data-action="solo-view" data-view="practice-select"><strong>Solo practice questions</strong><span>Practice Grade 9 syllabus subjects with chapter choices and source references.</span></button><button class="submode-card" data-action="solo-view" data-view="guide"><strong>Ask Prannoy · study guide</strong><span>Choose a subject and chapter for a clear topic explanation, or learn from his feedback after a wrong answer.</span></button><button class="submode-card" data-action="solo-view" data-view="study"><strong>Pomodoro study room</strong><span>Start a 25/5 Pomodoro, play an original ambient lo-fi loop, and see who else is studying.</span></button></div></main>`;
     }
 
     function renderPracticeSubjectPicker() {

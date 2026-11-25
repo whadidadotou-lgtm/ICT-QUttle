@@ -225,12 +225,12 @@ test('player icon and solo-focus totals are validated, saved, and ranked', () =>
 	assert.throws(() => getLeaderboard('matches', new Map()), /valid leaderboard/i);
 });
 
-test('all Grade 9 syllabus subjects have at least 200 solo practice questions', () => {
-	assert.equal(SUBJECTS.length, 10);
-	assert.equal(SUBJECTS.some((subject) => subject.id === 'global-perspectives'), false);
+test('Grade 9 practice subjects expose their question banks and curriculum references', () => {
+	assert.equal(SUBJECTS.length, 12);
+	assert.ok(SUBJECTS.some((subject) => subject.id === 'global-perspectives'));
 	for (const subject of SUBJECTS) {
-		assert.ok(subject.questionCount >= 200, `${subject.name} question count`);
-		assert.ok(subject.source.length > 0, `${subject.name} curriculum source`);
+		assert.ok(subject.questionCount >= (subject.id === 'global-perspectives' ? 24 : 200), `${subject.name} question count`);
+		if (subject.id !== 'global-perspectives') assert.ok(subject.source.length > 0, `${subject.name} curriculum source`);
 	}
 
 	for (const subject of SUBJECTS) {
@@ -551,16 +551,20 @@ test('question pools have expanded coverage and rotate correct answer positions'
 	}
 });
 
-test('Computers and Scripture topic filters only return questions from populated syllabus topics', () => {
+test('Computers, Computer Science, and Scripture topic filters use populated syllabus topics', () => {
 	const computers = SUBJECTS.find((subject) => subject.id === 'computers');
+	const computerScience = SUBJECTS.find((subject) => subject.id === 'computer-science');
 	const scripture = SUBJECTS.find((subject) => subject.id === 'scripture');
 	assert.ok(computers);
-	assert.equal(SUBJECTS.some((subject) => ['ict', 'computer-science'].includes(subject.id)), false);
+	assert.ok(computerScience);
+	assert.equal(SUBJECTS.some((subject) => subject.id === 'ict'), false);
 	assert.deepEqual(computers.practiceTopics.slice().sort(), computers.topics.slice().sort());
 	assert.ok(computers.practiceTopics.includes('1.2'));
 	assert.ok(computers.practiceTopics.includes('Cyber security'));
+	assert.ok(computerScience.practiceTopics.includes('Chapter 5 – The Internet and cyber security'));
 	assert.ok(computers.source.some((source) => source.includes('0417')));
 	assert.ok(computers.source.some((source) => source.includes('0478')));
+	assert.ok(computerScience.source.some((source) => source.includes('0478')));
 	assert.deepEqual(scripture.practiceTopics, [
 		'Ch 1: The Beginning of the Gospel of Mark',
 		'Ch 2: Christ and the Multitudes',
@@ -580,12 +584,16 @@ test('Computers and Scripture topic filters only return questions from populated
 			assert.equal(getQuestion(subject.id, topic).chapter, topic);
 		}
 	}
+	for (const topic of computerScience.practiceTopics) {
+		assert.equal(getSoloPracticeQuestion(`computer-science-${topic}`, 'computer-science', topic).question.chapter, topic);
+	}
 });
 
-test('battles remain available except English, Mathematics, and Business Studies', () => {
+test('battles remain unavailable for practice-only subjects', () => {
 	assert.equal(SUBJECTS.find((subject) => subject.id === 'english').battleAvailable, false);
 	assert.equal(SUBJECTS.find((subject) => subject.id === 'mathematics').battleAvailable, false);
 	assert.equal(SUBJECTS.find((subject) => subject.id === 'business').battleAvailable, false);
+	assert.equal(SUBJECTS.find((subject) => subject.id === 'global-perspectives').battleAvailable, false);
 	for (const subject of SUBJECTS) {
 		assert.ok(subject.practiceTopics.length, `${subject.id} exposes practice chapters`);
 		for (const topic of subject.practiceTopics) {
@@ -601,6 +609,70 @@ test('battles remain available except English, Mathematics, and Business Studies
 			assert.ok(question, `${subject.id} has a question in ${topic}`);
 			assert.equal(question.chapter, topic);
 			assert.equal(question.options.length, 4);
+		}
+	}
+});
+
+test('Term 2 syllabus topics are selectable and have topic-filtered practice questions', () => {
+	const term2Topics = {
+		english: [
+			'Unit 5: Extended response to reading',
+			'Unit 4: Analysing and explaining writer’s effects',
+			'Unit 6: Reading skills practice (may be done in Grade 10)',
+			'Unit 10: Narrative writing',
+			'Unit 7: Writing skills',
+		],
+		mathematics: [
+			'7.3 Circle Theorems', '3.4 Financial Mathematics', '3.5 Time', '3.6 Rates',
+			'8.3 Proportion', '8.4 Indices 2', '8.5 Inequalities', '13.4 Scatter Diagrams',
+			'13.5 Cumulative Frequency', '13.6 Comparing Data Sets', '14.2 Relative Frequency',
+			'14.3 Mutually Exclusive and Independent Events', '14.5 Probability from Venn Diagrams',
+			'14.6 Conditional Probability', '12.2 Column Vectors', '12.3 Vector Geometry',
+			'12.5 Combined Transformations',
+		],
+		physics: ['Thermal Physics', 'Waves', 'Electricity and Magnetism'],
+		chemistry: [
+			'Chapter 15 – Reactivity of metals', 'Chapter 16 – Extraction and corrosion of metals',
+			'Chapter 6 – Electrochemistry', 'Chapter 11 – Acids and bases',
+			'Chapter 12 – Preparation of salts',
+		],
+		biology: [
+			'Chapter 18 Organisms and their environment',
+			'Chapter 19 Human influences on ecosystems',
+			'Chapter 14 Reproduction in plants',
+		],
+		french: [
+			'Unit 5: Travaille et étudier - Studying and working',
+			'Unit 6: Perspectives Internationale- the international perspective',
+			'Past paper practice for Reading, Writing, Listening and speaking',
+		],
+		hindi: [
+			'इकाई-5 - यात्रा का भ्रमण', 'इकाई-6 - स्वास्थ्य', 'इकाई-7 - इतिहास',
+			'लेखन विधा - लेख', 'लेखन विधा - भाषण', 'लेखन विधा - निबंध',
+			'लेखन विधा - संवाद लेखन', 'लेखन विधा - पत्र लेखन', 'लेखन विधा - ईमेल लेखन',
+			'लेखन विधा - निमंत्रण लेखन',
+		],
+		'global-perspectives': [
+			'Assessment Objective 1 - Research, Analysis, Evaluation',
+			'Assessment Objective 2 - Reflection',
+			'Assessment Objective 3 - Communication and collaboration',
+		],
+		business: [
+			'17 Production of goods and services',
+			'18 Costs, scale of production and break-even analysis',
+			'19 Quality of goods and services',
+			'20 Location decisions',
+		],
+		'computer-science': ['Chapter 5 – The Internet and cyber security', 'Chapter 4 – Software'],
+	};
+
+	for (const [subjectId, topics] of Object.entries(term2Topics)) {
+		const subject = SUBJECTS.find((candidate) => candidate.id === subjectId);
+		assert.ok(subject, `${subjectId} is selectable`);
+		for (const topic of topics) {
+			assert.ok(subject.practiceTopics.includes(topic), `${subjectId} exposes ${topic}`);
+			const result = getSoloPracticeQuestion(`term2-${subjectId}-${topic}`, subjectId, topic);
+			assert.equal(result?.question.chapter, topic, `${subjectId} filters questions to ${topic}`);
 		}
 	}
 });

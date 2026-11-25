@@ -9,7 +9,7 @@
 	const MAX_NPC_LEVEL = 110;
 	const SOLO_PRACTICE_XP = 1;
 	const STORAGE_ERROR = 'Could not save local game data. Check that browser storage is enabled and has space.';
-	const PRACTICE_ONLY_SUBJECTS = ['english', 'mathematics', 'business'];
+	const PRACTICE_ONLY_SUBJECTS = ['english', 'mathematics', 'business', 'global-perspectives'];
 	const CHARACTER_ICONS = ['star', 'bolt', 'fox', 'owl', 'book', 'rocket', 'leaf', 'moon', 'sun', 'crown', 'operator-dan', 'operator-red'];
 	const OPERATOR_ICONS = { 'operator-dan': 'danthecanman', 'operator-red': 'redsto_1' };
 	const subjectRivals = {

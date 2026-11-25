@@ -326,7 +326,7 @@ const curriculum = {
 		],
 	},
 	business: {
-		name: 'Business',
+		name: 'Business Studies',
 		topics: ['Human resource management', 'Organisation and management', 'Communication', 'Motivating employees', 'Marketing and the market', 'Market research', 'Marketing mix: product, price, place, promotion', 'Marketing strategy and legal controls', 'Product and service quality', 'Costs, scale of production and break-even analysis', 'Location decisions'],
 		source: ['https://www.cambridgeinternational.org/programmes-and-qualifications/cambridge-igcse-business-studies-0450/'],
 		rows: [
@@ -401,7 +401,6 @@ curriculum.computers = {
 	rows: [...curriculum.ict.rows, ...computerScience.rows],
 };
 delete curriculum.ict;
-delete curriculum['computer-science'];
 
 const topicAliases = {
 	ict: {
@@ -475,10 +474,177 @@ function buildQuestions(subject, subjectId) {
 
 const computerScienceQuestions = buildQuestions(computerScience, 'computer-science');
 
+const term2Topics = {
+	english: [
+		'Unit 5: Extended response to reading',
+		'Unit 4: Analysing and explaining writer’s effects',
+		'Unit 6: Reading skills practice (may be done in Grade 10)',
+		'Unit 10: Narrative writing',
+		'Unit 7: Writing skills',
+	],
+	mathematics: [
+		'7.3 Circle Theorems',
+		'3.4 Financial Mathematics',
+		'3.5 Time',
+		'3.6 Rates',
+		'8.3 Proportion',
+		'8.4 Indices 2',
+		'8.5 Inequalities',
+		'13.4 Scatter Diagrams',
+		'13.5 Cumulative Frequency',
+		'13.6 Comparing Data Sets',
+		'14.2 Relative Frequency',
+		'14.3 Mutually Exclusive and Independent Events',
+		'14.5 Probability from Venn Diagrams',
+		'14.6 Conditional Probability',
+		'12.2 Column Vectors',
+		'12.3 Vector Geometry',
+		'12.5 Combined Transformations',
+	],
+	physics: ['Thermal Physics', 'Waves', 'Electricity and Magnetism'],
+	chemistry: [
+		'Chapter 15 – Reactivity of metals',
+		'Chapter 16 – Extraction and corrosion of metals',
+		'Chapter 6 – Electrochemistry',
+		'Chapter 11 – Acids and bases',
+		'Chapter 12 – Preparation of salts',
+	],
+	biology: [
+		'Chapter 18 Organisms and their environment',
+		'Chapter 19 Human influences on ecosystems',
+		'Chapter 14 Reproduction in plants',
+	],
+	french: [
+		'Unit 5: Travaille et étudier - Studying and working',
+		'Unit 6: Perspectives Internationale- the international perspective',
+		'Past paper practice for Reading, Writing, Listening and speaking',
+	],
+	hindi: [
+		'इकाई-5 - यात्रा का भ्रमण',
+		'इकाई-6 - स्वास्थ्य',
+		'इकाई-7 - इतिहास',
+		'लेखन विधा - लेख',
+		'लेखन विधा - भाषण',
+		'लेखन विधा - निबंध',
+		'लेखन विधा - संवाद लेखन',
+		'लेखन विधा - पत्र लेखन',
+		'लेखन विधा - ईमेल लेखन',
+		'लेखन विधा - निमंत्रण लेखन',
+	],
+	'global-perspectives': [
+		'Assessment Objective 1 - Research, Analysis, Evaluation',
+		'Assessment Objective 2 - Reflection',
+		'Assessment Objective 3 - Communication and collaboration',
+	],
+	business: [
+		'17 Production of goods and services',
+		'18 Costs, scale of production and break-even analysis',
+		'19 Quality of goods and services',
+		'20 Location decisions',
+	],
+	'computer-science': [
+		'Chapter 5 – The Internet and cyber security',
+		'Chapter 4 – Software',
+	],
+};
+
+const term2Rows = {
+	english: [
+		['Unit 5: Extended response to reading', 'When writing an extended response to reading, what should each main point be supported with?', 'Relevant evidence from the passage', ['An unrelated personal story', 'A copied title only', 'A guess without textual support'], 'Select details from the passage and explain how they support your response.'],
+		['Unit 4: Analysing and explaining writer’s effects', 'When explaining the effect of a writer’s word choice, what should you do?', 'Explain the associations of the word and its effect on the reader', ['Name the word without discussing it', 'Replace it with a synonym only', 'Count the letters in the sentence'], 'Link the specific choice to meaning, imagery, tone, or reader response.'],
+		['Unit 6: Reading skills practice (may be done in Grade 10)', 'Which approach helps locate a specific detail in a text efficiently?', 'Scanning for a key word or detail', ['Rewriting the whole passage', 'Reading only the final paragraph', 'Ignoring headings and dates'], 'Scanning searches for a particular piece of information.'],
+		['Unit 10: Narrative writing', 'Which feature helps a narrative feel coherent?', 'A clear sequence of events with purposeful details', ['Unconnected events in random order', 'A list of facts with no characters', 'Repeating the opening in every paragraph'], 'Organise events so the reader can follow how the story develops.'],
+		['Unit 7: Writing skills', 'What is the best way to improve clarity when editing a paragraph?', 'Check that sentences are accurate, connected, and suited to the audience', ['Add as many adjectives as possible', 'Remove all punctuation', 'Make every sentence the same length'], 'Editing checks meaning, organisation, grammar, and audience.'],
+	],
+	mathematics: [
+		['7.3 Circle Theorems', 'An angle at the centre of a circle is 100°. What is the angle at the circumference subtended by the same arc?', '50°', ['100°', '200°', '25°'], 'The angle at the centre is twice the angle at the circumference.'],
+		['3.4 Financial Mathematics', 'A jacket costs $80 and is reduced by 15%. What is its sale price?', '$68', ['$12', '$65', '$92'], 'Find 15% of $80, then subtract the discount from the original price.'],
+		['3.5 Time', 'A film starts at 14:35 and lasts 1 hour 48 minutes. At what time does it end?', '16:23', ['15:83', '16:13', '15:23'], 'Add 1 hour, then add 48 minutes to 14:35.'],
+		['3.6 Rates', 'A cyclist travels 36 km in 1.5 hours. What is the average speed?', '24 km/h', ['18 km/h', '37.5 km/h', '54 km/h'], 'Average speed is distance divided by time.'],
+		['8.3 Proportion', 'If 4 notebooks cost $10, how much do 10 notebooks cost at the same rate?', '$25', ['$20', '$14', '$40'], 'Find the unit cost and multiply by 10.'],
+		['8.4 Indices 2', 'Simplify 2³ × 2⁴.', '2⁷', ['2¹²', '4⁷', '2¹'], 'When multiplying powers with the same base, add the indices.'],
+		['8.5 Inequalities', 'Solve 3x - 4 < 11.', 'x < 5', ['x > 5', 'x < 7', 'x > -5'], 'Add 4 to both sides, then divide by 3.'],
+		['13.4 Scatter Diagrams', 'A scatter diagram has points that rise from left to right. What relationship does it suggest?', 'Positive correlation', ['Negative correlation', 'No correlation', 'A constant with no variation'], 'As one variable increases, the other tends to increase.'],
+		['13.5 Cumulative Frequency', 'What does a cumulative frequency curve show?', 'The running total of frequencies up to each value', ['The frequency of only the largest value', 'The mean of every class', 'The difference between two modes'], 'Cumulative frequency adds frequencies progressively.'],
+		['13.6 Comparing Data Sets', 'Which pair of statistics is useful when comparing the centre and spread of two data sets?', 'Median and interquartile range', ['Mode and maximum only', 'Sum and sample label', 'Range and first value only'], 'The median describes centre and the interquartile range describes spread.'],
+		['14.2 Relative Frequency', 'An event happens 18 times in 60 trials. What is its relative frequency?', '0.3', ['3', '0.18', '0.6'], 'Relative frequency is the number of occurrences divided by the number of trials.'],
+		['14.3 Mutually Exclusive and Independent Events', 'If two events are mutually exclusive, can they happen at the same time?', 'No', ['Yes, always', 'Only if they are independent', 'Only when their probabilities are equal'], 'Mutually exclusive events have no outcomes in common.'],
+		['14.5 Probability from Venn Diagrams', 'In a Venn diagram, what does the overlap of two event circles represent?', 'Outcomes belonging to both events', ['Outcomes belonging to neither event', 'The sample space total only', 'Outcomes in the universal set but outside both circles'], 'The intersection contains outcomes shared by the two events.'],
+		['14.6 Conditional Probability', 'What does P(A | B) mean?', 'The probability of A occurring given that B has occurred', ['The probability of A and B never occurring', 'The probability of A plus B', 'The probability of B given that A is impossible'], 'The condition after the vertical bar is assumed to have occurred.'],
+		['12.2 Column Vectors', 'Which column vector represents a translation 3 units right and 2 units down?', '[3, -2]', ['[-3, 2]', '[2, 3]', '[-2, -3]'], 'Right is positive horizontally; down is negative vertically.'],
+		['12.3 Vector Geometry', 'If vector AB is a and vector BC is b, what is vector AC?', 'a + b', ['a - b', 'b - a', '-a - b'], 'Follow the route from A to C through B and add the vectors.'],
+		['12.5 Combined Transformations', 'When two transformations are combined, what must be specified to describe the result fully?', 'The transformations and the order in which they are applied', ['Only the colour of the image', 'The area of the original shape only', 'The name of one vertex'], 'Changing the order can change the final image.'],
+	],
+	physics: [
+		['Thermal Physics', 'Why does a metal spoon feel colder than a wooden spoon at the same room temperature?', 'Metal transfers thermal energy away from your hand more quickly', ['Metal is always below room temperature', 'Wood creates thermal energy', 'The spoon’s mass changes its temperature'], 'Metal is a better thermal conductor than wood.'],
+		['Waves', 'A wave has frequency 5 Hz and wavelength 2 m. What is its speed?', '10 m/s', ['2.5 m/s', '7 m/s', '0.4 m/s'], 'Use wave speed = frequency × wavelength.'],
+		['Electricity and Magnetism', 'A 6 Ω resistor is connected to a 12 V supply. What current flows?', '2 A', ['0.5 A', '6 A', '72 A'], 'Use Ohm’s law: current = voltage ÷ resistance.'],
+	],
+	chemistry: [
+		['Chapter 15 – Reactivity of metals', 'What happens when magnesium is placed in copper(II) sulfate solution?', 'Magnesium displaces copper because it is more reactive', ['Copper displaces magnesium', 'No reaction occurs because both are metals', 'Both metals dissolve into water without products'], 'A more reactive metal displaces a less reactive metal from its compound.'],
+		['Chapter 16 – Extraction and corrosion of metals', 'Why is iron extracted from iron oxide using carbon in a blast furnace?', 'Carbon is more reactive than iron and removes oxygen from the ore', ['Iron is more reactive than carbon', 'Carbon turns iron into a non-metal', 'The process uses electrolysis of pure iron'], 'Carbon reduces iron oxide, leaving iron.'],
+		['Chapter 6 – Electrochemistry', 'During electrolysis, which ions move towards the cathode?', 'Positive ions (cations)', ['Negative ions (anions)', 'Neutrons', 'Neutral molecules only'], 'The cathode is negative and attracts positive ions.'],
+		['Chapter 11 – Acids and bases', 'What is the ionic equation for neutralisation?', 'H⁺ + OH⁻ → H₂O', ['H⁺ + Cl⁻ → HCl', 'Na⁺ + OH⁻ → NaOH', 'O₂ + H₂ → H₂O₂'], 'Hydrogen ions react with hydroxide ions to form water.'],
+		['Chapter 12 – Preparation of salts', 'Which method is suitable for preparing a soluble salt from an acid and an insoluble base?', 'Add excess base to warm acid, filter, then crystallise the solution', ['Mix the acid with excess water and freeze it', 'Filter the acid before adding the base', 'Evaporate the dry base without reacting it'], 'Excess insoluble base ensures the acid is fully neutralised and can be filtered off.'],
+	],
+	biology: [
+		['Chapter 18 Organisms and their environment', 'What is a niche?', 'The role of an organism in its ecosystem, including how it uses resources', ['The place where only a plant grows', 'The total number of species on Earth', 'A single food chain'], 'A niche describes an organism’s role and interactions in its environment.'],
+		['Chapter 19 Human influences on ecosystems', 'How can deforestation reduce biodiversity?', 'It destroys habitats and can isolate populations', ['It guarantees more food for every species', 'It stops all competition', 'It increases every population equally'], 'Habitat loss leaves fewer places and resources for organisms.'],
+		['Chapter 14 Reproduction in plants', 'What is pollination?', 'The transfer of pollen from anther to stigma', ['The fusion of a seed with soil', 'The growth of a root towards water', 'The dispersal of fruit by animals only'], 'Pollination moves pollen to the female part of a flower.'],
+	],
+	french: [
+		['Unit 5: Travaille et étudier - Studying and working', 'What does “Je travaille dans un bureau” mean?', 'I work in an office', ['I study at a library', 'I am looking for a job', 'I travel by bus'], '“Je travaille” means “I work”; “dans un bureau” means “in an office”.'],
+		['Unit 6: Perspectives Internationale- the international perspective', 'Which French phrase means “in another country”?', 'Dans un autre pays', ['À côté de la maison', 'Tous les jours', 'Après le déjeuner'], '“Un autre pays” means “another country”.'],
+		['Past paper practice for Reading, Writing, Listening and speaking', 'Which practice routine covers all four named language skills?', 'Read a text, write a response, listen to audio, and speak about the topic', ['Only memorise vocabulary lists', 'Practise reading and skip the other skills', 'Write answers without reading or listening'], 'The syllabus lists reading, writing, listening, and speaking practice.'],
+	],
+	hindi: [
+		['इकाई-5 - यात्रा का भ्रमण', '“यात्रा” शब्द का अर्थ क्या है?', 'सफ़र', ['इतिहास', 'स्वास्थ्य', 'निमंत्रण'], 'यात्रा का अर्थ सफ़र या भ्रमण है।'],
+		['इकाई-6 - स्वास्थ्य', 'अच्छे स्वास्थ्य के लिए कौन-सी आदत सहायक है?', 'संतुलित भोजन और नियमित व्यायाम', ['केवल मीठा खाना', 'पूरी तरह पानी न पीना', 'हर दिन देर रात तक जागना'], 'संतुलित भोजन और गतिविधि स्वास्थ्य को सहारा देते हैं।'],
+		['इकाई-7 - इतिहास', 'इतिहास का अध्ययन मुख्य रूप से किससे जुड़ा है?', 'अतीत की घटनाओं और लोगों से', ['भविष्य के मौसम से', 'केवल गणितीय सूत्रों से', 'भोजन पकाने की विधियों से'], 'इतिहास अतीत के समाजों, घटनाओं और बदलावों का अध्ययन है।'],
+		['लेखन विधा - लेख', 'एक लेख का मुख्य उद्देश्य क्या होता है?', 'किसी विषय पर जानकारी और विचार व्यवस्थित रूप से प्रस्तुत करना', ['केवल दो लोगों की बातचीत दिखाना', 'किसी को निजी संदेश भेजना', 'कार्यक्रम में आने का निमंत्रण देना'], 'लेख में विषय पर क्रमबद्ध जानकारी और विचार दिए जाते हैं।'],
+		['लेखन विधा - भाषण', 'भाषण लिखते समय श्रोताओं को सीधे संबोधित करने का अच्छा तरीका क्या है?', '“प्रिय साथियो” जैसे संबोधन से शुरुआत करना', ['केवल पता और तारीख लिखना', 'सभी विचारों को बिना क्रम के लिखना', 'विषय बताए बिना समाप्त करना'], 'भाषण श्रोताओं के लिए होता है और संबोधन से शुरू हो सकता है।'],
+		['लेखन विधा - निबंध', 'निबंध को स्पष्ट बनाने के लिए विचार कैसे व्यवस्थित करने चाहिए?', 'भूमिका, मुख्य भाग और निष्कर्ष में', ['एक ही वाक्य में', 'केवल प्रश्नों की सूची में', 'बिना अनुच्छेदों के यादृच्छिक क्रम में'], 'निबंध में विचारों का क्रमबद्ध विकास होता है।'],
+		['लेखन विधा - संवाद लेखन', 'संवाद लेखन में प्रत्येक वक्ता की बात कैसे दिखाई जाती है?', 'वक्ता का नाम या पहचान देकर उसकी पंक्ति लिखकर', ['हर पंक्ति को शीर्षक बनाकर', 'केवल एक वक्ता की बात लिखकर', 'तारीख और पता जोड़कर'], 'संवाद में वक्ताओं की बारी-बारी से कही गई बातें होती हैं।'],
+		['लेखन विधा - पत्र लेखन', 'औपचारिक पत्र में विषय-पंक्ति का क्या काम है?', 'पत्र का उद्देश्य संक्षेप में बताना', ['पत्र के अंत में हस्ताक्षर करना', 'प्राप्तकर्ता का उत्तर लिखना', 'कहानी का पात्र बताना'], 'विषय-पंक्ति पाठक को पत्र का मुख्य कारण बताती है।'],
+		['लेखन विधा - ईमेल लेखन', 'ईमेल में “विषय” (Subject) में क्या लिखना चाहिए?', 'संदेश का छोटा और स्पष्ट विषय', ['पूरा संदेश दोबारा', 'केवल प्रेषक का पासवर्ड', 'असंबंधित अभिवादन'], 'विषय-पंक्ति प्राप्तकर्ता को ईमेल का उद्देश्य समझाती है।'],
+		['लेखन विधा - निमंत्रण लेखन', 'एक निमंत्रण में कौन-सी जानकारी आवश्यक होती है?', 'कार्यक्रम, तारीख, समय और स्थान', ['केवल लेखक का पसंदीदा रंग', 'परीक्षा के उत्तर', 'असंबंधित समाचार'], 'निमंत्रण में अतिथि को कार्यक्रम की जरूरी जानकारी दी जाती है।'],
+	],
+	'global-perspectives': [
+		['Assessment Objective 1 - Research, Analysis, Evaluation', 'When evaluating evidence for a global issue, what should you consider?', 'Its source, reliability, relevance, and limitations', ['Whether it agrees with you only', 'The colour of the page', 'How many times it is repeated'], 'Evaluate where evidence came from and how well it supports a claim.'],
+		['Assessment Objective 2 - Reflection', 'What makes reflection on a project useful?', 'Considering what you learned, how your view changed, and what you could improve', ['Repeating the project title', 'Listing sources without comment', 'Ignoring feedback and outcomes'], 'Reflection considers learning and future improvements.'],
+		['Assessment Objective 3 - Communication and collaboration', 'Which action best supports effective collaboration on a team project?', 'Agreeing roles, sharing evidence, and listening to different perspectives', ['Letting one person make every decision without discussion', 'Keeping research private from teammates', 'Ignoring agreed deadlines'], 'Collaboration involves shared responsibilities and respectful communication.'],
+	],
+	business: [
+		['17 Production of goods and services', 'What is meant by production?', 'The process of combining resources to make goods or provide services', ['Advertising a product only', 'Paying tax on sales', 'Choosing a business name'], 'Production transforms inputs into goods and services.'],
+		['18 Costs, scale of production and break-even analysis', 'A business has fixed costs of $600. Its contribution per unit is $5. What is its break-even output?', '120 units', ['605 units', '3000 units', '12 units'], 'Break-even output = fixed costs ÷ contribution per unit.'],
+		['19 Quality of goods and services', 'How can consistently good quality benefit a business?', 'It can improve customer satisfaction and encourage repeat purchases', ['It guarantees that costs disappear', 'It removes the need to understand customers', 'It always prevents new competitors'], 'Quality can build reputation and customer loyalty.'],
+		['20 Location decisions', 'Why might a retailer choose a location with high customer footfall?', 'More potential customers may see and visit the shop', ['It guarantees zero rent', 'It removes every competitor', 'It eliminates the need for stock'], 'Access to customers is one factor in a retail location decision.'],
+	],
+	'computer-science': [
+		['Chapter 5 – The Internet and cyber security', 'Which action is an example of a cyber-security measure for an online account?', 'Use a unique strong password and multi-factor authentication', ['Reuse one short password everywhere', 'Share login codes publicly', 'Disable security updates'], 'Unique credentials and an additional authentication factor help protect accounts.'],
+		['Chapter 4 – Software', 'What is the main difference between system software and application software?', 'System software manages the computer; application software helps users perform tasks', ['System software is always a physical device', 'Applications control electricity supply only', 'There is no difference in purpose'], 'An operating system is system software; a word processor is application software.'],
+	],
+};
+
+curriculum['global-perspectives'] = {
+	id: 'global-perspectives',
+	name: 'Global Perspectives',
+	grade: 9,
+	topics: term2Topics['global-perspectives'],
+	source: [],
+	rows: [],
+};
+
 for (const [id, subject] of Object.entries(curriculum)) {
 	subject.id = id;
 	subject.grade = 9;
+	const termIds = id === 'computers' ? ['computers', 'computer-science'] : [id];
+	subject.rows.push(...termIds.flatMap((termId) => term2Rows[termId] || []));
 	subject.practiceTopics = [...new Set(subject.rows.map(([chapter, prompt]) => practiceChapter(id, chapter, prompt)))];
+	subject.topics = [...new Set([
+		...(subject.topics || []),
+		...termIds.flatMap((termId) => term2Topics[termId] || []),
+	])];
 	subject.questionCount = subject.rows.length * questionStems.length;
 	subject.questions = buildQuestions(subject, id);
 	delete subject.rows;

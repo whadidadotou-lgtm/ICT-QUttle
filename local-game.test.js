@@ -87,6 +87,26 @@ test('local practice awards and saves XP on the player profile', async () => {
 	assert.equal(signedIn.you.xpBalance, result.xpAwarded);
 });
 
+test('local practice exposes Term 2 Global Perspectives and Computer Science topics', async () => {
+	const api = createLocalGame(createStorage(), webcrypto, grade9Practice);
+	const registered = await post(api, '/api/register', { username: 'TermTwoPractice', password: 'strong password' });
+	const state = await api.handle(`/api/state?playerId=${encodeURIComponent(registered.you.id)}`);
+	const globalPerspectives = await post(api, '/api/practice-question', {
+		playerId: registered.you.id,
+		subject: 'global-perspectives',
+		topic: 'Assessment Objective 2 - Reflection',
+	});
+	assert.equal(globalPerspectives.question.chapter, 'Assessment Objective 2 - Reflection');
+	assert.equal(state.subjects.find((subject) => subject.id === 'global-perspectives').battleAvailable, false);
+
+	const computerScience = await post(api, '/api/practice-question', {
+		playerId: registered.you.id,
+		subject: 'computer-science',
+		topic: 'Chapter 5 – The Internet and cyber security',
+	});
+	assert.equal(computerScience.question.chapter, 'Chapter 5 – The Internet and cyber security');
+});
+
 test('local practice avoids repeating questions across 50 prompts in one subject', async () => {
 	const api = createLocalGame(createStorage(), webcrypto, grade9Practice);
 	const registered = await post(api, '/api/register', { username: 'QuestionRotator', password: 'strong password' });
@@ -306,7 +326,7 @@ test('local subject levels and bot rosters remain independent and hide rivals 10
 	assert.equal(physics.you.level, 1);
 	assert.equal(physics.npcs.some((npc) => npc.name === 'Stalin'), true);
 	assert.notEqual(chemistry.npcs[0].id, physics.npcs[0].id);
-	assert.equal(chemistry.subjects.some((subject) => subject.id === 'global-perspectives'), false);
+	assert.equal(chemistry.subjects.some((subject) => subject.id === 'global-perspectives'), true);
 });
 
 test('local mode clearly rejects multiplayer that needs a server', async () => {

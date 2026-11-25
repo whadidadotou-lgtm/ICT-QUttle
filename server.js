@@ -42,7 +42,7 @@ const PLAYER_PROGRESS_FIELDS = [
 ];
 const ACCOUNT_FIELDS = ['username', 'usernameKey', 'passwordSalt', 'passwordHash'];
 const CHARACTER_ICONS = ['star', 'bolt', 'fox', 'owl', 'book', 'rocket', 'leaf', 'moon', 'sun', 'crown', 'operator-dan', 'operator-red'];
-const PRACTICE_ONLY_SUBJECTS = ['english', 'mathematics', 'business'];
+const PRACTICE_ONLY_SUBJECTS = ['english', 'mathematics', 'business', 'global-perspectives'];
 const OPERATOR_ICONS = {
 	'operator-dan': 'danthecanman',
 	'operator-red': 'redsto_1',
