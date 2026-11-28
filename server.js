@@ -9,6 +9,7 @@ const INDEX = path.join(__dirname, 'index.html');
 const STATIC_ASSETS = new Map([
 	['/grade9-practice.js', path.join(__dirname, 'grade9-practice.js')],
 	['/local-game.js', path.join(__dirname, 'local-game.js')],
+	['/peerjs.min.js', path.join(__dirname, 'peerjs.min.js')],
 ]);
 function getPlayerDataFile(environment = process.env) {
 	if (environment.PLAYER_DATA_FILE) return environment.PLAYER_DATA_FILE;
@@ -1344,7 +1345,37 @@ function getPlayerState(playerId, selectedSubject = 'computers') {
 	};
 }
 
+
+const vcRooms = new Map();
+function handleVcApi(request, response, url) {
+  if (request.method === "POST" && url.pathname === "/api/vc/send") {
+    return readBody(request).then(({ room, from, to, signal }) => {
+      if (!vcRooms.has(room)) vcRooms.set(room, []);
+      const q = vcRooms.get(room);
+      q.push({ from, to, signal, ts: Date.now() });
+      while (q.length > 200) q.shift();
+      return json(response, 200, { ok: true });
+    }).catch((e) => json(response, 400, { error: e.message }));
+  }
+  if (request.method === "GET" && url.pathname === "/api/vc/poll") {
+    const room = url.searchParams.get("room") || "";
+    const me = url.searchParams.get("me") || "";
+    const q = vcRooms.get(room) || [];
+    const mine = [];
+    const rest = [];
+    for (const msg of q) {
+      if (Date.now() - msg.ts > 30000) continue;
+      if ((msg.to === me || msg.to === "all") && msg.from !== me) mine.push(msg);
+      else rest.push(msg);
+    }
+    vcRooms.set(room, rest);
+    return json(response, 200, { messages: mine });
+  }
+  return false;
+}
+
 function handleApi(request, response, url) {
+  if (url.pathname.startsWith("/api/vc/")) return handleVcApi(request, response, url);
 	if (request.method === 'GET' && url.pathname === '/api/health') {
 		return json(response, 200, { status: 'ok' });
 	}

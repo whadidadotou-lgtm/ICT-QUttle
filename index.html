@@ -3388,29 +3388,27 @@
     boot();
   </script>
 <!-- Floating Study Room Voice Chat (Works on all Wi-Fi networks) -->
-<script src="https://unpkg.com"></script>
+<script src="peerjs.min.js"></script>
 
+<!-- Floating Study Room Voice Chat (100% Native WebRTC) -->
 <div id="vc-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; font-family: var(--sans);">
   <button id="vc-toggle-btn" onclick="toggleStudyVCPanel()" style="padding: 10px 16px; border-radius: 99px; border: 1px solid var(--line); background: var(--forest); color: var(--paper-bright); font-weight: 600; font-size: 13px; cursor: pointer; box-shadow: 0 8px 24px rgba(0,0,0,0.18);">
     🎙️ Study VC Rooms
   </button>
 
   <div id="vc-box" style="display: none; margin-top: 10px; width: 300px; background: var(--paper-bright); border: 1px solid var(--line); border-radius: 12px; padding: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.22);">
-    
-    <!-- Create or Join -->
     <div id="vc-setup">
       <div style="font-size: 11px; font-family: var(--mono); color: var(--muted); margin-bottom: 6px;">HOST OR JOIN A STUDY ROOM</div>
       <div style="display: flex; gap: 6px;">
-        <input id="vc-room-input" type="text" placeholder="Paste friend's room ID" style="flex: 1; height: 36px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); font-size: 13px;">
-        <button onclick="joinPeerRoom()" style="height: 36px; padding: 0 12px; border: 0; border-radius: 6px; background: var(--forest); color: var(--paper-bright); font-weight: 600; font-size: 12px; cursor: pointer;">Join</button>
+        <input id="vc-room-input" type="text" placeholder="e.g. sprint-4821" style="flex: 1; height: 36px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); font-size: 13px;">
+        <button onclick="startVCRoom(false)" style="height: 36px; padding: 0 12px; border: 0; border-radius: 6px; background: var(--forest); color: var(--paper-bright); font-weight: 600; font-size: 12px; cursor: pointer;">Join</button>
       </div>
-      <button onclick="hostPeerRoom()" style="width: 100%; margin-top: 8px; height: 34px; border: 1px solid var(--line); border-radius: 6px; background: transparent; color: var(--ink); font-family: var(--mono); font-size: 11px; cursor: pointer;">+ Host New Room</button>
+      <button onclick="startVCRoom(true)" style="width: 100%; margin-top: 8px; height: 34px; border: 1px solid var(--line); border-radius: 6px; background: transparent; color: var(--ink); font-family: var(--mono); font-size: 11px; cursor: pointer;">+ Host New Room</button>
     </div>
 
-    <!-- Active Call -->
     <div id="vc-active" style="display: none;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-        <span id="vc-room-label" style="font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--forest); overflow: hidden; text-overflow: ellipsis; max-width: 170px;"></span>
+        <span id="vc-room-label" style="font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--forest);"></span>
         <button onclick="copyVCRoomCode()" style="padding: 3px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); font-family: var(--mono); font-size: 10px; cursor: pointer;">Copy ID</button>
       </div>
       <div id="vc-status" style="font-size: 11px; color: var(--muted); margin-bottom: 8px;">🎙️ Mic live — share ID for friends to join!</div>
@@ -3419,95 +3417,91 @@
         <button onclick="leaveVCRoom()" style="flex: 1; height: 32px; border: 0; border-radius: 6px; background: var(--danger); color: white; font-weight: 600; font-size: 12px; cursor: pointer;">Leave</button>
       </div>
     </div>
-
     <div id="vc-audio-pool"></div>
   </div>
 </div>
 
 <script>
-  let vcPeer = null;
-  let vcStream = null;
-  let currentVCRoom = '';
-  let isMicMuted = false;
+  const myVcId = 'u-' + Math.random().toString(36).slice(2, 9);
+  const vcPeers = {};
+  let vcStream = null, currentVCRoom = '', vcPollTimer = null, isMicMuted = false;
 
   function toggleStudyVCPanel() {
     const box = document.getElementById('vc-box');
     box.style.display = box.style.display === 'none' ? 'block' : 'none';
   }
 
-  async function initMic() {
-    if (!vcStream) {
+  async function sendVcSignal(to, signal) {
+    await fetch('/api/vc/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ room: currentVCRoom, from: myVcId, to, signal })
+    });
+  }
+
+  function createPeerFor(remoteId) {
+    if (vcPeers[remoteId]) return vcPeers[remoteId];
+    const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:://google.com' }] });
+    vcPeers[remoteId] = pc;
+    vcStream.getTracks().forEach(t => pc.addTrack(t, vcStream));
+    pc.onicecandidate = (e) => { if (e.candidate) sendVcSignal(remoteId, { ice: e.candidate }); };
+    pc.ontrack = (e) => {
+      if (document.getElementById('vc-aud-' + remoteId)) return;
+      const aud = document.createElement('audio');
+      aud.id = 'vc-aud-' + remoteId;
+      aud.srcObject = e.streams[0];
+      aud.autoplay = true;
+      document.getElementById('vc-audio-pool').appendChild(aud);
+      document.getElementById('vc-status').textContent = '🔊 Connected! Talking live.';
+    };
+    return pc;
+  }
+
+  async function startVCRoom(isHost) {
+    let room = isHost
+      ? 'sprint-' + Math.floor(1000 + Math.random() * 9000)
+      : document.getElementById('vc-room-input').value.trim().toLowerCase();
+    if (!room) return alert('Enter a room ID first!');
+
+    try {
       vcStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-    }
-  }
+      currentVCRoom = room;
+      document.getElementById('vc-setup').style.display = 'none';
+      document.getElementById('vc-active').style.display = 'block';
+      document.getElementById('vc-room-label').textContent = 'ID: ' + room;
+      document.getElementById('vc-toggle-btn').textContent = '🟢 In VC (' + room + ')';
 
-  async function hostPeerRoom() {
-    try {
-      await initMic();
-      const shortId = 'sprint-' + Math.floor(1000 + Math.random() * 9000);
-      vcPeer = new Peer(shortId);
-
-      vcPeer.on('open', (id) => {
-        currentVCRoom = id;
-        showActiveVC(id);
-      });
-
-      vcPeer.on('call', (call) => {
-        call.answer(vcStream);
-        call.on('stream', (remoteStream) => attachAudio(call.peer, remoteStream));
-      });
-
-      vcPeer.on('error', () => alert('Room ID taken or network hiccup—click Host New Room again!'));
+      await sendVcSignal('all', { join: true });
+      vcPollTimer = setInterval(async () => {
+        const res = await fetch(`/api/vc/poll?room=${encodeURIComponent(currentVCRoom)}&me=${myVcId}`);
+        const { messages } = await res.json();
+        for (const m of messages) {
+          const pc = createPeerFor(m.from);
+          if (m.signal.join) {
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            await sendVcSignal(m.from, { sdp: pc.localDescription });
+          } else if (m.signal.sdp) {
+            await pc.setRemoteDescription(new RTCSessionDescription(m.signal.sdp));
+            if (m.signal.sdp.type === 'offer') {
+              const ans = await pc.createAnswer();
+              await pc.setLocalDescription(ans);
+              await sendVcSignal(m.from, { sdp: pc.localDescription });
+            }
+          } else if (m.signal.ice) {
+            await pc.addIceCandidate(new RTCIceCandidate(m.signal.ice));
+          }
+        }
+      }, 1000);
     } catch (err) {
-      alert('Please allow microphone access in your browser to use VC!');
+      alert('Mic error: ' + err.message);
     }
-  }
-
-  async function joinPeerRoom() {
-    const hostId = document.getElementById('vc-room-input').value.trim();
-    if (!hostId) return alert('Paste a room ID first!');
-
-    try {
-      await initMic();
-      vcPeer = new Peer();
-
-      vcPeer.on('open', () => {
-        currentVCRoom = hostId;
-        showActiveVC(hostId);
-        const call = vcPeer.call(hostId, vcStream);
-        call.on('stream', (remoteStream) => attachAudio(hostId, remoteStream));
-      });
-
-      vcPeer.on('call', (call) => {
-        call.answer(vcStream);
-        call.on('stream', (remoteStream) => attachAudio(call.peer, remoteStream));
-      });
-    } catch (err) {
-      alert('Please allow microphone access in your browser to use VC!');
-    }
-  }
-
-  function showActiveVC(roomId) {
-    document.getElementById('vc-setup').style.display = 'none';
-    document.getElementById('vc-active').style.display = 'block';
-    document.getElementById('vc-room-label').textContent = 'ID: ' + roomId;
-    document.getElementById('vc-toggle-btn').textContent = '🟢 In VC (' + roomId + ')';
-  }
-
-  function attachAudio(peerId, stream) {
-    if (document.getElementById('vc-audio-' + peerId)) return;
-    const audio = document.createElement('audio');
-    audio.id = 'vc-audio-' + peerId;
-    audio.srcObject = stream;
-    audio.autoplay = true;
-    document.getElementById('vc-audio-pool').appendChild(audio);
-    document.getElementById('vc-status').textContent = '🔊 Connected! Talking live.';
   }
 
   function toggleMuteMic() {
     if (!vcStream) return;
     isMicMuted = !isMicMuted;
-    vcStream.getAudioTracks()[0].enabled = !isMicMuted;
+    vcStream.getAudioTracks().enabled = !isMicMuted;
     document.getElementById('vc-mute-btn').textContent = isMicMuted ? 'Unmute Mic' : 'Mute Mic';
   }
 
@@ -3517,11 +3511,10 @@
   }
 
   function leaveVCRoom() {
-    if (vcPeer) vcPeer.destroy();
-    if (vcStream) {
-      vcStream.getTracks().forEach(t => t.stop());
-      vcStream = null;
-    }
+    clearInterval(vcPollTimer);
+    Object.values(vcPeers).forEach(pc => pc.close());
+    for (const k in vcPeers) delete vcPeers[k];
+    if (vcStream) { vcStream.getTracks().forEach(t => t.stop()); vcStream = null; }
     document.getElementById('vc-audio-pool').innerHTML = '';
     document.getElementById('vc-active').style.display = 'none';
     document.getElementById('vc-setup').style.display = 'block';
@@ -3529,6 +3522,7 @@
     currentVCRoom = '';
   }
 </script>
+
 
 </body>
 </html>
