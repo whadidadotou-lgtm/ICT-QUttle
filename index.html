@@ -3387,5 +3387,148 @@
     applyAppearance();
     boot();
   </script>
+<!-- Floating Study Room Voice Chat (Works on all Wi-Fi networks) -->
+<script src="https://unpkg.com"></script>
+
+<div id="vc-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; font-family: var(--sans);">
+  <button id="vc-toggle-btn" onclick="toggleStudyVCPanel()" style="padding: 10px 16px; border-radius: 99px; border: 1px solid var(--line); background: var(--forest); color: var(--paper-bright); font-weight: 600; font-size: 13px; cursor: pointer; box-shadow: 0 8px 24px rgba(0,0,0,0.18);">
+    🎙️ Study VC Rooms
+  </button>
+
+  <div id="vc-box" style="display: none; margin-top: 10px; width: 300px; background: var(--paper-bright); border: 1px solid var(--line); border-radius: 12px; padding: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.22);">
+    
+    <!-- Create or Join -->
+    <div id="vc-setup">
+      <div style="font-size: 11px; font-family: var(--mono); color: var(--muted); margin-bottom: 6px;">HOST OR JOIN A STUDY ROOM</div>
+      <div style="display: flex; gap: 6px;">
+        <input id="vc-room-input" type="text" placeholder="Paste friend's room ID" style="flex: 1; height: 36px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); font-size: 13px;">
+        <button onclick="joinPeerRoom()" style="height: 36px; padding: 0 12px; border: 0; border-radius: 6px; background: var(--forest); color: var(--paper-bright); font-weight: 600; font-size: 12px; cursor: pointer;">Join</button>
+      </div>
+      <button onclick="hostPeerRoom()" style="width: 100%; margin-top: 8px; height: 34px; border: 1px solid var(--line); border-radius: 6px; background: transparent; color: var(--ink); font-family: var(--mono); font-size: 11px; cursor: pointer;">+ Host New Room</button>
+    </div>
+
+    <!-- Active Call -->
+    <div id="vc-active" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <span id="vc-room-label" style="font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--forest); overflow: hidden; text-overflow: ellipsis; max-width: 170px;"></span>
+        <button onclick="copyVCRoomCode()" style="padding: 3px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); font-family: var(--mono); font-size: 10px; cursor: pointer;">Copy ID</button>
+      </div>
+      <div id="vc-status" style="font-size: 11px; color: var(--muted); margin-bottom: 8px;">🎙️ Mic live — share ID for friends to join!</div>
+      <div style="display: flex; gap: 6px;">
+        <button id="vc-mute-btn" onclick="toggleMuteMic()" style="flex: 1; height: 32px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); font-weight: 600; font-size: 12px; cursor: pointer;">Mute Mic</button>
+        <button onclick="leaveVCRoom()" style="flex: 1; height: 32px; border: 0; border-radius: 6px; background: var(--danger); color: white; font-weight: 600; font-size: 12px; cursor: pointer;">Leave</button>
+      </div>
+    </div>
+
+    <div id="vc-audio-pool"></div>
+  </div>
+</div>
+
+<script>
+  let vcPeer = null;
+  let vcStream = null;
+  let currentVCRoom = '';
+  let isMicMuted = false;
+
+  function toggleStudyVCPanel() {
+    const box = document.getElementById('vc-box');
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  }
+
+  async function initMic() {
+    if (!vcStream) {
+      vcStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    }
+  }
+
+  async function hostPeerRoom() {
+    try {
+      await initMic();
+      const shortId = 'sprint-' + Math.floor(1000 + Math.random() * 9000);
+      vcPeer = new Peer(shortId);
+
+      vcPeer.on('open', (id) => {
+        currentVCRoom = id;
+        showActiveVC(id);
+      });
+
+      vcPeer.on('call', (call) => {
+        call.answer(vcStream);
+        call.on('stream', (remoteStream) => attachAudio(call.peer, remoteStream));
+      });
+
+      vcPeer.on('error', () => alert('Room ID taken or network hiccup—click Host New Room again!'));
+    } catch (err) {
+      alert('Please allow microphone access in your browser to use VC!');
+    }
+  }
+
+  async function joinPeerRoom() {
+    const hostId = document.getElementById('vc-room-input').value.trim();
+    if (!hostId) return alert('Paste a room ID first!');
+
+    try {
+      await initMic();
+      vcPeer = new Peer();
+
+      vcPeer.on('open', () => {
+        currentVCRoom = hostId;
+        showActiveVC(hostId);
+        const call = vcPeer.call(hostId, vcStream);
+        call.on('stream', (remoteStream) => attachAudio(hostId, remoteStream));
+      });
+
+      vcPeer.on('call', (call) => {
+        call.answer(vcStream);
+        call.on('stream', (remoteStream) => attachAudio(call.peer, remoteStream));
+      });
+    } catch (err) {
+      alert('Please allow microphone access in your browser to use VC!');
+    }
+  }
+
+  function showActiveVC(roomId) {
+    document.getElementById('vc-setup').style.display = 'none';
+    document.getElementById('vc-active').style.display = 'block';
+    document.getElementById('vc-room-label').textContent = 'ID: ' + roomId;
+    document.getElementById('vc-toggle-btn').textContent = '🟢 In VC (' + roomId + ')';
+  }
+
+  function attachAudio(peerId, stream) {
+    if (document.getElementById('vc-audio-' + peerId)) return;
+    const audio = document.createElement('audio');
+    audio.id = 'vc-audio-' + peerId;
+    audio.srcObject = stream;
+    audio.autoplay = true;
+    document.getElementById('vc-audio-pool').appendChild(audio);
+    document.getElementById('vc-status').textContent = '🔊 Connected! Talking live.';
+  }
+
+  function toggleMuteMic() {
+    if (!vcStream) return;
+    isMicMuted = !isMicMuted;
+    vcStream.getAudioTracks()[0].enabled = !isMicMuted;
+    document.getElementById('vc-mute-btn').textContent = isMicMuted ? 'Unmute Mic' : 'Mute Mic';
+  }
+
+  function copyVCRoomCode() {
+    navigator.clipboard.writeText(currentVCRoom);
+    alert('Copied room ID "' + currentVCRoom + '"!');
+  }
+
+  function leaveVCRoom() {
+    if (vcPeer) vcPeer.destroy();
+    if (vcStream) {
+      vcStream.getTracks().forEach(t => t.stop());
+      vcStream = null;
+    }
+    document.getElementById('vc-audio-pool').innerHTML = '';
+    document.getElementById('vc-active').style.display = 'none';
+    document.getElementById('vc-setup').style.display = 'block';
+    document.getElementById('vc-toggle-btn').textContent = '🎙️ Study VC Rooms';
+    currentVCRoom = '';
+  }
+</script>
+
 </body>
 </html>
